@@ -1,0 +1,31 @@
+spring:
+  application:
+    name: hr-management-api
+
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/RH_XTENSUS}
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:admin}
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+
+app:
+  storage:
+    medical-certificates-path: ${MEDICAL_CERTIFICATES_PATH:./storage/medical-certificates}
+    max-file-size: 5MB
+    allowed-types:
+      - application/pdf
+      - image/jpeg
+      - image/png
