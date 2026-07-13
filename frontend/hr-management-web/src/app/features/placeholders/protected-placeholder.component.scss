@@ -1,0 +1,56 @@
+:host {
+  display: block;
+  min-height: 100dvh;
+  background: #f4f7f9;
+}
+
+.page-shell {
+  margin: 0 auto;
+  max-width: 920px;
+  padding: 48px 24px;
+}
+
+.summary {
+  background: #ffffff;
+  border: 1px solid #dbe4ea;
+  border-radius: 8px;
+  padding: 28px;
+}
+
+.eyebrow {
+  color: #0f766e;
+  font-size: 0.76rem;
+  font-weight: 700;
+  margin: 0 0 8px;
+  text-transform: uppercase;
+}
+
+h1 {
+  color: #172033;
+  font-size: 1.7rem;
+  margin: 0 0 22px;
+}
+
+dl {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+}
+
+div {
+  border-top: 1px solid #e2e8f0;
+  display: grid;
+  gap: 4px;
+  padding-top: 12px;
+}
+
+dt {
+  color: #64748b;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+dd {
+  color: #172033;
+  margin: 0;
+}

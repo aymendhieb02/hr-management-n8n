@@ -1,0 +1,47 @@
+<main class="login-shell">
+  <section class="login-panel" aria-labelledby="login-title">
+    <div class="brand">
+      <img class="brand-logo" src="/xtensus_logo.jfif" alt="" />
+      <div>
+        <p class="eyebrow">XTENSUS HR</p>
+        <h1 id="login-title">Sign in</h1>
+      </div>
+    </div>
+
+    <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+      <label>
+        <span>Username or email</span>
+        <input
+          autocomplete="username"
+          formControlName="usernameOrEmail"
+          type="text"
+          [attr.aria-invalid]="hasFieldError('usernameOrEmail')"
+        />
+      </label>
+      @if (hasFieldError('usernameOrEmail')) {
+        <p class="field-error">Username or email is required.</p>
+      }
+
+      <label>
+        <span>Password</span>
+        <input
+          autocomplete="current-password"
+          formControlName="password"
+          type="password"
+          [attr.aria-invalid]="hasFieldError('password')"
+        />
+      </label>
+      @if (hasFieldError('password')) {
+        <p class="field-error">Password is required.</p>
+      }
+
+      @if (errorMessage()) {
+        <p class="form-error" role="alert">{{ errorMessage() }}</p>
+      }
+
+      <button type="submit" [disabled]="isSubmitDisabled()">
+        {{ isLoading() ? 'Signing in...' : 'Sign in' }}
+      </button>
+    </form>
+  </section>
+</main>

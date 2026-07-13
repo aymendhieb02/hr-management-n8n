@@ -1,0 +1,12 @@
+<nav class="sidebar-nav" aria-label="Primary navigation">
+  @for (item of items(); track item.path) {
+    <a
+      [routerLink]="item.path"
+      routerLinkActive="active"
+      [routerLinkActiveOptions]="{ exact: true }"
+      (click)="closeSidebar()"
+    >
+      {{ item.label }}
+    </a>
+  }
+</nav>

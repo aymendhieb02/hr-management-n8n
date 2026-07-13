@@ -22,6 +22,8 @@ Optional PowerShell examples:
 $env:DB_URL="jdbc:postgresql://localhost:5432/RH_XTENSUS"
 $env:DB_USERNAME="postgres"
 $env:MEDICAL_CERTIFICATES_PATH="./storage/medical-certificates"
+$env:JWT_SECRET="replace_with_a_secure_secret_of_at_least_32_characters"
+$env:JWT_EXPIRATION_MS="3600000"
 ```
 
 In IntelliJ IDEA, open the Spring Boot run configuration and add environment variables in the `Environment variables` field, for example:
@@ -29,6 +31,14 @@ In IntelliJ IDEA, open the Spring Boot run configuration and add environment var
 ```text
 DB_URL=jdbc:postgresql://localhost:5432/RH_XTENSUS;DB_USERNAME=postgres;DB_PASSWORD=admin
 ```
+
+For JWT authentication, add the JWT variables to the same IntelliJ `Environment variables` field:
+
+```text
+JWT_SECRET=replace_with_a_secure_secret_of_at_least_32_characters;JWT_EXPIRATION_MS=3600000
+```
+
+`JWT_EXPIRATION_MS` controls access-token lifetime in milliseconds. The default local value is `3600000` (one hour). Do not commit or reuse a production JWT secret; production must provide a secure secret through environment variables or a secrets manager.
 
 Production must provide real environment variables for database URL, username, and password. Do not rely on local development defaults in production.
 

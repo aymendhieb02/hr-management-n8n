@@ -2,8 +2,25 @@ package com.xtensus.hrmanagementapi.common.exception;
 
 import com.xtensus.hrmanagementapi.department.exception.DepartmentNotFoundException;
 import com.xtensus.hrmanagementapi.department.exception.DuplicateDepartmentException;
+import com.xtensus.hrmanagementapi.auth.exception.AccountDisabledException;
+import com.xtensus.hrmanagementapi.auth.exception.AccountInactiveException;
+import com.xtensus.hrmanagementapi.auth.exception.InvalidCredentialsException;
+import com.xtensus.hrmanagementapi.leave.balance.exception.DuplicateLeaveBalanceException;
+import com.xtensus.hrmanagementapi.leave.balance.exception.InsufficientLeaveBalanceException;
+import com.xtensus.hrmanagementapi.leave.balance.exception.InvalidLeaveBalanceException;
+import com.xtensus.hrmanagementapi.leave.balance.exception.LeaveBalanceNotFoundException;
+import com.xtensus.hrmanagementapi.leave.request.exception.InvalidLeaveRequestException;
+import com.xtensus.hrmanagementapi.leave.request.exception.LeaveDecisionNotAllowedException;
+import com.xtensus.hrmanagementapi.leave.request.exception.LeaveRequestNotFoundException;
+import com.xtensus.hrmanagementapi.leave.request.exception.UnauthorizedApproverException;
+import com.xtensus.hrmanagementapi.leave.request.exception.UpdateNotAllowedException;
 import com.xtensus.hrmanagementapi.leave.type.exception.DuplicateLeaveTypeException;
 import com.xtensus.hrmanagementapi.leave.type.exception.LeaveTypeNotFoundException;
+import com.xtensus.hrmanagementapi.medical.document.exception.DuplicateMedicalDocumentException;
+import com.xtensus.hrmanagementapi.medical.document.exception.InvalidMedicalDocumentException;
+import com.xtensus.hrmanagementapi.medical.document.exception.MedicalDocumentNotFoundException;
+import com.xtensus.hrmanagementapi.medical.document.exception.StorageException;
+import com.xtensus.hrmanagementapi.notification.exception.NotificationNotFoundException;
 import com.xtensus.hrmanagementapi.position.exception.DuplicatePositionException;
 import com.xtensus.hrmanagementapi.position.exception.PositionNotFoundException;
 import com.xtensus.hrmanagementapi.user.exception.DuplicateEmailException;
@@ -25,6 +42,30 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    @ExceptionHandler(InvalidCredentialsException.class)
+    public ResponseEntity<ApiErrorResponse> handleInvalidCredentials(
+            InvalidCredentialsException exception,
+            HttpServletRequest request
+    ) {
+        return buildResponse(HttpStatus.UNAUTHORIZED, exception.getMessage(), request, null);
+    }
+
+    @ExceptionHandler(AccountDisabledException.class)
+    public ResponseEntity<ApiErrorResponse> handleAccountDisabled(
+            AccountDisabledException exception,
+            HttpServletRequest request
+    ) {
+        return buildResponse(HttpStatus.FORBIDDEN, exception.getMessage(), request, null);
+    }
+
+    @ExceptionHandler(AccountInactiveException.class)
+    public ResponseEntity<ApiErrorResponse> handleAccountInactive(
+            AccountInactiveException exception,
+            HttpServletRequest request
+    ) {
+        return buildResponse(HttpStatus.FORBIDDEN, exception.getMessage(), request, null);
+    }
 
     @ExceptionHandler(DepartmentNotFoundException.class)
     public ResponseEntity<ApiErrorResponse> handleDepartmentNotFound(
@@ -72,6 +113,118 @@ public class GlobalExceptionHandler {
             HttpServletRequest request
     ) {
         return buildResponse(HttpStatus.CONFLICT, exception.getMessage(), request, null);
+    }
+
+    @ExceptionHandler(LeaveBalanceNotFoundException.class)
+    public ResponseEntity<ApiErrorResponse> handleLeaveBalanceNotFound(
+            LeaveBalanceNotFoundException exception,
+            HttpServletRequest request
+    ) {
+        return buildResponse(HttpStatus.NOT_FOUND, exception.getMessage(), request, null);
+    }
+
+    @ExceptionHandler(DuplicateLeaveBalanceException.class)
+    public ResponseEntity<ApiErrorResponse> handleDuplicateLeaveBalance(
+            DuplicateLeaveBalanceException exception,
+            HttpServletRequest request
+    ) {
+        return buildResponse(HttpStatus.CONFLICT, exception.getMessage(), request, null);
+    }
+
+    @ExceptionHandler(InsufficientLeaveBalanceException.class)
+    public ResponseEntity<ApiErrorResponse> handleInsufficientLeaveBalance(
+            InsufficientLeaveBalanceException exception,
+            HttpServletRequest request
+    ) {
+        return buildResponse(HttpStatus.CONFLICT, exception.getMessage(), request, null);
+    }
+
+    @ExceptionHandler(InvalidLeaveBalanceException.class)
+    public ResponseEntity<ApiErrorResponse> handleInvalidLeaveBalance(
+            InvalidLeaveBalanceException exception,
+            HttpServletRequest request
+    ) {
+        return buildResponse(HttpStatus.BAD_REQUEST, exception.getMessage(), request, null);
+    }
+
+    @ExceptionHandler(LeaveRequestNotFoundException.class)
+    public ResponseEntity<ApiErrorResponse> handleLeaveRequestNotFound(
+            LeaveRequestNotFoundException exception,
+            HttpServletRequest request
+    ) {
+        return buildResponse(HttpStatus.NOT_FOUND, exception.getMessage(), request, null);
+    }
+
+    @ExceptionHandler(InvalidLeaveRequestException.class)
+    public ResponseEntity<ApiErrorResponse> handleInvalidLeaveRequest(
+            InvalidLeaveRequestException exception,
+            HttpServletRequest request
+    ) {
+        return buildResponse(HttpStatus.BAD_REQUEST, exception.getMessage(), request, null);
+    }
+
+    @ExceptionHandler(UpdateNotAllowedException.class)
+    public ResponseEntity<ApiErrorResponse> handleUpdateNotAllowed(
+            UpdateNotAllowedException exception,
+            HttpServletRequest request
+    ) {
+        return buildResponse(HttpStatus.CONFLICT, exception.getMessage(), request, null);
+    }
+
+    @ExceptionHandler(LeaveDecisionNotAllowedException.class)
+    public ResponseEntity<ApiErrorResponse> handleLeaveDecisionNotAllowed(
+            LeaveDecisionNotAllowedException exception,
+            HttpServletRequest request
+    ) {
+        return buildResponse(HttpStatus.CONFLICT, exception.getMessage(), request, null);
+    }
+
+    @ExceptionHandler(UnauthorizedApproverException.class)
+    public ResponseEntity<ApiErrorResponse> handleUnauthorizedApprover(
+            UnauthorizedApproverException exception,
+            HttpServletRequest request
+    ) {
+        return buildResponse(HttpStatus.FORBIDDEN, exception.getMessage(), request, null);
+    }
+
+    @ExceptionHandler(MedicalDocumentNotFoundException.class)
+    public ResponseEntity<ApiErrorResponse> handleMedicalDocumentNotFound(
+            MedicalDocumentNotFoundException exception,
+            HttpServletRequest request
+    ) {
+        return buildResponse(HttpStatus.NOT_FOUND, exception.getMessage(), request, null);
+    }
+
+    @ExceptionHandler(DuplicateMedicalDocumentException.class)
+    public ResponseEntity<ApiErrorResponse> handleDuplicateMedicalDocument(
+            DuplicateMedicalDocumentException exception,
+            HttpServletRequest request
+    ) {
+        return buildResponse(HttpStatus.CONFLICT, exception.getMessage(), request, null);
+    }
+
+    @ExceptionHandler(InvalidMedicalDocumentException.class)
+    public ResponseEntity<ApiErrorResponse> handleInvalidMedicalDocument(
+            InvalidMedicalDocumentException exception,
+            HttpServletRequest request
+    ) {
+        return buildResponse(HttpStatus.BAD_REQUEST, exception.getMessage(), request, null);
+    }
+
+    @ExceptionHandler(StorageException.class)
+    public ResponseEntity<ApiErrorResponse> handleStorageException(
+            StorageException exception,
+            HttpServletRequest request
+    ) {
+        return buildResponse(HttpStatus.INTERNAL_SERVER_ERROR, exception.getMessage(), request, null);
+    }
+
+    @ExceptionHandler(NotificationNotFoundException.class)
+    public ResponseEntity<ApiErrorResponse> handleNotificationNotFound(
+            NotificationNotFoundException exception,
+            HttpServletRequest request
+    ) {
+        return buildResponse(HttpStatus.NOT_FOUND, exception.getMessage(), request, null);
     }
 
     @ExceptionHandler(UserNotFoundException.class)
