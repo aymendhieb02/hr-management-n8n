@@ -21,6 +21,8 @@ public class EmployeResponse {
     private LocalDate dateEmbauche;
     private String sexe;
     private Boolean actif;
+    private String role;
+    private String statut;
     private PosteResume poste;
     private TypeContratResume typeContrat;
     private ManagerResume manager;
@@ -53,3 +55,5 @@ public class EmployeResponse {
         private String email;
     }
 }
+
+

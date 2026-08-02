@@ -6,12 +6,11 @@ import com.xtensus.hrmanagementapi.auth.dto.LoginResponse;
 import com.xtensus.hrmanagementapi.auth.exception.AccountDisabledException;
 import com.xtensus.hrmanagementapi.auth.exception.AccountInactiveException;
 import com.xtensus.hrmanagementapi.auth.exception.InvalidCredentialsException;
-import com.xtensus.hrmanagementapi.domain.entity.User;
-import com.xtensus.hrmanagementapi.domain.enums.UserStatus;
-import com.xtensus.hrmanagementapi.repository.UserRepository;
+import com.xtensus.hrmanagementapi.domain.entity.Employe;
+import com.xtensus.hrmanagementapi.domain.enums.RoleType;
+import com.xtensus.hrmanagementapi.repository.EmployeRepository;
 import com.xtensus.hrmanagementapi.security.jwt.JwtService;
 import com.xtensus.hrmanagementapi.security.user.CustomUserDetails;
-import java.util.Optional;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -20,17 +19,12 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class AuthenticationService {
-
-    private final UserRepository userRepository;
+    private final EmployeRepository employeRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
 
-    public AuthenticationService(
-            UserRepository userRepository,
-            PasswordEncoder passwordEncoder,
-            JwtService jwtService
-    ) {
-        this.userRepository = userRepository;
+    public AuthenticationService(EmployeRepository employeRepository, PasswordEncoder passwordEncoder, JwtService jwtService) {
+        this.employeRepository = employeRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
     }
@@ -38,53 +32,40 @@ public class AuthenticationService {
     @Transactional(readOnly = true)
     public LoginResponse login(LoginRequest request) {
         String usernameOrEmail = request.getUsernameOrEmail().trim();
-        User user = userRepository.findByUsernameIgnoreCase(usernameOrEmail)
-                .or(() -> userRepository.findByEmailIgnoreCase(usernameOrEmail))
+        Employe employe = employeRepository.findByUsernameIgnoreCase(usernameOrEmail)
+                .or(() -> employeRepository.findByEmailIgnoreCase(usernameOrEmail))
                 .orElseThrow(InvalidCredentialsException::new);
-
-        validateAccount(user);
-        if (!passwordEncoder.matches(request.getPassword(), user.getPasswordHash())) {
-            throw new InvalidCredentialsException();
-        }
-
+        validateAccount(employe);
+        if (!passwordEncoder.matches(request.getPassword(), employe.getMotDePasseHash())) { throw new InvalidCredentialsException(); }
         LoginResponse response = new LoginResponse();
-        response.setAccessToken(jwtService.generateToken(user));
+        response.setAccessToken(jwtService.generateToken(employe));
         response.setTokenType("Bearer");
         response.setExpiresIn(jwtService.getExpirationMs());
-        response.setUser(toAuthenticatedUser(user));
+        response.setUser(toAuthenticatedUser(employe));
         return response;
     }
 
     @Transactional(readOnly = true)
     public AuthenticatedUserResponse me() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || !(authentication.getPrincipal() instanceof CustomUserDetails principal)) {
-            throw new InvalidCredentialsException();
-        }
-
-        User user = userRepository.findByUsernameIgnoreCase(principal.getUsername())
-                .orElseThrow(InvalidCredentialsException::new);
-        return toAuthenticatedUser(user);
+        if (authentication == null || !(authentication.getPrincipal() instanceof CustomUserDetails principal)) { throw new InvalidCredentialsException(); }
+        Employe employe = employeRepository.findByUsernameIgnoreCase(principal.getUsername()).orElseThrow(InvalidCredentialsException::new);
+        return toAuthenticatedUser(employe);
     }
 
-    private void validateAccount(User user) {
-        if (!Boolean.TRUE.equals(user.getEnabled())) {
-            throw new AccountDisabledException();
-        }
-
-        if (user.getStatus() != UserStatus.ACTIVE) {
-            throw new AccountInactiveException();
-        }
+    private void validateAccount(Employe employe) {
+        if (!Boolean.TRUE.equals(employe.getActif())) { throw new AccountDisabledException(); }
+        if (!"ACTIF".equalsIgnoreCase(employe.getStatut())) { throw new AccountInactiveException(); }
     }
 
-    private AuthenticatedUserResponse toAuthenticatedUser(User user) {
+    private AuthenticatedUserResponse toAuthenticatedUser(Employe employe) {
         AuthenticatedUserResponse response = new AuthenticatedUserResponse();
-        response.setId(user.getId());
-        response.setUsername(user.getUsername());
-        response.setEmail(user.getEmail());
-        response.setFirstName(user.getFirstName());
-        response.setLastName(user.getLastName());
-        response.setRole(user.getRole());
+        response.setId(employe.getId());
+        response.setUsername(employe.getUsername());
+        response.setEmail(employe.getEmail());
+        response.setFirstName(employe.getPrenom());
+        response.setLastName(employe.getNom());
+        response.setRole(RoleType.fromDatabaseRole(employe.getRole()));
         return response;
     }
 }

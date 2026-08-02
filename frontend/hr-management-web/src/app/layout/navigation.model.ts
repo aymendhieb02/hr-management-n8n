@@ -23,7 +23,6 @@ export const NAVIGATION_ITEMS: NavigationItem[] = [
 
   { label: 'Tableau de bord', path: '/dashboard', roles: ['HR', 'ADMIN'] },
   { label: 'Employes', path: '/users', roles: ['HR'] },
-  { label: 'Departements', path: '/departments', roles: ['EMPLOYEE', 'MANAGER', 'HR', 'ADMIN'] },
   { label: 'Postes', path: '/positions', roles: ['EMPLOYEE', 'MANAGER', 'HR', 'ADMIN'] },
   { label: 'Types de conge', path: '/leave-types', roles: ['EMPLOYEE', 'MANAGER', 'HR', 'ADMIN'] },
   { label: 'Demandes de conge', path: '/leave-requests', roles: ['HR', 'ADMIN'] },

@@ -1,6 +1,5 @@
 package com.xtensus.hrmanagementapi.security.jwt;
 
-import com.xtensus.hrmanagementapi.domain.enums.UserStatus;
 import com.xtensus.hrmanagementapi.security.user.CustomUserDetails;
 import com.xtensus.hrmanagementapi.security.user.CustomUserDetailsService;
 import jakarta.servlet.FilterChain;
@@ -54,8 +53,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             String username = jwtService.extractUsername(token);
             CustomUserDetails userDetails = (CustomUserDetails) userDetailsService.loadUserByUsername(username);
             if (jwtService.validateToken(token, userDetails)
-                    && userDetails.isEnabled()
-                    && userDetails.getStatus() == UserStatus.ACTIVE) {
+                    && userDetails.isEnabled()) {
                 UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
                         userDetails,
                         null,

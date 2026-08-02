@@ -109,13 +109,6 @@ export const routes: Routes = [
         data: { title: 'Employes', roles: ['HR', 'ADMIN'] }
       },
       {
-        path: 'departments',
-        canActivate: [roleGuard],
-        data: { title: 'Departements', roles: ['EMPLOYEE', 'MANAGER', 'HR', 'ADMIN'] },
-        loadComponent: () => import('./features/departments/pages/department-list/department-list.component')
-          .then((m) => m.DepartmentListComponent)
-      },
-      {
         path: 'positions',
         canActivate: [roleGuard],
         data: { title: 'Postes', roles: ['EMPLOYEE', 'MANAGER', 'HR', 'ADMIN'] },

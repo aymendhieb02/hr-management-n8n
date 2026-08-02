@@ -89,3 +89,4 @@ describe('AppLayoutComponent', () => {
     expect(fixture.nativeElement.querySelector('.layout-shell')?.classList.contains('sidebar-open')).toBe(true);
   });
 });
+

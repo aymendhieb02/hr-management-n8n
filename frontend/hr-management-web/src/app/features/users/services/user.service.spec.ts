@@ -7,7 +7,7 @@ import { UserService } from './user.service';
 describe('UserService', () => {
   let service: UserService;
   let httpMock: HttpTestingController;
-  const baseUrl = `${environment.apiUrl}/users`;
+  const baseUrl = `${environment.apiUrl}/employes`;
 
   beforeEach(() => {
     TestBed.configureTestingModule({
@@ -30,18 +30,10 @@ describe('UserService', () => {
     expect(findById.request.method).toBe('GET');
     findById.flush({});
 
-    service.findByRole('MANAGER').subscribe();
-    const byRole = httpMock.expectOne(`${baseUrl}/role/MANAGER`);
-    expect(byRole.request.method).toBe('GET');
-    byRole.flush([]);
 
-    service.findByDepartment(9).subscribe();
-    const byDepartment = httpMock.expectOne(`${baseUrl}/department/9`);
-    expect(byDepartment.request.method).toBe('GET');
-    byDepartment.flush([]);
 
     service.findTeamMembers(2).subscribe();
-    const team = httpMock.expectOne(`${baseUrl}/2/team`);
+    const team = httpMock.expectOne(`${baseUrl}/2/equipe`);
     expect(team.request.method).toBe('GET');
     team.flush([]);
 
@@ -55,10 +47,6 @@ describe('UserService', () => {
     expect(update.request.method).toBe('PUT');
     update.flush({});
 
-    service.updatePassword(4, { newPassword: 'password1' }).subscribe();
-    const password = httpMock.expectOne(`${baseUrl}/4/password`);
-    expect(password.request.method).toBe('PATCH');
-    password.flush(null);
 
     service.delete(4).subscribe();
     const remove = httpMock.expectOne(`${baseUrl}/4`);
@@ -66,3 +54,5 @@ describe('UserService', () => {
     remove.flush(null);
   });
 });
+
+

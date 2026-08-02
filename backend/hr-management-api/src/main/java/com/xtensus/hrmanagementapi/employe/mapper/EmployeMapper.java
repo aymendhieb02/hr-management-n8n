@@ -3,6 +3,7 @@ package com.xtensus.hrmanagementapi.employe.mapper;
 import com.xtensus.hrmanagementapi.domain.entity.Employe;
 import com.xtensus.hrmanagementapi.domain.entity.Poste;
 import com.xtensus.hrmanagementapi.domain.entity.TypeContrat;
+import com.xtensus.hrmanagementapi.domain.enums.RoleType;
 import com.xtensus.hrmanagementapi.employe.dto.EmployeRequest;
 import com.xtensus.hrmanagementapi.employe.dto.EmployeResponse;
 import org.springframework.stereotype.Component;
@@ -28,6 +29,8 @@ public class EmployeMapper {
         response.setDateEmbauche(employe.getDateEmbauche());
         response.setSexe(employe.getSexe());
         response.setActif(employe.getActif());
+        response.setRole(RoleType.fromDatabaseRole(employe.getRole()).name());
+        response.setStatut(employe.getStatut());
         response.setPoste(toPosteResume(employe.getPoste()));
         response.setTypeContrat(toTypeContratResume(employe.getTypeContrat()));
         response.setManager(toManagerResume(employe.getManager()));
@@ -50,6 +53,9 @@ public class EmployeMapper {
         employe.setDateEmbauche(request.getDateEmbauche());
         employe.setSexe(trim(request.getSexe()));
         employe.setActif(request.getActif());
+        if (request.getRole() != null && !request.getRole().trim().isEmpty()) {
+            employe.setRole(RoleType.valueOf(request.getRole().trim().toUpperCase()).toDatabaseRole());
+        }
     }
 
     private EmployeResponse.PosteResume toPosteResume(Poste poste) {
@@ -88,3 +94,5 @@ public class EmployeMapper {
         return value == null ? null : value.trim();
     }
 }
+
+

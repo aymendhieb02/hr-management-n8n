@@ -43,9 +43,14 @@ public class EmployeRequest {
     @NotNull(message = "Le statut actif est obligatoire")
     private Boolean actif;
 
+    @Size(max = 30, message = "Le role ne doit pas depasser 30 caracteres")
+    private String role;
+
     private Long posteId;
 
     private Long typeContratId;
 
     private Long managerId;
 }
+
+

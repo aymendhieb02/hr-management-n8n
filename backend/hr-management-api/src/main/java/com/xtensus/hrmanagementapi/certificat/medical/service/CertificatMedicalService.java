@@ -8,8 +8,8 @@ import com.xtensus.hrmanagementapi.certificat.medical.mapper.CertificatMedicalMa
 import com.xtensus.hrmanagementapi.conge.demande.exception.CongeDemandeIntrouvableException;
 import com.xtensus.hrmanagementapi.domain.entity.CongeDemande;
 import com.xtensus.hrmanagementapi.domain.entity.EmployeCertificatMedical;
-import com.xtensus.hrmanagementapi.medical.document.config.MedicalDocumentStorageProperties;
-import com.xtensus.hrmanagementapi.medical.document.exception.StorageException;
+import com.xtensus.hrmanagementapi.certificat.medical.config.CertificatMedicalStorageProperties;
+import com.xtensus.hrmanagementapi.certificat.medical.exception.StorageException;
 import com.xtensus.hrmanagementapi.repository.CongeDemandeRepository;
 import com.xtensus.hrmanagementapi.repository.EmployeCertificatMedicalRepository;
 import java.io.IOException;
@@ -29,11 +29,11 @@ public class CertificatMedicalService {
     private static final Set<String> TYPES_AUTORISES = Set.of("application/pdf", "image/jpeg", "image/png");
     private final EmployeCertificatMedicalRepository repository;
     private final CongeDemandeRepository demandes;
-    private final MedicalDocumentStorageProperties properties;
+    private final CertificatMedicalStorageProperties properties;
     private final CertificatMedicalMapper mapper;
 
     public CertificatMedicalService(EmployeCertificatMedicalRepository repository, CongeDemandeRepository demandes,
-            MedicalDocumentStorageProperties properties, CertificatMedicalMapper mapper) {
+            CertificatMedicalStorageProperties properties, CertificatMedicalMapper mapper) {
         this.repository = repository;
         this.demandes = demandes;
         this.properties = properties;

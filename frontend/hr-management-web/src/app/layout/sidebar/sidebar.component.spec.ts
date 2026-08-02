@@ -72,7 +72,6 @@ describe('SidebarComponent', () => {
     currentUser.set({ ...user, role: 'MANAGER' });
     fixture.detectChanges();
 
-    expect(text()).toContain('Departements');
     expect(text()).toContain('Postes');
     expect(text()).toContain('Types de conge');
   });
@@ -123,3 +122,4 @@ describe('SidebarComponent', () => {
     return fixture.nativeElement.textContent;
   }
 });
+

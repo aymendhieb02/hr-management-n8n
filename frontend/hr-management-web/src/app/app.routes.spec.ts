@@ -11,7 +11,6 @@ describe('app route role data', () => {
     expect(rolesFor('team-members')).toContain('HR');
     expect(rolesFor('team-members')).toContain('ADMIN');
     expect(rolesFor('team-availability')).toContain('MANAGER');
-    expect(rolesFor('departments')).toContain('MANAGER');
     expect(rolesFor('positions')).toContain('MANAGER');
     expect(rolesFor('leave-types')).toContain('MANAGER');
   });
@@ -61,3 +60,4 @@ describe('app route role data', () => {
     return (route?.data?.['roles'] ?? []) as string[];
   }
 });
+

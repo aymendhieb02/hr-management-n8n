@@ -3,6 +3,7 @@ package com.xtensus.hrmanagementapi.employe.service;
 import com.xtensus.hrmanagementapi.domain.entity.Employe;
 import com.xtensus.hrmanagementapi.domain.entity.Poste;
 import com.xtensus.hrmanagementapi.domain.entity.TypeContrat;
+import com.xtensus.hrmanagementapi.domain.enums.RoleType;
 import com.xtensus.hrmanagementapi.employe.dto.EmployeRequest;
 import com.xtensus.hrmanagementapi.employe.dto.EmployeResponse;
 import com.xtensus.hrmanagementapi.employe.exception.EmployeExisteDejaException;
@@ -104,7 +105,9 @@ public class EmployeService {
         if (employe.getMotDePasseHash() == null) {
             employe.setMotDePasseHash("NON_AUTHENTIFICATION");
         }
-        employe.setRole("EMPLOYE");
+        if (employe.getRole() == null || employe.getRole().isBlank()) {
+            employe.setRole(RoleType.EMPLOYEE.toDatabaseRole());
+        }
         employe.setStatut(Boolean.TRUE.equals(employe.getActif()) ? "ACTIF" : "INACTIF");
     }
     private Employe findEntity(Long id) {
@@ -145,4 +148,6 @@ public class EmployeService {
         return value.trim();
     }
 }
+
+
 
