@@ -20,7 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 @RestController
-@RequestMapping("/api/medical-documents")
+@RequestMapping({"/api/medical-documents", "/api/certificats-medicaux"})
 public class MedicalDocumentController {
 
     private final MedicalDocumentService medicalDocumentService;
@@ -67,3 +67,4 @@ public class MedicalDocumentController {
         return ResponseEntity.noContent().build();
     }
 }
+

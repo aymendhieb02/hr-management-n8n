@@ -9,6 +9,8 @@ public interface LeaveTypeRepository extends JpaRepository<LeaveType, Long> {
 
     Optional<LeaveType> findByName(String name);
 
+    Optional<LeaveType> findByNameIgnoreCase(String name);
+
     List<LeaveType> findByActiveTrue();
 
     boolean existsByNameIgnoreCase(String name);

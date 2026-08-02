@@ -58,43 +58,48 @@ public class SecurityConfig {
                                 .requestMatchers("/error").permitAll()
                                 .requestMatchers(HttpMethod.GET, "/actuator/health").permitAll()
 
-                                .requestMatchers(HttpMethod.GET, "/api/departments/**").authenticated()
-                                .requestMatchers(HttpMethod.POST, "/api/departments").hasAnyRole("HR", "ADMIN")
-                                .requestMatchers(HttpMethod.PUT, "/api/departments/**").hasAnyRole("HR", "ADMIN")
-                                .requestMatchers(HttpMethod.DELETE, "/api/departments/**").hasAnyRole("HR", "ADMIN")
+                                .requestMatchers(HttpMethod.GET, "/api/departments/**", "/api/departements/**").authenticated()
+                                .requestMatchers(HttpMethod.POST, "/api/departments", "/api/departements").hasAnyRole("HR", "ADMIN")
+                                .requestMatchers(HttpMethod.PUT, "/api/departments/**", "/api/departements/**").hasAnyRole("HR", "ADMIN")
+                                .requestMatchers(HttpMethod.DELETE, "/api/departments/**", "/api/departements/**").hasAnyRole("HR", "ADMIN")
 
-                                .requestMatchers(HttpMethod.GET, "/api/positions/**").authenticated()
-                                .requestMatchers(HttpMethod.POST, "/api/positions").hasAnyRole("HR", "ADMIN")
-                                .requestMatchers(HttpMethod.PUT, "/api/positions/**").hasAnyRole("HR", "ADMIN")
-                                .requestMatchers(HttpMethod.DELETE, "/api/positions/**").hasAnyRole("HR", "ADMIN")
+                                .requestMatchers(HttpMethod.GET, "/api/positions/**", "/api/postes/**", "/api/type-contrats/**").authenticated()
+                                .requestMatchers(HttpMethod.POST, "/api/positions", "/api/postes").hasAnyRole("HR", "ADMIN")
+                                .requestMatchers(HttpMethod.PUT, "/api/positions/**", "/api/postes/**").hasAnyRole("HR", "ADMIN")
+                                .requestMatchers(HttpMethod.DELETE, "/api/positions/**", "/api/postes/**").hasAnyRole("HR", "ADMIN")
+                                .requestMatchers(HttpMethod.POST, "/api/type-contrats").hasAnyRole("HR", "ADMIN")
+                                .requestMatchers(HttpMethod.PUT, "/api/type-contrats/**").hasAnyRole("HR", "ADMIN")
+                                .requestMatchers(HttpMethod.DELETE, "/api/type-contrats/**").hasAnyRole("HR", "ADMIN")
 
-                                .requestMatchers(HttpMethod.GET, "/api/leave-types/**").authenticated()
-                                .requestMatchers(HttpMethod.POST, "/api/leave-types").hasAnyRole("HR", "ADMIN")
-                                .requestMatchers(HttpMethod.PUT, "/api/leave-types/**").hasAnyRole("HR", "ADMIN")
-                                .requestMatchers(HttpMethod.DELETE, "/api/leave-types/**").hasAnyRole("HR", "ADMIN")
+                                .requestMatchers(HttpMethod.GET, "/api/leave-types/**", "/api/conge-types/**", "/api/conge-demande-statuts/**", "/api/raisons/**", "/api/conge-demande-statuts/**", "/api/raisons/**").authenticated()
+                                .requestMatchers(HttpMethod.POST, "/api/leave-types", "/api/conge-types", "/api/conge-demande-statuts", "/api/raisons").hasAnyRole("HR", "ADMIN")
+                                .requestMatchers(HttpMethod.PUT, "/api/leave-types/**", "/api/conge-types/**", "/api/conge-demande-statuts/**", "/api/raisons/**", "/api/conge-demande-statuts/**", "/api/raisons/**").hasAnyRole("HR", "ADMIN")
+                                .requestMatchers(HttpMethod.DELETE, "/api/leave-types/**", "/api/conge-types/**", "/api/conge-demande-statuts/**", "/api/raisons/**", "/api/conge-demande-statuts/**", "/api/raisons/**").hasAnyRole("HR", "ADMIN")
 
-                                .requestMatchers(HttpMethod.GET, "/api/users/*/team").hasAnyRole("MANAGER", "HR", "ADMIN")
-                                .requestMatchers(HttpMethod.GET, "/api/users/role/**").hasAnyRole("HR", "ADMIN")
+                                .requestMatchers(HttpMethod.GET, "/api/users/*/team", "/api/employes/*/equipe").hasAnyRole("MANAGER", "HR", "ADMIN")
+                                .requestMatchers(HttpMethod.GET, "/api/users/role/**", "/api/employes/role/**").hasAnyRole("HR", "ADMIN")
                                 .requestMatchers(HttpMethod.GET, "/api/users/department/**").hasAnyRole("HR", "ADMIN")
-                                .requestMatchers("/api/users/**").hasAnyRole("HR", "ADMIN")
+                                .requestMatchers("/api/users/**", "/api/employes/**").hasAnyRole("HR", "ADMIN")
 
-                                .requestMatchers(HttpMethod.GET, "/api/leave-balances/user/**").hasAnyRole("EMPLOYEE", "MANAGER", "HR", "ADMIN")
-                                .requestMatchers("/api/leave-balances/**").hasAnyRole("HR", "ADMIN")
+                                .requestMatchers(HttpMethod.GET, "/api/leave-balances/user/**", "/api/conge-soldes/user/**").hasAnyRole("EMPLOYEE", "MANAGER", "HR", "ADMIN")
+                                .requestMatchers("/api/leave-balances/**", "/api/conge-soldes/**").hasAnyRole("HR", "ADMIN")
 
-                                .requestMatchers(HttpMethod.POST, "/api/leave-requests").hasAnyRole("EMPLOYEE", "MANAGER", "HR", "ADMIN")
-                                .requestMatchers(HttpMethod.GET, "/api/leave-requests").hasAnyRole("HR", "ADMIN")
-                                .requestMatchers(HttpMethod.GET, "/api/leave-requests/requester/**").authenticated()
-                                .requestMatchers(HttpMethod.GET, "/api/leave-requests/approver/**").hasAnyRole("MANAGER", "HR", "ADMIN")
-                                .requestMatchers(HttpMethod.PATCH, "/api/leave-requests/*/approve").hasAnyRole("MANAGER", "HR", "ADMIN")
-                                .requestMatchers(HttpMethod.PATCH, "/api/leave-requests/*/reject").hasAnyRole("MANAGER", "HR", "ADMIN")
-                                .requestMatchers(HttpMethod.PUT, "/api/leave-requests/**").authenticated()
-                                .requestMatchers(HttpMethod.DELETE, "/api/leave-requests/**").authenticated()
-                                .requestMatchers(HttpMethod.GET, "/api/leave-requests/**").authenticated()
+                                .requestMatchers("/api/leave-accruals/**", "/api/acquisitions-conges/**").hasAnyRole("HR", "ADMIN")
 
-                                .requestMatchers(HttpMethod.POST, "/api/medical-documents/upload/**").hasAnyRole("EMPLOYEE", "MANAGER", "HR", "ADMIN")
-                                .requestMatchers(HttpMethod.GET, "/api/medical-documents/download/**").hasAnyRole("HR", "ADMIN")
-                                .requestMatchers(HttpMethod.GET, "/api/medical-documents/**").hasAnyRole("HR", "ADMIN")
-                                .requestMatchers(HttpMethod.DELETE, "/api/medical-documents/**").hasAnyRole("HR", "ADMIN")
+                                .requestMatchers(HttpMethod.POST, "/api/leave-requests", "/api/conge-demandes").hasAnyRole("EMPLOYEE", "MANAGER", "HR", "ADMIN")
+                                .requestMatchers(HttpMethod.GET, "/api/leave-requests", "/api/conge-demandes").hasAnyRole("HR", "ADMIN")
+                                .requestMatchers(HttpMethod.GET, "/api/leave-requests/requester/**", "/api/conge-demandes/demandeur/**").authenticated()
+                                .requestMatchers(HttpMethod.GET, "/api/leave-requests/approver/**", "/api/conge-demandes/decideur/**").hasAnyRole("MANAGER", "HR", "ADMIN")
+                                .requestMatchers(HttpMethod.PATCH, "/api/leave-requests/*/approve", "/api/conge-demandes/*/approuver").hasAnyRole("MANAGER", "HR", "ADMIN")
+                                .requestMatchers(HttpMethod.PATCH, "/api/leave-requests/*/reject", "/api/conge-demandes/*/refuser").hasAnyRole("MANAGER", "HR", "ADMIN")
+                                .requestMatchers(HttpMethod.PUT, "/api/leave-requests/**", "/api/conge-demandes/**").authenticated()
+                                .requestMatchers(HttpMethod.DELETE, "/api/leave-requests/**", "/api/conge-demandes/**").authenticated()
+                                .requestMatchers(HttpMethod.GET, "/api/leave-requests/**", "/api/conge-demandes/**").authenticated()
+
+                                .requestMatchers(HttpMethod.POST, "/api/medical-documents/upload/**", "/api/certificats-medicaux/upload/**").hasAnyRole("HR", "ADMIN")
+                                .requestMatchers(HttpMethod.GET, "/api/medical-documents/download/**", "/api/certificats-medicaux/download/**").hasAnyRole("HR", "ADMIN")
+                                .requestMatchers(HttpMethod.GET, "/api/medical-documents/**", "/api/certificats-medicaux/**").hasAnyRole("HR", "ADMIN")
+                                .requestMatchers(HttpMethod.DELETE, "/api/medical-documents/**", "/api/certificats-medicaux/**").hasAnyRole("HR", "ADMIN")
 
                                 .requestMatchers("/api/notifications/**").authenticated()
                                 .requestMatchers(HttpMethod.GET, "/api/auth/me").authenticated()
@@ -145,3 +150,7 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder();
     }
 }
+
+
+
+

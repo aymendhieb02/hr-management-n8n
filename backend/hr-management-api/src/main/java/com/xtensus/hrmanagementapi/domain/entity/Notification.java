@@ -15,7 +15,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
-@Table(name = "notifications")
+@Table(name = "legacy_notifications")
 @Getter
 @Setter
 @NoArgsConstructor

@@ -1,7 +1,12 @@
 package com.xtensus.hrmanagementapi.common.exception;
 
+import com.xtensus.hrmanagementapi.conge.statut.exception.CongeDemandeStatutExisteDejaException;
+import com.xtensus.hrmanagementapi.conge.statut.exception.CongeDemandeStatutIntrouvableException;
 import com.xtensus.hrmanagementapi.department.exception.DepartmentNotFoundException;
 import com.xtensus.hrmanagementapi.department.exception.DuplicateDepartmentException;
+import com.xtensus.hrmanagementapi.employe.exception.EmployeExisteDejaException;
+import com.xtensus.hrmanagementapi.employe.exception.EmployeIntrouvableException;
+import com.xtensus.hrmanagementapi.employe.exception.EmployeInvalideException;
 import com.xtensus.hrmanagementapi.auth.exception.AccountDisabledException;
 import com.xtensus.hrmanagementapi.auth.exception.AccountInactiveException;
 import com.xtensus.hrmanagementapi.auth.exception.InvalidCredentialsException;
@@ -9,6 +14,8 @@ import com.xtensus.hrmanagementapi.leave.balance.exception.DuplicateLeaveBalance
 import com.xtensus.hrmanagementapi.leave.balance.exception.InsufficientLeaveBalanceException;
 import com.xtensus.hrmanagementapi.leave.balance.exception.InvalidLeaveBalanceException;
 import com.xtensus.hrmanagementapi.leave.balance.exception.LeaveBalanceNotFoundException;
+import com.xtensus.hrmanagementapi.leave.accrual.exception.InvalidLeaveAccrualException;
+import com.xtensus.hrmanagementapi.leave.accrual.exception.LeaveAccrualConfigurationException;
 import com.xtensus.hrmanagementapi.leave.request.exception.InvalidLeaveRequestException;
 import com.xtensus.hrmanagementapi.leave.request.exception.LeaveDecisionNotAllowedException;
 import com.xtensus.hrmanagementapi.leave.request.exception.LeaveRequestNotFoundException;
@@ -22,7 +29,14 @@ import com.xtensus.hrmanagementapi.medical.document.exception.MedicalDocumentNot
 import com.xtensus.hrmanagementapi.medical.document.exception.StorageException;
 import com.xtensus.hrmanagementapi.notification.exception.NotificationNotFoundException;
 import com.xtensus.hrmanagementapi.position.exception.DuplicatePositionException;
+import com.xtensus.hrmanagementapi.raison.exception.RaisonIntrouvableException;
 import com.xtensus.hrmanagementapi.position.exception.PositionNotFoundException;
+import com.xtensus.hrmanagementapi.poste.exception.PosteExisteDejaException;
+import com.xtensus.hrmanagementapi.poste.exception.PosteIntrouvableException;
+import com.xtensus.hrmanagementapi.typecontrat.exception.TypeContratExisteDejaException;
+import com.xtensus.hrmanagementapi.typecontrat.exception.TypeContratIntrouvableException;
+import com.xtensus.hrmanagementapi.conge.type.exception.CongeTypeExisteDejaException;
+import com.xtensus.hrmanagementapi.conge.type.exception.CongeTypeIntrouvableException;
 import com.xtensus.hrmanagementapi.user.exception.DuplicateEmailException;
 import com.xtensus.hrmanagementapi.user.exception.DuplicateUsernameException;
 import com.xtensus.hrmanagementapi.user.exception.InvalidManagerException;
@@ -83,6 +97,64 @@ public class GlobalExceptionHandler {
         return buildResponse(HttpStatus.CONFLICT, exception.getMessage(), request, null);
     }
 
+
+    @ExceptionHandler(CongeDemandeStatutIntrouvableException.class)
+    public ResponseEntity<ApiErrorResponse> handleCongeDemandeStatutIntrouvable(CongeDemandeStatutIntrouvableException exception, HttpServletRequest request) {
+        return buildResponse(HttpStatus.NOT_FOUND, exception.getMessage(), request, null);
+    }
+
+    @ExceptionHandler(CongeDemandeStatutExisteDejaException.class)
+    public ResponseEntity<ApiErrorResponse> handleCongeDemandeStatutExisteDeja(CongeDemandeStatutExisteDejaException exception, HttpServletRequest request) {
+        return buildResponse(HttpStatus.CONFLICT, exception.getMessage(), request, null);
+    }
+
+    @ExceptionHandler(RaisonIntrouvableException.class)
+    public ResponseEntity<ApiErrorResponse> handleRaisonIntrouvable(RaisonIntrouvableException exception, HttpServletRequest request) {
+        return buildResponse(HttpStatus.NOT_FOUND, exception.getMessage(), request, null);
+    }
+    @ExceptionHandler(EmployeIntrouvableException.class)
+    public ResponseEntity<ApiErrorResponse> handleEmployeIntrouvable(EmployeIntrouvableException exception, HttpServletRequest request) {
+        return buildResponse(HttpStatus.NOT_FOUND, exception.getMessage(), request, null);
+    }
+
+    @ExceptionHandler(EmployeExisteDejaException.class)
+    public ResponseEntity<ApiErrorResponse> handleEmployeExisteDeja(EmployeExisteDejaException exception, HttpServletRequest request) {
+        return buildResponse(HttpStatus.CONFLICT, exception.getMessage(), request, null);
+    }
+
+    @ExceptionHandler(EmployeInvalideException.class)
+    public ResponseEntity<ApiErrorResponse> handleEmployeInvalide(EmployeInvalideException exception, HttpServletRequest request) {
+        return buildResponse(HttpStatus.BAD_REQUEST, exception.getMessage(), request, null);
+    }
+    @ExceptionHandler(PosteIntrouvableException.class)
+    public ResponseEntity<ApiErrorResponse> handlePosteIntrouvable(PosteIntrouvableException exception, HttpServletRequest request) {
+        return buildResponse(HttpStatus.NOT_FOUND, exception.getMessage(), request, null);
+    }
+
+    @ExceptionHandler(PosteExisteDejaException.class)
+    public ResponseEntity<ApiErrorResponse> handlePosteExisteDeja(PosteExisteDejaException exception, HttpServletRequest request) {
+        return buildResponse(HttpStatus.CONFLICT, exception.getMessage(), request, null);
+    }
+
+    @ExceptionHandler(TypeContratIntrouvableException.class)
+    public ResponseEntity<ApiErrorResponse> handleTypeContratIntrouvable(TypeContratIntrouvableException exception, HttpServletRequest request) {
+        return buildResponse(HttpStatus.NOT_FOUND, exception.getMessage(), request, null);
+    }
+
+    @ExceptionHandler(TypeContratExisteDejaException.class)
+    public ResponseEntity<ApiErrorResponse> handleTypeContratExisteDeja(TypeContratExisteDejaException exception, HttpServletRequest request) {
+        return buildResponse(HttpStatus.CONFLICT, exception.getMessage(), request, null);
+    }
+
+    @ExceptionHandler(CongeTypeIntrouvableException.class)
+    public ResponseEntity<ApiErrorResponse> handleCongeTypeIntrouvable(CongeTypeIntrouvableException exception, HttpServletRequest request) {
+        return buildResponse(HttpStatus.NOT_FOUND, exception.getMessage(), request, null);
+    }
+
+    @ExceptionHandler(CongeTypeExisteDejaException.class)
+    public ResponseEntity<ApiErrorResponse> handleCongeTypeExisteDeja(CongeTypeExisteDejaException exception, HttpServletRequest request) {
+        return buildResponse(HttpStatus.CONFLICT, exception.getMessage(), request, null);
+    }
     @ExceptionHandler(PositionNotFoundException.class)
     public ResponseEntity<ApiErrorResponse> handlePositionNotFound(
             PositionNotFoundException exception,
@@ -145,6 +217,22 @@ public class GlobalExceptionHandler {
             HttpServletRequest request
     ) {
         return buildResponse(HttpStatus.BAD_REQUEST, exception.getMessage(), request, null);
+    }
+
+    @ExceptionHandler(InvalidLeaveAccrualException.class)
+    public ResponseEntity<ApiErrorResponse> handleInvalidLeaveAccrual(
+            InvalidLeaveAccrualException exception,
+            HttpServletRequest request
+    ) {
+        return buildResponse(HttpStatus.BAD_REQUEST, exception.getMessage(), request, null);
+    }
+
+    @ExceptionHandler(LeaveAccrualConfigurationException.class)
+    public ResponseEntity<ApiErrorResponse> handleLeaveAccrualConfiguration(
+            LeaveAccrualConfigurationException exception,
+            HttpServletRequest request
+    ) {
+        return buildResponse(HttpStatus.CONFLICT, exception.getMessage(), request, null);
     }
 
     @ExceptionHandler(LeaveRequestNotFoundException.class)
@@ -342,3 +430,6 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(status).body(response);
     }
 }
+
+
+

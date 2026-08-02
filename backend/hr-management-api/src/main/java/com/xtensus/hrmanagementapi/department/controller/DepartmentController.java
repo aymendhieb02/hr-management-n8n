@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api/departments")
+@RequestMapping({"/api/departments", "/api/departements"})
 public class DepartmentController {
 
     private final DepartmentService departmentService;
@@ -55,3 +55,4 @@ public class DepartmentController {
         return ResponseEntity.noContent().build();
     }
 }
+

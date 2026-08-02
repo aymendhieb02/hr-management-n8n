@@ -6,6 +6,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.options;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -28,11 +29,16 @@ import com.xtensus.hrmanagementapi.domain.enums.UserStatus;
 import com.xtensus.hrmanagementapi.leave.request.dto.LeaveApprovalRequest;
 import com.xtensus.hrmanagementapi.leave.request.dto.LeaveRequestResponse;
 import com.xtensus.hrmanagementapi.leave.request.service.LeaveRequestService;
+import com.xtensus.hrmanagementapi.leave.accrual.dto.LeaveAccrualRunSummary;
+import com.xtensus.hrmanagementapi.leave.accrual.service.LeaveAccrualService;
+import com.xtensus.hrmanagementapi.leave.type.service.LeaveTypeService;
 import com.xtensus.hrmanagementapi.medical.document.service.MedicalDocumentDownload;
 import com.xtensus.hrmanagementapi.medical.document.service.MedicalDocumentService;
+import com.xtensus.hrmanagementapi.position.service.PositionService;
 import com.xtensus.hrmanagementapi.repository.UserRepository;
 import com.xtensus.hrmanagementapi.security.jwt.JwtService;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,6 +47,7 @@ import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
 
 @SpringBootTest
@@ -64,6 +71,15 @@ class SecurityIntegrationTest {
 
     @MockitoBean
     private LeaveRequestService leaveRequestService;
+
+    @MockitoBean
+    private PositionService positionService;
+
+    @MockitoBean
+    private LeaveTypeService leaveTypeService;
+
+    @MockitoBean
+    private LeaveAccrualService leaveAccrualService;
 
     @MockitoBean
     private MedicalDocumentService medicalDocumentService;
@@ -145,6 +161,22 @@ class SecurityIntegrationTest {
 
         mockMvc.perform(get("/api/departments")
                         .header("Authorization", bearer(employee)))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void managerCanReadDepartmentsPositionsAndLeaveTypes() throws Exception {
+        User manager = user(RoleType.MANAGER);
+        when(userRepository.findByUsernameIgnoreCase(manager.getUsername())).thenReturn(Optional.of(manager));
+        when(departmentService.findAll()).thenReturn(List.of());
+        when(positionService.findAll()).thenReturn(List.of());
+        when(leaveTypeService.findAll()).thenReturn(List.of());
+
+        mockMvc.perform(get("/api/departments").header("Authorization", bearer(manager)))
+                .andExpect(status().isOk());
+        mockMvc.perform(get("/api/positions").header("Authorization", bearer(manager)))
+                .andExpect(status().isOk());
+        mockMvc.perform(get("/api/leave-types").header("Authorization", bearer(manager)))
                 .andExpect(status().isOk());
     }
 
@@ -233,6 +265,23 @@ class SecurityIntegrationTest {
     }
 
     @Test
+    void managerCannotUploadMedicalDocument() throws Exception {
+        User manager = user(RoleType.MANAGER);
+        when(userRepository.findByUsernameIgnoreCase(manager.getUsername())).thenReturn(Optional.of(manager));
+        MockMultipartFile file = new MockMultipartFile(
+                "file",
+                "certificate.pdf",
+                "application/pdf",
+                "pdf".getBytes()
+        );
+
+        mockMvc.perform(multipart("/api/medical-documents/upload/1")
+                        .file(file)
+                        .header("Authorization", bearer(manager)))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
     void hrCanAccessMedicalDocumentDownload() throws Exception {
         User hr = user(RoleType.HR);
         when(userRepository.findByUsernameIgnoreCase(hr.getUsername())).thenReturn(Optional.of(hr));
@@ -247,6 +296,66 @@ class SecurityIntegrationTest {
                         .header("Authorization", bearer(hr)))
                 .andExpect(status().isOk())
                 .andExpect(header().string("Content-Type", "application/pdf"));
+    }
+
+    @Test
+    void adminCanAccessMedicalDocumentDownload() throws Exception {
+        User admin = user(RoleType.ADMIN);
+        when(userRepository.findByUsernameIgnoreCase(admin.getUsername())).thenReturn(Optional.of(admin));
+        when(medicalDocumentService.download(1L)).thenReturn(new MedicalDocumentDownload(
+                new ByteArrayResource("pdf".getBytes()),
+                "certificate.pdf",
+                "application/pdf",
+                3L
+        ));
+
+        mockMvc.perform(get("/api/medical-documents/download/1")
+                        .header("Authorization", bearer(admin)))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Content-Type", "application/pdf"));
+    }
+
+    @Test
+    void hrCanTriggerManualLeaveAccrual() throws Exception {
+        User hr = user(RoleType.HR);
+        when(userRepository.findByUsernameIgnoreCase(hr.getUsername())).thenReturn(Optional.of(hr));
+        when(leaveAccrualService.run(2026, 7)).thenReturn(accrualSummary());
+
+        mockMvc.perform(post("/api/leave-accruals/run?year=2026&month=7")
+                        .header("Authorization", bearer(hr)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.creditedUsers").value(1));
+    }
+
+    @Test
+    void adminCanQueryLeaveAccruals() throws Exception {
+        User admin = user(RoleType.ADMIN);
+        when(userRepository.findByUsernameIgnoreCase(admin.getUsername())).thenReturn(Optional.of(admin));
+        when(leaveAccrualService.findAll()).thenReturn(List.of());
+
+        mockMvc.perform(get("/api/leave-accruals")
+                        .header("Authorization", bearer(admin)))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void employeeCannotTriggerManualLeaveAccrual() throws Exception {
+        User employee = user(RoleType.EMPLOYEE);
+        when(userRepository.findByUsernameIgnoreCase(employee.getUsername())).thenReturn(Optional.of(employee));
+
+        mockMvc.perform(post("/api/leave-accruals/run")
+                        .header("Authorization", bearer(employee)))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void managerCannotTriggerManualLeaveAccrual() throws Exception {
+        User manager = user(RoleType.MANAGER);
+        when(userRepository.findByUsernameIgnoreCase(manager.getUsername())).thenReturn(Optional.of(manager));
+
+        mockMvc.perform(post("/api/leave-accruals/run")
+                        .header("Authorization", bearer(manager)))
+                .andExpect(status().isForbidden());
     }
 
     @Test
@@ -289,6 +398,19 @@ class SecurityIntegrationTest {
         response.setId(1L);
         response.setStatus(LeaveStatus.APPROVED);
         return response;
+    }
+
+    private LeaveAccrualRunSummary accrualSummary() {
+        LeaveAccrualRunSummary summary = new LeaveAccrualRunSummary();
+        summary.setYear(2026);
+        summary.setMonth(7);
+        summary.setEligibleUsers(1);
+        summary.setCreditedUsers(1);
+        summary.setSkippedUsers(0);
+        summary.setFailedUsers(0);
+        summary.setTotalCreditedDays(java.math.BigDecimal.valueOf(2.16));
+        summary.setExecutedAt(LocalDateTime.now());
+        return summary;
     }
 
     private AuthenticatedUserResponse authenticatedUser(User user) {

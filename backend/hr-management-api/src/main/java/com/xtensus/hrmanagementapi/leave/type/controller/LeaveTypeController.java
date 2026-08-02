@@ -60,3 +60,5 @@ public class LeaveTypeController {
         return ResponseEntity.noContent().build();
     }
 }
+
+

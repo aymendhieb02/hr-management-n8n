@@ -2,6 +2,7 @@ package com.xtensus.hrmanagementapi.repository;
 
 import com.xtensus.hrmanagementapi.domain.entity.User;
 import com.xtensus.hrmanagementapi.domain.enums.RoleType;
+import com.xtensus.hrmanagementapi.domain.enums.UserStatus;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -33,4 +34,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
     List<User> findByRole(RoleType role);
 
     List<User> findByDepartmentId(Long departmentId);
+
+    List<User> findByStatusAndEnabledTrueAndRoleIn(UserStatus status, List<RoleType> roles);
 }

@@ -21,7 +21,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api/leave-requests")
+@RequestMapping({"/api/leave-requests", "/api/conge-demandes"})
 public class LeaveRequestController {
 
     private final LeaveRequestService leaveRequestService;
@@ -85,3 +85,4 @@ public class LeaveRequestController {
         return ResponseEntity.noContent().build();
     }
 }
+
