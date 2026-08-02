@@ -1,5 +1,13 @@
 package com.xtensus.hrmanagementapi.common.exception;
 
+import com.xtensus.hrmanagementapi.certificat.medical.exception.CertificatMedicalExisteDejaException;
+import com.xtensus.hrmanagementapi.certificat.medical.exception.CertificatMedicalIntrouvableException;
+import com.xtensus.hrmanagementapi.certificat.medical.exception.CertificatMedicalInvalideException;
+import com.xtensus.hrmanagementapi.conge.demande.exception.CongeDemandeIntrouvableException;
+import com.xtensus.hrmanagementapi.conge.demande.exception.CongeDemandeInvalideException;
+import com.xtensus.hrmanagementapi.conge.demande.exception.DecisionCongeNonAutoriseeException;
+import com.xtensus.hrmanagementapi.conge.solde.exception.CongeSoldeExisteDejaException;
+import com.xtensus.hrmanagementapi.conge.solde.exception.CongeSoldeIntrouvableException;
 import com.xtensus.hrmanagementapi.conge.statut.exception.CongeDemandeStatutExisteDejaException;
 import com.xtensus.hrmanagementapi.conge.statut.exception.CongeDemandeStatutIntrouvableException;
 import com.xtensus.hrmanagementapi.department.exception.DepartmentNotFoundException;
@@ -28,6 +36,8 @@ import com.xtensus.hrmanagementapi.medical.document.exception.InvalidMedicalDocu
 import com.xtensus.hrmanagementapi.medical.document.exception.MedicalDocumentNotFoundException;
 import com.xtensus.hrmanagementapi.medical.document.exception.StorageException;
 import com.xtensus.hrmanagementapi.notification.exception.NotificationNotFoundException;
+import com.xtensus.hrmanagementapi.notificationfr.exception.NotificationFrancaiseIntrouvableException;
+import com.xtensus.hrmanagementapi.notificationfr.exception.NotificationTypeIntrouvableException;
 import com.xtensus.hrmanagementapi.position.exception.DuplicatePositionException;
 import com.xtensus.hrmanagementapi.raison.exception.RaisonIntrouvableException;
 import com.xtensus.hrmanagementapi.position.exception.PositionNotFoundException;
@@ -98,6 +108,43 @@ public class GlobalExceptionHandler {
     }
 
 
+    @ExceptionHandler(CertificatMedicalIntrouvableException.class)
+    public ResponseEntity<ApiErrorResponse> handleCertificatMedicalIntrouvable(CertificatMedicalIntrouvableException exception, HttpServletRequest request) {
+        return buildResponse(HttpStatus.NOT_FOUND, exception.getMessage(), request, null);
+    }
+
+    @ExceptionHandler(CertificatMedicalExisteDejaException.class)
+    public ResponseEntity<ApiErrorResponse> handleCertificatMedicalExisteDeja(CertificatMedicalExisteDejaException exception, HttpServletRequest request) {
+        return buildResponse(HttpStatus.CONFLICT, exception.getMessage(), request, null);
+    }
+
+    @ExceptionHandler(CertificatMedicalInvalideException.class)
+    public ResponseEntity<ApiErrorResponse> handleCertificatMedicalInvalide(CertificatMedicalInvalideException exception, HttpServletRequest request) {
+        return buildResponse(HttpStatus.BAD_REQUEST, exception.getMessage(), request, null);
+    }
+    @ExceptionHandler(CongeSoldeIntrouvableException.class)
+    public ResponseEntity<ApiErrorResponse> handleCongeSoldeIntrouvable(CongeSoldeIntrouvableException exception, HttpServletRequest request) {
+        return buildResponse(HttpStatus.NOT_FOUND, exception.getMessage(), request, null);
+    }
+
+    @ExceptionHandler(CongeSoldeExisteDejaException.class)
+    public ResponseEntity<ApiErrorResponse> handleCongeSoldeExisteDeja(CongeSoldeExisteDejaException exception, HttpServletRequest request) {
+        return buildResponse(HttpStatus.CONFLICT, exception.getMessage(), request, null);
+    }
+    @ExceptionHandler(CongeDemandeIntrouvableException.class)
+    public ResponseEntity<ApiErrorResponse> handleCongeDemandeIntrouvable(CongeDemandeIntrouvableException exception, HttpServletRequest request) {
+        return buildResponse(HttpStatus.NOT_FOUND, exception.getMessage(), request, null);
+    }
+
+    @ExceptionHandler(CongeDemandeInvalideException.class)
+    public ResponseEntity<ApiErrorResponse> handleCongeDemandeInvalide(CongeDemandeInvalideException exception, HttpServletRequest request) {
+        return buildResponse(HttpStatus.BAD_REQUEST, exception.getMessage(), request, null);
+    }
+
+    @ExceptionHandler(DecisionCongeNonAutoriseeException.class)
+    public ResponseEntity<ApiErrorResponse> handleDecisionCongeNonAutorisee(DecisionCongeNonAutoriseeException exception, HttpServletRequest request) {
+        return buildResponse(HttpStatus.CONFLICT, exception.getMessage(), request, null);
+    }
     @ExceptionHandler(CongeDemandeStatutIntrouvableException.class)
     public ResponseEntity<ApiErrorResponse> handleCongeDemandeStatutIntrouvable(CongeDemandeStatutIntrouvableException exception, HttpServletRequest request) {
         return buildResponse(HttpStatus.NOT_FOUND, exception.getMessage(), request, null);
@@ -307,6 +354,15 @@ public class GlobalExceptionHandler {
         return buildResponse(HttpStatus.INTERNAL_SERVER_ERROR, exception.getMessage(), request, null);
     }
 
+    @ExceptionHandler(NotificationFrancaiseIntrouvableException.class)
+    public ResponseEntity<ApiErrorResponse> handleNotificationFrancaiseIntrouvable(NotificationFrancaiseIntrouvableException exception, HttpServletRequest request) {
+        return buildResponse(HttpStatus.NOT_FOUND, exception.getMessage(), request, null);
+    }
+
+    @ExceptionHandler(NotificationTypeIntrouvableException.class)
+    public ResponseEntity<ApiErrorResponse> handleNotificationTypeIntrouvable(NotificationTypeIntrouvableException exception, HttpServletRequest request) {
+        return buildResponse(HttpStatus.NOT_FOUND, exception.getMessage(), request, null);
+    }
     @ExceptionHandler(NotificationNotFoundException.class)
     public ResponseEntity<ApiErrorResponse> handleNotificationNotFound(
             NotificationNotFoundException exception,

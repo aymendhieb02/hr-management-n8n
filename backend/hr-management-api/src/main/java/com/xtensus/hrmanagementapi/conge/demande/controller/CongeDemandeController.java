@@ -1,0 +1,84 @@
+package com.xtensus.hrmanagementapi.conge.demande.controller;
+
+import com.xtensus.hrmanagementapi.conge.demande.dto.CongeDecisionRequest;
+import com.xtensus.hrmanagementapi.conge.demande.dto.CongeDemandeCreationRequest;
+import com.xtensus.hrmanagementapi.conge.demande.dto.CongeDemandeModificationRequest;
+import com.xtensus.hrmanagementapi.conge.demande.dto.CongeDemandeResponse;
+import com.xtensus.hrmanagementapi.conge.demande.service.CongeDemandeService;
+import jakarta.validation.Valid;
+import java.util.List;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+@RestController
+@RequestMapping("/api/conge-demandes-v2")
+public class CongeDemandeController {
+    private final CongeDemandeService service;
+
+    public CongeDemandeController(CongeDemandeService service) {
+        this.service = service;
+    }
+
+    @PostMapping
+    public ResponseEntity<CongeDemandeResponse> creer(@Valid @RequestBody CongeDemandeCreationRequest request) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(service.creer(request));
+    }
+
+    @GetMapping
+    public ResponseEntity<List<CongeDemandeResponse>> lister() {
+        return ResponseEntity.ok(service.lister());
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<CongeDemandeResponse> trouverParId(@PathVariable Long id) {
+        return ResponseEntity.ok(service.trouverParId(id));
+    }
+
+    @GetMapping("/employe/{employeId}")
+    public ResponseEntity<List<CongeDemandeResponse>> parEmploye(@PathVariable Long employeId) {
+        return ResponseEntity.ok(service.parEmploye(employeId));
+    }
+
+    @GetMapping("/decideur/{decideurId}")
+    public ResponseEntity<List<CongeDemandeResponse>> parDecideur(@PathVariable Long decideurId) {
+        return ResponseEntity.ok(service.parDecideur(decideurId));
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<CongeDemandeResponse> modifier(
+            @PathVariable Long id,
+            @Valid @RequestBody CongeDemandeModificationRequest request
+    ) {
+        return ResponseEntity.ok(service.modifier(id, request));
+    }
+
+    @PostMapping("/{id}/approuver")
+    public ResponseEntity<CongeDemandeResponse> approuver(
+            @PathVariable Long id,
+            @Valid @RequestBody CongeDecisionRequest request
+    ) {
+        return ResponseEntity.ok(service.approuver(id, request));
+    }
+
+    @PostMapping("/{id}/refuser")
+    public ResponseEntity<CongeDemandeResponse> refuser(
+            @PathVariable Long id,
+            @Valid @RequestBody CongeDecisionRequest request
+    ) {
+        return ResponseEntity.ok(service.refuser(id, request));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> supprimer(@PathVariable Long id) {
+        service.supprimer(id);
+        return ResponseEntity.noContent().build();
+    }
+}
