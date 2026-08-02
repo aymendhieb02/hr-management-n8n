@@ -1,0 +1,67 @@
+export type RoleType = 'EMPLOYEE' | 'MANAGER' | 'HR' | 'ADMIN';
+export type UserStatus = 'ACTIVE' | 'INACTIVE';
+
+export interface UserSummary {
+  id: number;
+  firstName: string;
+  lastName: string;
+  email: string;
+}
+
+export interface UserReferenceSummary {
+  id: number;
+  name: string;
+}
+
+export interface UserCreateRequest {
+  username: string;
+  email: string;
+  password: string;
+  firstName: string;
+  lastName: string;
+  phone: string | null;
+  hireDate: string | null;
+  role: RoleType;
+  status: UserStatus;
+  enabled: boolean;
+  managerId: number | null;
+  departmentId: number | null;
+  positionId: number | null;
+}
+
+export interface UserUpdateRequest {
+  username: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  phone: string | null;
+  hireDate: string | null;
+  role: RoleType;
+  status: UserStatus;
+  enabled: boolean;
+  managerId: number | null;
+  departmentId: number | null;
+  positionId: number | null;
+}
+
+export interface PasswordUpdateRequest {
+  newPassword: string;
+}
+
+export interface UserResponse {
+  id: number;
+  username: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  phone: string | null;
+  hireDate: string | null;
+  role: RoleType;
+  status: UserStatus;
+  enabled: boolean;
+  manager: UserSummary | null;
+  department: UserReferenceSummary | null;
+  position: UserReferenceSummary | null;
+  createdAt: string;
+  updatedAt: string | null;
+}

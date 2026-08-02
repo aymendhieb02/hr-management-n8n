@@ -45,38 +45,69 @@ describe('SidebarComponent', () => {
   });
 
   it('shows employee self-service menu items', () => {
-    expect(text()).toContain('My Leave Requests');
-    expect(text()).toContain('Request Leave');
-    expect(text()).toContain('My Leave Balance');
+    expect(text()).toContain('Mes demandes de conge');
+    expect(text()).toContain('Demander un conge');
+    expect(text()).toContain('Mon solde de conges');
   });
 
   it('does not show HR or Admin menu items to employees', () => {
-    expect(text()).not.toContain('Employees');
-    expect(text()).not.toContain('Medical Documents');
-    expect(text()).not.toContain('System Configuration');
+    expect(text()).not.toContain('Employes');
+    expect(text()).not.toContain('Utilisateurs');
+    expect(text()).not.toContain('Documents medicaux');
+    expect(text()).not.toContain('Configuration systeme');
   });
 
   it('shows manager team and self-service menu items', () => {
     currentUser.set({ ...user, role: 'MANAGER' });
     fixture.detectChanges();
 
-    expect(text()).toContain('Team Requests');
-    expect(text()).toContain('My Leave Requests');
-    expect(text()).toContain('Request Leave');
+    expect(text()).toContain('Demandes de l equipe');
+    expect(text()).toContain('Membres de l equipe');
+    expect(text()).toContain('Disponibilite de l equipe');
+    expect(text()).toContain('Mes demandes de conge');
+    expect(text()).toContain('Demander un conge');
+  });
+
+  it('shows reference read menu items to managers', () => {
+    currentUser.set({ ...user, role: 'MANAGER' });
+    fixture.detectChanges();
+
+    expect(text()).toContain('Departements');
+    expect(text()).toContain('Postes');
+    expect(text()).toContain('Types de conge');
+  });
+
+  it('does not show restricted medical or system configuration items to managers', () => {
+    currentUser.set({ ...user, role: 'MANAGER' });
+    fixture.detectChanges();
+
+    expect(text()).not.toContain('Documents medicaux');
+    expect(text()).not.toContain('Configuration systeme');
   });
 
   it('shows medical documents to HR', () => {
     currentUser.set({ ...user, role: 'HR' });
     fixture.detectChanges();
 
-    expect(text()).toContain('Medical Documents');
+    expect(text()).toContain('Employes');
+    expect(text()).toContain('Demandes de l equipe');
+    expect(text()).toContain('Mes demandes de conge');
+    expect(text()).toContain('Mon solde de conges');
+    expect(text()).not.toContain('Utilisateurs');
+    expect(text()).toContain('Documents medicaux');
   });
 
-  it('does not show medical documents to Admin', () => {
+  it('shows HR business modules and medical documents to Admin', () => {
     currentUser.set({ ...user, role: 'ADMIN' });
     fixture.detectChanges();
 
-    expect(text()).not.toContain('Medical Documents');
+    expect(text()).toContain('Utilisateurs');
+    expect(text()).toContain('Demandes de conge');
+    expect(text()).toContain('Soldes de conges');
+    expect(text()).toContain('Documents medicaux');
+    expect(text()).toContain('Rapports');
+    expect(text()).toContain('Calendrier');
+    expect(text()).toContain('Configuration systeme');
   });
 
   it('applies active styling to the current route', async () => {
@@ -85,7 +116,7 @@ describe('SidebarComponent', () => {
     await fixture.whenStable();
 
     const activeLink = fixture.nativeElement.querySelector('a.active') as HTMLAnchorElement;
-    expect(activeLink.textContent?.trim()).toBe('My Profile');
+    expect(activeLink.textContent?.trim()).toBe('Mon profil');
   });
 
   function text(): string {

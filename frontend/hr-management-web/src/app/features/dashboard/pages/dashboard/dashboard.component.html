@@ -1,0 +1,18 @@
+<section class="resource-page">
+  <header class="page-header"><div><h1>Dashboard</h1><p>Operational HR summary from current system data.</p></div></header>
+  @if (error()) { <p class="state error" role="alert">{{ error() }}</p> }
+  @if (loading()) { <p class="state">Loading dashboard...</p> }
+  @else {
+    <div class="form-grid">
+      <app-stat-card label="Total Users" [value]="userList().length" />
+      <app-stat-card label="Pending Requests" [value]="pending()" />
+      <app-stat-card label="Approved Requests" [value]="approved()" />
+      <app-stat-card label="Rejected Requests" [value]="rejected()" />
+      <app-stat-card label="Absent Today" [value]="absentToday()" />
+      <app-stat-card label="Unread Notifications" [value]="unreadCount()" />
+    </div>
+    <app-status-chart [data]="statusData()" />
+    <section class="state"><h2>Users by Department</h2>@for (item of usersByDepartment(); track item.label) { <p>{{ item.label }}: {{ item.value }}</p> } @empty { <p>No users found.</p> }</section>
+    <app-recent-leave-table [requests]="recent()" />
+  }
+</section>

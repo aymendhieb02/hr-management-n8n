@@ -1,0 +1,47 @@
+<div class="dialog-backdrop">
+  <section class="dialog" aria-labelledby="leave-type-form-title">
+    <h2 id="leave-type-form-title">{{ leaveType() ? 'Edit Leave Type' : 'Add Leave Type' }}</h2>
+    <form class="form" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+      <label class="form-field">
+        <span>Name</span>
+        <input formControlName="name" maxlength="100" />
+        @if (fieldError('name')) {
+          <p class="field-error">{{ fieldError('name') }}</p>
+        }
+      </label>
+
+      <label class="form-field">
+        <span>Description</span>
+        <textarea formControlName="description" maxlength="255"></textarea>
+        @if (fieldError('description')) {
+          <p class="field-error">{{ fieldError('description') }}</p>
+        }
+      </label>
+
+      <label class="form-field">
+        <span>Max Days</span>
+        <input formControlName="maxDays" min="1" type="number" />
+        @if (fieldError('maxDays')) {
+          <p class="field-error">{{ fieldError('maxDays') }}</p>
+        }
+      </label>
+
+      <label class="checkbox-field">
+        <input formControlName="requiresMedicalCertificate" type="checkbox" />
+        Requires medical certificate
+      </label>
+
+      <label class="checkbox-field">
+        <input formControlName="active" type="checkbox" />
+        Active
+      </label>
+
+      <div class="dialog-actions">
+        <button class="secondary-button" type="button" (click)="cancel.emit()" [disabled]="loading()">Cancel</button>
+        <button class="primary-button" type="submit" [disabled]="form.invalid || loading()">
+          {{ loading() ? 'Saving...' : 'Save' }}
+        </button>
+      </div>
+    </form>
+  </section>
+</div>

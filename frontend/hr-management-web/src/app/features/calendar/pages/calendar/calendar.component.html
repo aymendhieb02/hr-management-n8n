@@ -1,0 +1,17 @@
+<section class="resource-page">
+  <header class="page-header"><div><h1>{{ title() }}</h1><p>Approved leave requests shown as read-only calendar events.</p></div></header>
+  <div class="toolbar">
+    <button class="secondary-button" type="button" (click)="previousMonth()">Previous</button>
+    <button class="secondary-button" type="button" (click)="today()">Today</button>
+    <button class="secondary-button" type="button" (click)="nextMonth()">Next</button>
+    <label class="form-field"><span>Leave Type</span><select [ngModel]="leaveTypeFilter()" (ngModelChange)="leaveTypeFilter.set($event)"><option value="">All</option>@for (type of leaveTypes(); track type) { <option [value]="type">{{ type }}</option> }</select></label>
+    <label class="form-field"><span>Department</span><select [ngModel]="departmentFilter()" (ngModelChange)="departmentFilter.set($event)"><option value="">All</option>@for (department of departments(); track department) { <option [value]="department">{{ department }}</option> }</select></label>
+  </div>
+  @if (error()) { <p class="state error">{{ error() }}</p> }
+  @if (loading()) { <p class="state">Loading calendar...</p> }
+  @else {
+    <h2>{{ month().toLocaleString('default', { month: 'long', year: 'numeric' }) }}</h2>
+    <app-month-calendar [month]="month()" [events]="filteredEvents()" />
+    <app-calendar-event-list [events]="filteredEvents()" />
+  }
+</section>

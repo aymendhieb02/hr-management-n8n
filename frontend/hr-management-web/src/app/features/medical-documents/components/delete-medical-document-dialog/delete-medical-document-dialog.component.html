@@ -1,0 +1,11 @@
+<div class="dialog-backdrop">
+  <section class="dialog" aria-labelledby="delete-medical-document-title">
+    <h2 id="delete-medical-document-title">Delete Medical Document</h2>
+    <p>Delete document #{{ documentId() }}?</p>
+    @if (error()) { <p class="form-error" role="alert">{{ error() }}</p> }
+    <div class="dialog-actions">
+      <button class="secondary-button" type="button" (click)="cancel.emit()" [disabled]="loading()">Cancel</button>
+      <button class="danger-button" type="button" (click)="confirmDelete.emit()" [disabled]="loading()">Delete</button>
+    </div>
+  </section>
+</div>

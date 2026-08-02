@@ -1,0 +1,40 @@
+<div class="dialog-backdrop">
+  <section class="dialog" aria-labelledby="leave-request-form-title">
+    <h2 id="leave-request-form-title">{{ request() ? 'Edit Leave Request' : 'Create Leave Request' }}</h2>
+    <form class="form" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+      <label class="form-field">
+        <span>Leave Type</span>
+        <select formControlName="leaveTypeId">
+          <option [ngValue]="null">Select leave type</option>
+          @for (leaveType of leaveTypes(); track leaveType.id) {
+            <option [ngValue]="leaveType.id">{{ leaveType.name }}</option>
+          }
+        </select>
+        @if (fieldError('leaveTypeId')) { <p class="field-error">{{ fieldError('leaveTypeId') }}</p> }
+      </label>
+      <div class="form-grid">
+        <label class="form-field">
+          <span>Start Date</span>
+          <input formControlName="startDate" type="date" />
+          @if (fieldError('startDate')) { <p class="field-error">{{ fieldError('startDate') }}</p> }
+        </label>
+        <label class="form-field">
+          <span>End Date</span>
+          <input formControlName="endDate" type="date" />
+          @if (fieldError('endDate')) { <p class="field-error">{{ fieldError('endDate') }}</p> }
+        </label>
+      </div>
+      <label class="form-field">
+        <span>Reason</span>
+        <textarea formControlName="reason" maxlength="1000"></textarea>
+        @if (fieldError('reason')) { <p class="field-error">{{ fieldError('reason') }}</p> }
+      </label>
+      <div class="dialog-actions">
+        <button class="secondary-button" type="button" (click)="cancel.emit()" [disabled]="loading()">Cancel</button>
+        <button class="primary-button" type="submit" [disabled]="form.invalid || loading()">
+          {{ loading() ? 'Saving...' : 'Save' }}
+        </button>
+      </div>
+    </form>
+  </section>
+</div>

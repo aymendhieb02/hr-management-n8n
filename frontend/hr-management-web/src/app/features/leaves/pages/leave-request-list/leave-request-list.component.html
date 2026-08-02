@@ -1,0 +1,74 @@
+<section class="resource-page">
+  <header class="page-header">
+    <div>
+      <h1>{{ title() }}</h1>
+      <p>{{ isManagerMode() ? 'Review assigned team leave requests.' : 'Create and track your leave requests.' }}</p>
+    </div>
+    @if (!isManagerMode()) {
+      <button class="primary-button" type="button" (click)="openCreate()">Create Leave Request</button>
+    }
+  </header>
+  <div class="toolbar">
+    <input class="search-input" type="search" placeholder="Search requests" [ngModel]="searchTerm()" (ngModelChange)="searchTerm.set($event)" />
+    <label class="form-field">
+      <span>Status</span>
+      <select [ngModel]="statusFilter()" (ngModelChange)="statusFilter.set($event)">
+        <option value="">All statuses</option>
+        @for (status of statuses; track status) { <option [value]="status">{{ status }}</option> }
+      </select>
+    </label>
+    <button class="secondary-button" type="button" (click)="loadRequests()">Refresh</button>
+  </div>
+  @if (success()) { <p class="state">{{ success() }}</p> }
+  @if (error()) { <p class="state error" role="alert">{{ error() }}</p> }
+  @if (isLoading()) {
+    <p class="state">Loading leave requests...</p>
+  } @else if (filteredRequests().length === 0) {
+    <p class="state">No leave requests found.</p>
+  } @else {
+    <div class="table-card">
+      <table>
+        <thead>
+          <tr>
+            @if (isManagerMode()) { <th>Requester</th> }
+            <th>Leave Type</th><th>Dates</th><th>Days</th><th>Status</th><th>Approver</th><th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (request of filteredRequests(); track request.id) {
+            <tr>
+              @if (isManagerMode()) { <td>{{ request.requester.firstName }} {{ request.requester.lastName }}</td> }
+              <td>{{ request.leaveType.name }}</td>
+              <td>{{ request.startDate }} to {{ request.endDate }}</td>
+              <td>{{ request.requestedDays }}</td>
+              <td><span class="badge" [class.success]="request.status === 'APPROVED'" [class.warning]="request.status === 'PENDING'" [class.muted]="request.status !== 'APPROVED' && request.status !== 'PENDING'">{{ request.status }}</span></td>
+              <td>{{ request.approver ? request.approver.firstName + ' ' + request.approver.lastName : 'Not assigned' }}</td>
+              <td>
+                <div class="actions">
+                  <button class="secondary-button" type="button" (click)="detailRequest.set(request)">View Details</button>
+                  @if (!isManagerMode() && request.status === 'PENDING') {
+                    <button class="secondary-button" type="button" (click)="openEdit(request)">Edit</button>
+                    <button class="danger-button" type="button" (click)="deleteRequest(request)" [disabled]="isSaving()">Delete</button>
+                  }
+                  @if (isManagerMode() && request.status === 'PENDING') {
+                    <button class="primary-button" type="button" (click)="openDecision(request, 'approve')">Approve</button>
+                    <button class="danger-button" type="button" (click)="openDecision(request, 'reject')">Reject</button>
+                  }
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</section>
+@if (formOpen()) {
+  <app-leave-request-form [request]="editingRequest()" [leaveTypes]="leaveTypes()" [loading]="isSaving()" [validationErrors]="formErrors()" (save)="saveRequest($event)" (cancel)="formOpen.set(false)" />
+}
+@if (detailRequest()) {
+  <app-leave-details [request]="detailRequest()!" (close)="detailRequest.set(null)" />
+}
+@if (decisionRequest()) {
+  <app-leave-decision-dialog [mode]="decisionMode()" [loading]="isSaving()" [error]="null" (save)="saveDecision($event)" (cancel)="decisionRequest.set(null)" />
+}

@@ -7,28 +7,30 @@ export interface NavigationItem {
 }
 
 export const NAVIGATION_ITEMS: NavigationItem[] = [
-  { label: 'Home', path: '/home', roles: ['EMPLOYEE', 'MANAGER', 'HR', 'ADMIN'] },
-  { label: 'My Profile', path: '/profile', roles: ['EMPLOYEE', 'MANAGER', 'HR', 'ADMIN'] },
+  { label: 'Accueil', path: '/home', roles: ['EMPLOYEE', 'MANAGER', 'HR', 'ADMIN'] },
+  { label: 'Mon profil', path: '/profile', roles: ['EMPLOYEE', 'MANAGER', 'HR', 'ADMIN'] },
   { label: 'Notifications', path: '/notifications', roles: ['EMPLOYEE', 'MANAGER', 'HR', 'ADMIN'] },
 
-  { label: 'My Leave Requests', path: '/my-leave-requests', roles: ['EMPLOYEE', 'MANAGER'] },
-  { label: 'Request Leave', path: '/request-leave', roles: ['EMPLOYEE', 'MANAGER'] },
-  { label: 'My Leave Balance', path: '/my-balance', roles: ['EMPLOYEE', 'MANAGER'] },
-  { label: 'My Calendar', path: '/my-calendar', roles: ['EMPLOYEE'] },
+  { label: 'Mes demandes de conge', path: '/my-leave-requests', roles: ['EMPLOYEE', 'MANAGER', 'HR', 'ADMIN'] },
+  { label: 'Demander un conge', path: '/request-leave', roles: ['EMPLOYEE', 'MANAGER', 'HR', 'ADMIN'] },
+  { label: 'Mon solde de conges', path: '/my-balance', roles: ['EMPLOYEE', 'MANAGER', 'HR', 'ADMIN'] },
+  { label: 'Mon calendrier', path: '/my-calendar', roles: ['EMPLOYEE', 'MANAGER', 'HR', 'ADMIN'] },
 
-  { label: 'Team Requests', path: '/team-requests', roles: ['MANAGER'] },
-  { label: 'Team Calendar', path: '/team-calendar', roles: ['MANAGER'] },
+  { label: 'Demandes de l equipe', path: '/team-requests', roles: ['MANAGER', 'HR', 'ADMIN'] },
+  { label: 'Membres de l equipe', path: '/team-members', roles: ['MANAGER'] },
+  { label: 'Calendrier de l equipe', path: '/team-calendar', roles: ['MANAGER', 'HR', 'ADMIN'] },
+  { label: 'Disponibilite de l equipe', path: '/team-availability', roles: ['MANAGER'] },
 
-  { label: 'Dashboard', path: '/dashboard', roles: ['HR', 'ADMIN'] },
-  { label: 'Employees', path: '/employees', roles: ['HR'] },
-  { label: 'Departments', path: '/departments', roles: ['HR', 'ADMIN'] },
-  { label: 'Positions', path: '/positions', roles: ['HR', 'ADMIN'] },
-  { label: 'Leave Types', path: '/leave-types', roles: ['HR', 'ADMIN'] },
-  { label: 'Leave Requests', path: '/leave-requests', roles: ['HR'] },
-  { label: 'Leave Balances', path: '/leave-balances', roles: ['HR'] },
-  { label: 'Medical Documents', path: '/medical-documents', roles: ['HR'] },
-  { label: 'Reports', path: '/reports', roles: ['HR'] },
-  { label: 'Calendar', path: '/calendar', roles: ['HR'] },
-  { label: 'Users', path: '/users', roles: ['ADMIN'] },
-  { label: 'System Configuration', path: '/system-configuration', roles: ['ADMIN'] }
+  { label: 'Tableau de bord', path: '/dashboard', roles: ['HR', 'ADMIN'] },
+  { label: 'Employes', path: '/users', roles: ['HR'] },
+  { label: 'Departements', path: '/departments', roles: ['EMPLOYEE', 'MANAGER', 'HR', 'ADMIN'] },
+  { label: 'Postes', path: '/positions', roles: ['EMPLOYEE', 'MANAGER', 'HR', 'ADMIN'] },
+  { label: 'Types de conge', path: '/leave-types', roles: ['EMPLOYEE', 'MANAGER', 'HR', 'ADMIN'] },
+  { label: 'Demandes de conge', path: '/leave-requests', roles: ['HR', 'ADMIN'] },
+  { label: 'Soldes de conges', path: '/leave-balances', roles: ['HR', 'ADMIN'] },
+  { label: 'Documents medicaux', path: '/medical-documents', roles: ['HR', 'ADMIN'] },
+  { label: 'Rapports', path: '/reports', roles: ['HR', 'ADMIN'] },
+  { label: 'Calendrier', path: '/calendar', roles: ['HR', 'ADMIN'] },
+  { label: 'Utilisateurs', path: '/users', roles: ['ADMIN'] },
+  { label: 'Configuration systeme', path: '/system-configuration', roles: ['ADMIN'] }
 ];

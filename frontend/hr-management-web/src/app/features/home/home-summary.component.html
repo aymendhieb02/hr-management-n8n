@@ -1,0 +1,15 @@
+<section class="resource-page">
+  <header class="page-header"><div><h1>Home</h1><p>Your current HR summary.</p></div></header>
+  @if (loading()) { <p class="state">Loading summary...</p> } @else {
+    <div class="form-grid">
+      @if (role() === 'MANAGER') { <section class="state"><h2>Team Members</h2><p>{{ team().length }}</p></section> }
+      <section class="state"><h2>Pending Requests</h2><p>{{ pending() }}</p></section>
+      <section class="state"><h2>Approved Requests</h2><p>{{ approved() }}</p></section>
+      <section class="state"><h2>Rejected Requests</h2><p>{{ rejected() }}</p></section>
+      <section class="state"><h2>Unread Notifications</h2><p>{{ unread() }}</p></section>
+      @if (role() === 'MANAGER') { <section class="state"><h2>Team Absent Today</h2><p>{{ absentToday() }}</p></section> }
+      @if (role() !== 'MANAGER') { <section class="state"><h2>Current Balances</h2><p>{{ balanceList().length }}</p></section> }
+    </div>
+    @if (nextAbsence()) { <p class="state">Next approved absence: {{ nextAbsence()!.startDate }} to {{ nextAbsence()!.endDate }}</p> }
+  }
+</section>

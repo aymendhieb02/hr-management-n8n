@@ -1,0 +1,138 @@
+<section class="resource-page">
+  <header class="page-header">
+    <div>
+      <h1>{{ title() }}</h1>
+      <p>{{ isTeamMode() ? 'View assigned team members.' : 'Manage employee accounts and organization assignments.' }}</p>
+    </div>
+    @if (canManage()) {
+      <button class="primary-button" type="button" (click)="openCreate()">Add User</button>
+    }
+  </header>
+
+  <div class="toolbar">
+    <input
+      class="search-input"
+      type="search"
+      placeholder="Search by name, username, or email"
+      [ngModel]="searchTerm()"
+      (ngModelChange)="searchTerm.set($event)"
+    />
+    @if (canManage()) {
+      <label class="form-field">
+        <span>Role</span>
+        <select [ngModel]="roleFilter()" (ngModelChange)="roleFilter.set($event)">
+          <option value="">All roles</option>
+          @for (role of roles; track role) { <option [value]="role">{{ role }}</option> }
+        </select>
+      </label>
+      <label class="form-field">
+        <span>Department</span>
+        <select [ngModel]="departmentFilter()" (ngModelChange)="departmentFilter.set($event)">
+          <option value="">All departments</option>
+          @for (department of departments(); track department.id) {
+            <option [ngValue]="department.id">{{ department.name }}</option>
+          }
+        </select>
+      </label>
+    }
+    <button class="secondary-button" type="button" (click)="loadUsers()">Refresh</button>
+  </div>
+
+  @if (error()) {
+    <p class="state error" role="alert">{{ error() }}</p>
+  }
+
+  @if (isLoading()) {
+    <p class="state">Loading users...</p>
+  } @else if (filteredUsers().length === 0) {
+    <p class="state">{{ isTeamMode() ? 'No team members found.' : 'No users found.' }}</p>
+  } @else {
+    <div class="table-card">
+      <table>
+        <thead>
+          <tr>
+            <th>Full name</th>
+            <th>Username</th>
+            <th>Email</th>
+            <th>Role</th>
+            <th>Department</th>
+            <th>Position</th>
+            <th>Manager</th>
+            <th>Status</th>
+            <th>Enabled</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (user of filteredUsers(); track user.id) {
+            <tr>
+              <td>{{ user.firstName }} {{ user.lastName }}</td>
+              <td>{{ user.username }}</td>
+              <td>{{ user.email }}</td>
+              <td>{{ user.role }}</td>
+              <td>{{ user.department?.name || 'None' }}</td>
+              <td>{{ user.position?.name || 'None' }}</td>
+              <td>{{ user.manager ? user.manager.firstName + ' ' + user.manager.lastName : 'None' }}</td>
+              <td>
+                <span class="badge" [class.success]="user.status === 'ACTIVE'" [class.muted]="user.status !== 'ACTIVE'">
+                  {{ user.status }}
+                </span>
+              </td>
+              <td>
+                <span class="badge" [class.success]="user.enabled" [class.muted]="!user.enabled">
+                  {{ user.enabled ? 'Enabled' : 'Disabled' }}
+                </span>
+              </td>
+              <td>
+                <div class="actions">
+                  <button class="secondary-button" type="button" (click)="detailUser.set(user)">View Details</button>
+                  @if (canManage()) {
+                    <button class="secondary-button" type="button" (click)="openEdit(user)">Edit</button>
+                    <button class="secondary-button" type="button" (click)="openPassword(user)">Reset Password</button>
+                    <button class="danger-button" type="button" (click)="requestDelete(user)">Delete</button>
+                  }
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</section>
+
+@if (formOpen()) {
+  <app-user-form
+    [user]="editingUser()"
+    [users]="allUsersForManagers()"
+    [departments]="departments()"
+    [positions]="positions()"
+    [loading]="isSaving()"
+    [validationErrors]="formErrors()"
+    (save)="saveUser($event)"
+    (cancel)="formOpen.set(false)"
+  />
+}
+
+@if (passwordUser()) {
+  <app-password-update-dialog
+    [loading]="isSaving()"
+    [error]="passwordError()"
+    (save)="updatePassword($event)"
+    (cancel)="passwordUser.set(null)"
+  />
+}
+
+@if (deletingUser()) {
+  <app-delete-user-dialog
+    [user]="deletingUser()!"
+    [loading]="isDeleting()"
+    [error]="deleteError()"
+    (confirmDelete)="deleteUser()"
+    (cancel)="deletingUser.set(null)"
+  />
+}
+
+@if (detailUser()) {
+  <app-user-details [user]="detailUser()!" (close)="detailUser.set(null)" />
+}

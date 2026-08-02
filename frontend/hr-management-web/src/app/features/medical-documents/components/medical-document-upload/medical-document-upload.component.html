@@ -1,0 +1,13 @@
+<section class="state">
+  <h2>Medical Certificate</h2>
+  <label class="form-field">
+    <span>Certificate file</span>
+    <input type="file" accept="application/pdf,image/jpeg,image/png" (change)="selectFile($event)" [disabled]="disabled() || loading()" />
+  </label>
+  @if (selectedFile()) {
+    <p>{{ selectedFile()!.name }} - {{ selectedFile()!.size }} bytes</p>
+  }
+  @if (success()) { <p>{{ success() }}</p> }
+  @if (error()) { <p class="form-error" role="alert">{{ error() }}</p> }
+  <button class="primary-button" type="button" (click)="upload()" [disabled]="!selectedFile() || disabled() || loading()">Upload</button>
+</section>

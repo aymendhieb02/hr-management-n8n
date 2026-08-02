@@ -26,129 +26,154 @@ export const routes: Routes = [
     children: [
       {
         path: 'home',
-        component: PlaceholderPageComponent,
         canActivate: [roleGuard],
-        data: { title: 'Home', roles: ['EMPLOYEE', 'MANAGER', 'HR', 'ADMIN'] }
+        data: { title: 'Accueil', roles: ['EMPLOYEE', 'MANAGER', 'HR', 'ADMIN'] },
+        loadComponent: () => import('./features/home/home-summary.component').then((m) => m.HomeSummaryComponent)
       },
       {
         path: 'profile',
         component: PlaceholderPageComponent,
         canActivate: [roleGuard],
-        data: { title: 'My Profile', roles: ['EMPLOYEE', 'MANAGER', 'HR', 'ADMIN'] }
+        data: { title: 'Mon profil', roles: ['EMPLOYEE', 'MANAGER', 'HR', 'ADMIN'] }
       },
       {
         path: 'notifications',
-        component: PlaceholderPageComponent,
         canActivate: [roleGuard],
-        data: { title: 'Notifications', roles: ['EMPLOYEE', 'MANAGER', 'HR', 'ADMIN'] }
+        data: { title: 'Notifications', roles: ['EMPLOYEE', 'MANAGER', 'HR', 'ADMIN'] },
+        loadComponent: () => import('./features/notifications/pages/notification-list/notification-list.component')
+          .then((m) => m.NotificationListComponent)
       },
       {
         path: 'my-leave-requests',
-        component: PlaceholderPageComponent,
         canActivate: [roleGuard],
-        data: { title: 'My Leave Requests', roles: ['EMPLOYEE', 'MANAGER'] }
+        data: { title: 'Mes demandes de conge', roles: ['EMPLOYEE', 'MANAGER', 'HR', 'ADMIN'] },
+        loadComponent: () => import('./features/leaves/pages/leave-request-list/leave-request-list.component')
+          .then((m) => m.LeaveRequestListComponent)
       },
       {
         path: 'request-leave',
-        component: PlaceholderPageComponent,
         canActivate: [roleGuard],
-        data: { title: 'Request Leave', roles: ['EMPLOYEE', 'MANAGER'] }
+        data: { title: 'Demander un conge', roles: ['EMPLOYEE', 'MANAGER', 'HR', 'ADMIN'] },
+        loadComponent: () => import('./features/leaves/pages/leave-request-list/leave-request-list.component')
+          .then((m) => m.LeaveRequestListComponent)
       },
       {
         path: 'my-balance',
-        component: PlaceholderPageComponent,
         canActivate: [roleGuard],
-        data: { title: 'My Leave Balance', roles: ['EMPLOYEE', 'MANAGER'] }
+        data: { title: 'Mon solde de conges', roles: ['EMPLOYEE', 'MANAGER', 'HR', 'ADMIN'] },
+        loadComponent: () => import('./features/leaves/pages/leave-balance-list/leave-balance-list.component')
+          .then((m) => m.LeaveBalanceListComponent)
       },
       {
         path: 'my-calendar',
-        component: PlaceholderPageComponent,
         canActivate: [roleGuard],
-        data: { title: 'My Calendar', roles: ['EMPLOYEE'] }
+        data: { title: 'Mon calendrier', roles: ['EMPLOYEE', 'MANAGER', 'HR', 'ADMIN'] },
+        loadComponent: () => import('./features/calendar/pages/calendar/calendar.component').then((m) => m.CalendarComponent)
       },
       {
         path: 'team-requests',
-        component: PlaceholderPageComponent,
         canActivate: [roleGuard],
-        data: { title: 'Team Requests', roles: ['MANAGER'] }
+        data: { title: 'Demandes de l equipe', roles: ['MANAGER', 'HR', 'ADMIN'] },
+        loadComponent: () => import('./features/leaves/pages/leave-request-list/leave-request-list.component')
+          .then((m) => m.LeaveRequestListComponent)
+      },
+      {
+        path: 'team-members',
+        canActivate: [roleGuard],
+        data: { title: 'Membres de l equipe', roles: ['MANAGER', 'HR', 'ADMIN'] },
+        loadComponent: () => import('./features/users/pages/user-list/user-list.component')
+          .then((m) => m.UserListComponent)
       },
       {
         path: 'team-calendar',
+        canActivate: [roleGuard],
+        data: { title: 'Calendrier de l equipe', roles: ['MANAGER', 'HR', 'ADMIN'] },
+        loadComponent: () => import('./features/calendar/pages/calendar/calendar.component').then((m) => m.CalendarComponent)
+      },
+      {
+        path: 'team-availability',
         component: PlaceholderPageComponent,
         canActivate: [roleGuard],
-        data: { title: 'Team Calendar', roles: ['MANAGER'] }
+        data: { title: 'Disponibilite de l equipe', roles: ['MANAGER'] }
       },
       {
         path: 'dashboard',
-        component: PlaceholderPageComponent,
         canActivate: [roleGuard],
-        data: { title: 'Dashboard', roles: ['HR', 'ADMIN'] }
+        data: { title: 'Tableau de bord', roles: ['HR', 'ADMIN'] },
+        loadComponent: () => import('./features/dashboard/pages/dashboard/dashboard.component').then((m) => m.DashboardComponent)
       },
       {
         path: 'employees',
         component: PlaceholderPageComponent,
         canActivate: [roleGuard],
-        data: { title: 'Employees', roles: ['HR'] }
+        data: { title: 'Employes', roles: ['HR', 'ADMIN'] }
       },
       {
         path: 'departments',
-        component: PlaceholderPageComponent,
         canActivate: [roleGuard],
-        data: { title: 'Departments', roles: ['HR', 'ADMIN'] }
+        data: { title: 'Departements', roles: ['EMPLOYEE', 'MANAGER', 'HR', 'ADMIN'] },
+        loadComponent: () => import('./features/departments/pages/department-list/department-list.component')
+          .then((m) => m.DepartmentListComponent)
       },
       {
         path: 'positions',
-        component: PlaceholderPageComponent,
         canActivate: [roleGuard],
-        data: { title: 'Positions', roles: ['HR', 'ADMIN'] }
+        data: { title: 'Postes', roles: ['EMPLOYEE', 'MANAGER', 'HR', 'ADMIN'] },
+        loadComponent: () => import('./features/positions/pages/position-list/position-list.component')
+          .then((m) => m.PositionListComponent)
       },
       {
         path: 'leave-types',
-        component: PlaceholderPageComponent,
         canActivate: [roleGuard],
-        data: { title: 'Leave Types', roles: ['HR', 'ADMIN'] }
+        data: { title: 'Types de conge', roles: ['EMPLOYEE', 'MANAGER', 'HR', 'ADMIN'] },
+        loadComponent: () => import('./features/leave-types/pages/leave-type-list/leave-type-list.component')
+          .then((m) => m.LeaveTypeListComponent)
       },
       {
         path: 'leave-requests',
-        component: PlaceholderPageComponent,
         canActivate: [roleGuard],
-        data: { title: 'Leave Requests', roles: ['HR'] }
+        data: { title: 'Demandes de conge', roles: ['HR', 'ADMIN'] },
+        loadComponent: () => import('./features/leaves/pages/leave-request-list/leave-request-list.component')
+          .then((m) => m.LeaveRequestListComponent)
       },
       {
         path: 'leave-balances',
-        component: PlaceholderPageComponent,
         canActivate: [roleGuard],
-        data: { title: 'Leave Balances', roles: ['HR'] }
+        data: { title: 'Soldes de conges', roles: ['HR', 'ADMIN'] },
+        loadComponent: () => import('./features/leaves/pages/leave-balance-list/leave-balance-list.component')
+          .then((m) => m.LeaveBalanceListComponent)
       },
       {
         path: 'medical-documents',
-        component: PlaceholderPageComponent,
         canActivate: [roleGuard],
-        data: { title: 'Medical Documents', roles: ['HR'] }
+        data: { title: 'Documents medicaux', roles: ['HR', 'ADMIN'] },
+        loadComponent: () => import('./features/medical-documents/pages/medical-document-admin/medical-document-admin.component')
+          .then((m) => m.MedicalDocumentAdminComponent)
       },
       {
         path: 'reports',
-        component: PlaceholderPageComponent,
         canActivate: [roleGuard],
-        data: { title: 'Reports', roles: ['HR'] }
+        data: { title: 'Rapports', roles: ['HR', 'ADMIN'] },
+        loadComponent: () => import('./features/reports/pages/reports/reports.component').then((m) => m.ReportsComponent)
       },
       {
         path: 'calendar',
-        component: PlaceholderPageComponent,
         canActivate: [roleGuard],
-        data: { title: 'Calendar', roles: ['HR'] }
+        data: { title: 'Calendrier', roles: ['HR', 'ADMIN'] },
+        loadComponent: () => import('./features/calendar/pages/calendar/calendar.component').then((m) => m.CalendarComponent)
       },
       {
         path: 'users',
-        component: PlaceholderPageComponent,
         canActivate: [roleGuard],
-        data: { title: 'Users', roles: ['ADMIN'] }
+        data: { title: 'Utilisateurs', roles: ['HR', 'ADMIN'] },
+        loadComponent: () => import('./features/users/pages/user-list/user-list.component')
+          .then((m) => m.UserListComponent)
       },
       {
         path: 'system-configuration',
         component: PlaceholderPageComponent,
         canActivate: [roleGuard],
-        data: { title: 'System Configuration', roles: ['ADMIN'] }
+        data: { title: 'Configuration systeme', roles: ['ADMIN'] }
       }
     ]
   },

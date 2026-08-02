@@ -1,0 +1,82 @@
+<section class="resource-page">
+  <header class="page-header">
+    <div>
+      <h1>Positions</h1>
+      <p>View and manage job positions.</p>
+    </div>
+    @if (canManage()) {
+      <button class="primary-button" type="button" (click)="openCreate()">Add Position</button>
+    }
+  </header>
+
+  <div class="toolbar">
+    <input
+      class="search-input"
+      type="search"
+      placeholder="Search by title"
+      [ngModel]="searchTerm()"
+      (ngModelChange)="searchTerm.set($event)"
+    />
+    <button class="secondary-button" type="button" (click)="loadPositions()">Refresh</button>
+  </div>
+
+  @if (error()) {
+    <p class="state error" role="alert">{{ error() }}</p>
+  }
+
+  @if (isLoading()) {
+    <p class="state">Loading positions...</p>
+  } @else if (filteredPositions().length === 0) {
+    <p class="state">No positions found.</p>
+  } @else {
+    <div class="table-card">
+      <table>
+        <thead>
+          <tr>
+            <th>Title</th>
+            <th>Description</th>
+            @if (canManage()) {
+              <th>Actions</th>
+            }
+          </tr>
+        </thead>
+        <tbody>
+          @for (position of filteredPositions(); track position.id) {
+            <tr>
+              <td>{{ position.title }}</td>
+              <td class="description">{{ position.description || 'No description' }}</td>
+              @if (canManage()) {
+                <td>
+                  <div class="actions">
+                    <button class="secondary-button" type="button" (click)="openEdit(position)">Edit</button>
+                    <button class="danger-button" type="button" (click)="requestDelete(position)">Delete</button>
+                  </div>
+                </td>
+              }
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</section>
+
+@if (formOpen()) {
+  <app-position-form
+    [position]="editingPosition()"
+    [loading]="isSaving()"
+    [validationErrors]="formErrors()"
+    (save)="savePosition($event)"
+    (cancel)="formOpen.set(false)"
+  />
+}
+
+@if (deletingPosition()) {
+  <app-delete-position-dialog
+    [position]="deletingPosition()!"
+    [loading]="isDeleting()"
+    [error]="deleteError()"
+    (confirmDelete)="deletePosition()"
+    (cancel)="deletingPosition.set(null)"
+  />
+}

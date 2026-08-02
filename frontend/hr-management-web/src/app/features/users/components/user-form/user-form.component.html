@@ -1,0 +1,109 @@
+<div class="dialog-backdrop">
+  <section class="dialog" aria-labelledby="user-form-title">
+    <h2 id="user-form-title">{{ title() }}</h2>
+    <form class="form" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+      <div class="form-grid">
+        <label class="form-field">
+          <span>Username</span>
+          <input formControlName="username" maxlength="100" />
+          @if (fieldError('username')) { <p class="field-error">{{ fieldError('username') }}</p> }
+        </label>
+
+        <label class="form-field">
+          <span>Email</span>
+          <input formControlName="email" maxlength="150" type="email" />
+          @if (fieldError('email')) { <p class="field-error">{{ fieldError('email') }}</p> }
+        </label>
+
+        @if (!user()) {
+          <label class="form-field">
+            <span>Password</span>
+            <input formControlName="password" maxlength="100" type="password" autocomplete="new-password" />
+            @if (fieldError('password')) { <p class="field-error">{{ fieldError('password') }}</p> }
+          </label>
+        }
+
+        <label class="form-field">
+          <span>First name</span>
+          <input formControlName="firstName" maxlength="100" />
+          @if (fieldError('firstName')) { <p class="field-error">{{ fieldError('firstName') }}</p> }
+        </label>
+
+        <label class="form-field">
+          <span>Last name</span>
+          <input formControlName="lastName" maxlength="100" />
+          @if (fieldError('lastName')) { <p class="field-error">{{ fieldError('lastName') }}</p> }
+        </label>
+
+        <label class="form-field">
+          <span>Phone</span>
+          <input formControlName="phone" maxlength="30" />
+          @if (fieldError('phone')) { <p class="field-error">{{ fieldError('phone') }}</p> }
+        </label>
+
+        <label class="form-field">
+          <span>Hire date</span>
+          <input formControlName="hireDate" type="date" />
+        </label>
+
+        <label class="form-field">
+          <span>Role</span>
+          <select formControlName="role">
+            @for (role of roles; track role) { <option [value]="role">{{ role }}</option> }
+          </select>
+          @if (fieldError('role')) { <p class="field-error">{{ fieldError('role') }}</p> }
+        </label>
+
+        <label class="form-field">
+          <span>Status</span>
+          <select formControlName="status">
+            @for (status of statuses; track status) { <option [value]="status">{{ status }}</option> }
+          </select>
+          @if (fieldError('status')) { <p class="field-error">{{ fieldError('status') }}</p> }
+        </label>
+
+        <label class="form-field">
+          <span>Department</span>
+          <select formControlName="departmentId">
+            <option [ngValue]="null">None</option>
+            @for (department of departments(); track department.id) {
+              <option [ngValue]="department.id">{{ department.name }}</option>
+            }
+          </select>
+        </label>
+
+        <label class="form-field">
+          <span>Position</span>
+          <select formControlName="positionId">
+            <option [ngValue]="null">None</option>
+            @for (position of positions(); track position.id) {
+              <option [ngValue]="position.id">{{ position.title }}</option>
+            }
+          </select>
+        </label>
+
+        <label class="form-field">
+          <span>Manager</span>
+          <select formControlName="managerId">
+            <option [ngValue]="null">None</option>
+            @for (manager of eligibleManagers(); track manager.id) {
+              <option [ngValue]="manager.id">{{ manager.firstName }} {{ manager.lastName }}</option>
+            }
+          </select>
+        </label>
+      </div>
+
+      <label class="checkbox-field">
+        <input formControlName="enabled" type="checkbox" />
+        Enabled
+      </label>
+
+      <div class="dialog-actions">
+        <button class="secondary-button" type="button" (click)="cancel.emit()" [disabled]="loading()">Cancel</button>
+        <button class="primary-button" type="submit" [disabled]="form.invalid || loading()">
+          {{ loading() ? 'Saving...' : 'Save' }}
+        </button>
+      </div>
+    </form>
+  </section>
+</div>

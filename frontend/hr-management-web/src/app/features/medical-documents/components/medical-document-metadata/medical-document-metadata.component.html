@@ -1,0 +1,16 @@
+<section class="state">
+  <dl class="detail-grid">
+    <div><dt>Document ID</dt><dd>{{ document().id }}</dd></div>
+    <div><dt>Leave Request</dt><dd>{{ document().leaveRequestId }}</dd></div>
+    <div><dt>Filename</dt><dd>{{ document().originalFilename }}</dd></div>
+    <div><dt>Type</dt><dd>{{ document().mimeType }}</dd></div>
+    <div><dt>Size</dt><dd>{{ document().fileSize }} bytes</dd></div>
+    <div><dt>Uploaded</dt><dd>{{ document().uploadedAt }}</dd></div>
+  </dl>
+  @if (canManage()) {
+    <div class="dialog-actions">
+      <button class="secondary-button" type="button" (click)="download.emit(document().id)">Download</button>
+      <button class="danger-button" type="button" (click)="delete.emit(document().id)">Delete</button>
+    </div>
+  }
+</section>

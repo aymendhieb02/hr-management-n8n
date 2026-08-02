@@ -45,7 +45,7 @@ describe('AppLayoutComponent', () => {
 
     expect(fixture.nativeElement.textContent).toContain('XTENSUS HR');
     expect(fixture.nativeElement.textContent).toContain('Employee User');
-    expect(fixture.nativeElement.textContent).toContain('Home');
+    expect(fixture.nativeElement.textContent).toContain('Accueil');
   });
 
   it('blocks unauthenticated users from the layout route', async () => {

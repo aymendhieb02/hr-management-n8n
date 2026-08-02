@@ -1,0 +1,28 @@
+<div class="dialog-backdrop">
+  <section class="dialog" aria-labelledby="leave-details-title">
+    <h2 id="leave-details-title">{{ request().leaveType.name }}</h2>
+    <dl class="detail-grid">
+      <div><dt>Dates</dt><dd>{{ request().startDate }} to {{ request().endDate }}</dd></div>
+      <div><dt>Requested Days</dt><dd>{{ request().requestedDays }}</dd></div>
+      <div><dt>Status</dt><dd>{{ request().status }}</dd></div>
+      <div><dt>Approver</dt><dd>{{ request().approver ? request().approver?.firstName + ' ' + request().approver?.lastName : 'Not assigned' }}</dd></div>
+      <div><dt>Reason</dt><dd>{{ request().reason || 'None' }}</dd></div>
+      <div><dt>Decision Comment</dt><dd>{{ request().decisionComment || 'None' }}</dd></div>
+      <div><dt>Submitted</dt><dd>{{ request().submittedAt }}</dd></div>
+      <div><dt>Decision Date</dt><dd>{{ request().decisionAt || 'None' }}</dd></div>
+    </dl>
+    @if (isSickLeave()) {
+      <section class="state">
+        <h2>Medical Certificate</h2>
+        @if (canUploadMedicalDocument()) {
+          <app-medical-document-upload [leaveRequestId]="request().id" />
+        } @else {
+          <p>Medical certificate upload is available only to the requester. Metadata lookup and downloads are available to HR/Admin from Medical Documents when a document id is known.</p>
+        }
+      </section>
+    }
+    <div class="dialog-actions">
+      <button class="secondary-button" type="button" (click)="close.emit()">Close</button>
+    </div>
+  </section>
+</div>

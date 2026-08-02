@@ -1,0 +1,24 @@
+<section class="resource-page">
+  <header class="page-header">
+    <div><h1>Notifications</h1><p>Review updates sent to your account.</p></div>
+    <span class="badge warning">{{ unreadCount() }} unread</span>
+  </header>
+  <div class="toolbar">
+    <label class="form-field"><span>Filter</span><select [ngModel]="filter()" (ngModelChange)="filter.set($event)"><option value="all">All</option><option value="unread">Unread</option></select></label>
+    <button class="secondary-button" type="button" (click)="loadNotifications()">Refresh</button>
+    <button class="primary-button" type="button" (click)="markAllAsRead()" [disabled]="unreadCount() === 0">Mark all as read</button>
+  </div>
+  @if (error()) { <p class="state error" role="alert">{{ error() }}</p> }
+  @if (isLoading()) {
+    <p class="state">Loading notifications...</p>
+  } @else if (filteredNotifications().length === 0) {
+    <p class="state">No notifications found.</p>
+  } @else {
+    @for (notification of filteredNotifications(); track notification.id) {
+      <app-notification-item [notification]="notification" (markRead)="markAsRead($event)" (delete)="deleteError.set(null); deleting.set($event)" />
+    }
+  }
+</section>
+@if (deleting()) {
+  <app-delete-notification-dialog [notification]="deleting()!" [loading]="isSaving()" [error]="deleteError()" (confirmDelete)="deleteNotification()" (cancel)="deleting.set(null)" />
+}

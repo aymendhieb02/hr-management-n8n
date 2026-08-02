@@ -1,0 +1,102 @@
+<section class="resource-page">
+  <header class="page-header">
+    <div>
+      <h1>Leave Types</h1>
+      <p>View and manage leave policy types.</p>
+    </div>
+    @if (canManage()) {
+      <button class="primary-button" type="button" (click)="openCreate()">Add Leave Type</button>
+    }
+  </header>
+
+  <div class="toolbar">
+    <input
+      class="search-input"
+      type="search"
+      placeholder="Search by name"
+      [ngModel]="searchTerm()"
+      (ngModelChange)="searchTerm.set($event)"
+    />
+    <label class="checkbox-field">
+      <input type="checkbox" [ngModel]="activeOnly()" (ngModelChange)="activeOnly.set($event)" />
+      Active only
+    </label>
+    <button class="secondary-button" type="button" (click)="loadLeaveTypes()">Refresh</button>
+  </div>
+
+  @if (error()) {
+    <p class="state error" role="alert">{{ error() }}</p>
+  }
+
+  @if (isLoading()) {
+    <p class="state">Loading leave types...</p>
+  } @else if (filteredLeaveTypes().length === 0) {
+    <p class="state">No leave types found.</p>
+  } @else {
+    <div class="table-card">
+      <table>
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Description</th>
+            <th>Max Days</th>
+            <th>Status</th>
+            <th>Medical</th>
+            @if (canManage()) {
+              <th>Actions</th>
+            }
+          </tr>
+        </thead>
+        <tbody>
+          @for (leaveType of filteredLeaveTypes(); track leaveType.id) {
+            <tr>
+              <td>{{ leaveType.name }}</td>
+              <td class="description">{{ leaveType.description || 'No description' }}</td>
+              <td>{{ leaveType.maxDays ?? 'Unlimited' }}</td>
+              <td>
+                <span class="badge" [class.success]="leaveType.active" [class.muted]="!leaveType.active">
+                  {{ leaveType.active ? 'Active' : 'Inactive' }}
+                </span>
+              </td>
+              <td>
+                @if (leaveType.requiresMedicalCertificate) {
+                  <span class="badge warning">Required</span>
+                } @else {
+                  <span class="badge muted">Not required</span>
+                }
+              </td>
+              @if (canManage()) {
+                <td>
+                  <div class="actions">
+                    <button class="secondary-button" type="button" (click)="openEdit(leaveType)">Edit</button>
+                    <button class="danger-button" type="button" (click)="requestDelete(leaveType)">Delete</button>
+                  </div>
+                </td>
+              }
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</section>
+
+@if (formOpen()) {
+  <app-leave-type-form
+    [leaveType]="editingLeaveType()"
+    [loading]="isSaving()"
+    [validationErrors]="formErrors()"
+    (save)="saveLeaveType($event)"
+    (cancel)="formOpen.set(false)"
+  />
+}
+
+@if (deletingLeaveType()) {
+  <app-delete-leave-type-dialog
+    [leaveType]="deletingLeaveType()!"
+    [loading]="isDeleting()"
+    [error]="deleteError()"
+    (confirmDelete)="deleteLeaveType()"
+    (cancel)="deletingLeaveType.set(null)"
+  />
+}
