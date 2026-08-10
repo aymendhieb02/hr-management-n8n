@@ -1,3 +1,0 @@
-.calendar-toolbar{justify-content:space-between;padding:14px 16px;border:1px solid var(--app-line);border-radius:16px;background:#fff;box-shadow:0 8px 24px rgba(65,49,36,.05)}
-.calendar-navigation,.calendar-filters{display:flex;align-items:center;gap:10px}.arrow-button{width:42px;padding:0;font-size:1.35rem}.calendar-period{text-transform:capitalize;color:var(--app-ink);font-size:1.05rem}.calendar-filters{margin-left:auto}
-@media(max-width:900px){.calendar-toolbar,.calendar-filters{align-items:stretch;flex-direction:column}.calendar-filters{width:100%;margin-left:0}.calendar-navigation{justify-content:center}.calendar-period{text-align:center}}
