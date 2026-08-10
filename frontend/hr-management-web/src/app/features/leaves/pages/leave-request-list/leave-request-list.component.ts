@@ -1,11 +1,15 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { AuthService } from '../../../../core/services/auth.service';
 import { LeaveType } from '../../../leave-types/models/leave-type.model';
 import { LeaveTypeService } from '../../../leave-types/services/leave-type.service';
+import { Reason } from '../../../reasons/reason.model';
+import { ReasonService } from '../../../reasons/reason.service';
 import { safeApiMessage, validationErrors } from '../../../shared/api-error.util';
+import { JourFerieResponse } from '../../../jours-feries/models/jour-ferie.model';
+import { JourFerieService } from '../../../jours-feries/services/jour-ferie.service';
 import { LeaveDecisionDialogComponent } from '../../components/leave-decision-dialog/leave-decision-dialog.component';
 import { LeaveDetailsComponent } from '../../components/leave-details/leave-details.component';
 import { LeaveRequestFormComponent } from '../../components/leave-request-form/leave-request-form.component';
@@ -16,16 +20,21 @@ import { LeaveRequestService } from '../../services/leave-request.service';
   selector: 'app-leave-request-list',
   imports: [FormsModule, LeaveDecisionDialogComponent, LeaveDetailsComponent, LeaveRequestFormComponent],
   templateUrl: './leave-request-list.component.html',
-  styleUrl: '../../../shared/resource-page.scss'
+  styleUrls: ['../../../shared/resource-page.scss', './leave-request-list.component.scss']
 })
 export class LeaveRequestListComponent implements OnInit {
   private readonly leaveRequestService = inject(LeaveRequestService);
   private readonly leaveTypeService = inject(LeaveTypeService);
+  private readonly reasonService = inject(ReasonService);
+  private readonly jourFerieService = inject(JourFerieService);
   private readonly authService = inject(AuthService);
   private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
 
   protected readonly requests = signal<LeaveRequestResponse[]>([]);
   protected readonly leaveTypes = signal<LeaveType[]>([]);
+  protected readonly reasons = signal<Reason[]>([]);
+  protected readonly holidays = signal<JourFerieResponse[]>([]);
   protected readonly isLoading = signal(false);
   protected readonly isSaving = signal(false);
   protected readonly error = signal<string | null>(null);
@@ -40,7 +49,8 @@ export class LeaveRequestListComponent implements OnInit {
   protected readonly decisionMode = signal<'approve' | 'reject'>('approve');
   protected readonly statuses: LeaveRequestStatus[] = ['PENDING', 'APPROVED', 'REJECTED', 'CANCELLED'];
   protected readonly isManagerMode = computed(() => this.route.snapshot.routeConfig?.path === 'team-requests');
-  protected readonly title = computed(() => this.isManagerMode() ? 'Team Requests' : 'My Leave Requests');
+  protected readonly isCreateMode = computed(() => this.route.snapshot.routeConfig?.path === 'request-leave');
+  protected readonly title = computed(() => this.isManagerMode() ? "Demandes de l'equipe" : this.isCreateMode() ? 'Demander un conge' : 'Mes demandes de conge');
   protected readonly filteredRequests = computed(() => {
     const search = this.searchTerm().trim().toLowerCase();
     const status = this.statusFilter();
@@ -56,7 +66,10 @@ export class LeaveRequestListComponent implements OnInit {
 
   ngOnInit(): void {
     this.leaveTypeService.findActive().subscribe({ next: (types) => this.leaveTypes.set(types), error: () => {} });
+    this.reasonService.findAvailable().subscribe({ next: (reasons) => this.reasons.set(reasons), error: () => {} });
+    this.jourFerieService.getActive().subscribe({ next: (holidays) => this.holidays.set(holidays), error: () => {} });
     this.loadRequests();
+    if (this.isCreateMode()) this.openCreate();
   }
 
   protected loadRequests(): void {
@@ -73,7 +86,7 @@ export class LeaveRequestListComponent implements OnInit {
         this.isLoading.set(false);
       },
       error: () => {
-        this.error.set(this.isManagerMode() ? 'Team requests could not be loaded.' : 'Leave requests could not be loaded.');
+        this.error.set(this.isManagerMode() ? "Impossible de charger les demandes de l'equipe." : 'Impossible de charger les demandes de conge.');
         this.isLoading.set(false);
       }
     });
@@ -104,12 +117,13 @@ export class LeaveRequestListComponent implements OnInit {
       next: () => {
         this.isSaving.set(false);
         this.formOpen.set(false);
-        this.success.set('Leave request saved.');
+        this.success.set('Demande de conge enregistree.');
         this.loadRequests();
+        if (this.isCreateMode()) void this.router.navigate(['/my-leave-requests']);
       },
       error: (error: HttpErrorResponse) => {
         this.formErrors.set(validationErrors(error));
-        this.error.set(safeApiMessage(error, 'Leave request could not be saved.'));
+        this.error.set(safeApiMessage(error, "Impossible d'enregistrer la demande de conge."));
         this.isSaving.set(false);
       }
     });
@@ -120,11 +134,11 @@ export class LeaveRequestListComponent implements OnInit {
     this.leaveRequestService.delete(request.id).subscribe({
       next: () => {
         this.isSaving.set(false);
-        this.success.set('Leave request deleted.');
+        this.success.set('Demande de conge supprimee.');
         this.loadRequests();
       },
       error: (error) => {
-        this.error.set(safeApiMessage(error, 'Leave request could not be deleted.'));
+        this.error.set(safeApiMessage(error, 'Impossible de supprimer la demande de conge.'));
         this.isSaving.set(false);
       }
     });
@@ -148,13 +162,26 @@ export class LeaveRequestListComponent implements OnInit {
       next: () => {
         this.isSaving.set(false);
         this.decisionRequest.set(null);
-        this.success.set(this.decisionMode() === 'approve' ? 'Leave request approved.' : 'Leave request rejected.');
+        this.success.set(this.decisionMode() === 'approve' ? 'Demande de conge approuvee.' : 'Demande de conge refusee.');
         this.loadRequests();
       },
       error: (error) => {
-        this.error.set(safeApiMessage(error, 'Decision could not be saved.'));
+        this.error.set(safeApiMessage(error, "Impossible d'enregistrer la decision."));
         this.isSaving.set(false);
       }
     });
+  }
+
+  protected statusLabel(status: LeaveRequestStatus): string {
+    return { PENDING: 'En attente', APPROVED: 'Approuvee', REJECTED: 'Refusee', CANCELLED: 'Annulee' }[status];
+  }
+
+  protected countStatus(status: LeaveRequestStatus): number {
+    return this.requests().filter((request) => request.status === status).length;
+  }
+
+  protected closeForm(): void {
+    this.formOpen.set(false);
+    if (this.isCreateMode()) void this.router.navigate(['/my-leave-requests']);
   }
 }

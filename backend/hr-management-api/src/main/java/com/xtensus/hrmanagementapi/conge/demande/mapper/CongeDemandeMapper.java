@@ -25,6 +25,7 @@ public class CongeDemandeMapper {
             response.setStatut(statut);
         }
         response.setRaison(demande.getRaison() == null ? null : demande.getRaison().getCommentaire());
+        response.setNature(demande.getNature());
         response.setDateDebut(demande.getDateDebut());
         response.setHeureDebut(demande.getHeureDebut());
         response.setDateFin(demande.getDateFin());

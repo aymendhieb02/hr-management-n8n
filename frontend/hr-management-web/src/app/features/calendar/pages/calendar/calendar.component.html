@@ -1,17 +1,20 @@
 <section class="resource-page">
-  <header class="page-header"><div><h1>{{ title() }}</h1><p>Approved leave requests shown as read-only calendar events.</p></div></header>
-  <div class="toolbar">
-    <button class="secondary-button" type="button" (click)="previousMonth()">Previous</button>
-    <button class="secondary-button" type="button" (click)="today()">Today</button>
-    <button class="secondary-button" type="button" (click)="nextMonth()">Next</button>
-    <label class="form-field"><span>Leave Type</span><select [ngModel]="leaveTypeFilter()" (ngModelChange)="leaveTypeFilter.set($event)"><option value="">All</option>@for (type of leaveTypes(); track type) { <option [value]="type">{{ type }}</option> }</select></label>
-    <label class="form-field"><span>Department</span><select [ngModel]="departmentFilter()" (ngModelChange)="departmentFilter.set($event)"><option value="">All</option>@for (department of departments(); track department) { <option [value]="department">{{ department }}</option> }</select></label>
+  <header class="page-header"><div><h1>{{ title() }}</h1><p>Consultez les congés, autorisations d'absence et jours fériés par semaine.</p></div></header>
+  <div class="toolbar calendar-toolbar">
+    <div class="calendar-navigation">
+      <button class="primary-button" type="button" (click)="today()">Aujourd'hui</button>
+      <button class="secondary-button arrow-button" aria-label="Semaine précédente" type="button" (click)="previousWeek()">‹</button>
+      <button class="secondary-button arrow-button" aria-label="Semaine suivante" type="button" (click)="nextWeek()">›</button>
+    </div>
+    <strong class="calendar-period">{{ month().toLocaleString('fr-FR', { month: 'long', year: 'numeric' }) }}</strong>
+    <div class="calendar-filters">
+      <label class="form-field"><span>Catégorie</span><select [ngModel]="leaveTypeFilter()" (ngModelChange)="leaveTypeFilter.set($event)"><option value="">Toutes les catégories</option>@for (type of leaveTypes(); track type) { <option [value]="type">{{ type }}</option> }</select></label>
+      <label class="form-field"><span>Statut</span><select [ngModel]="statusFilter()" (ngModelChange)="statusFilter.set($event)"><option value="">Tous les statuts</option>@for (status of statuses(); track status) { <option [value]="status">{{ statusLabel(status) }}</option> }</select></label>
+    </div>
   </div>
   @if (error()) { <p class="state error">{{ error() }}</p> }
-  @if (loading()) { <p class="state">Loading calendar...</p> }
+  @if (loading()) { <p class="state">Chargement du calendrier...</p> }
   @else {
-    <h2>{{ month().toLocaleString('default', { month: 'long', year: 'numeric' }) }}</h2>
-    <app-month-calendar [month]="month()" [events]="filteredEvents()" />
-    <app-calendar-event-list [events]="filteredEvents()" />
+    <app-week-planner [selectedDate]="month()" [events]="filteredEvents()" (dateSelected)="selectDate($event)" />
   }
 </section>

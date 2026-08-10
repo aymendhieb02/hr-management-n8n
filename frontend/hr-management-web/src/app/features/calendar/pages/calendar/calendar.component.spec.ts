@@ -5,6 +5,7 @@ import { AuthService } from '../../../../core/services/auth.service';
 import { LeaveRequestService } from '../../../leaves/services/leave-request.service';
 import { UserService } from '../../../users/services/user.service';
 import { CalendarService } from '../../services/calendar.service';
+import { JourFerieService } from '../../../jours-feries/services/jour-ferie.service';
 import { CalendarComponent } from './calendar.component';
 
 describe('CalendarComponent', () => {
@@ -26,6 +27,7 @@ describe('CalendarComponent', () => {
         { provide: LeaveRequestService, useValue: leaveRequests },
         { provide: UserService, useValue: { findAll: vi.fn(() => of([{ id: 7, department: { name: 'HR' } }])) } },
         CalendarService
+        ,{ provide: JourFerieService, useValue: { getActive: vi.fn(() => of([])) } }
       ]
     });
 
@@ -36,19 +38,19 @@ describe('CalendarComponent', () => {
   it('loads current user requests for my calendar', () => {
     setup('my-calendar');
     expect(leaveRequests.findByRequester).toHaveBeenCalledWith(7);
-    expect(fixture.nativeElement.textContent).toContain('My Calendar');
+    expect(fixture.nativeElement.textContent).toContain('Mon calendrier');
   });
 
   it('loads approver requests for team calendar', () => {
     setup('team-calendar');
     expect(leaveRequests.findByApprover).toHaveBeenCalledWith(7);
-    expect(fixture.nativeElement.textContent).toContain('Team Calendar');
+    expect(fixture.nativeElement.textContent).toContain("Calendrier de l'équipe");
   });
 
   it('loads all requests for global calendar', () => {
     setup('calendar');
     expect(leaveRequests.findAll).toHaveBeenCalled();
-    expect(fixture.nativeElement.textContent).toContain('Global Calendar');
+    expect(fixture.nativeElement.textContent).toContain('Calendrier global');
   });
 
   it('supports month navigation', () => {

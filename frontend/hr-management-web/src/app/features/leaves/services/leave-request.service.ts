@@ -9,11 +9,15 @@ interface CongeDemandeApiResponse {
   employe: { id: number; nom: string; prenom: string; email: string };
   decideur: { id: number; nom: string; prenom: string; email: string } | null;
   congeType: { id: number; nom: string };
+  nature: LeaveRequestResponse['nature'];
   dateDebut: string;
   dateFin: string;
+  heureDebut: string | null;
+  heureFin: string | null;
   nombreJours: number;
   commentaireEmploye: string | null;
-  statut: LeaveRequestResponse['status'];
+  raison: string | null;
+  statut: { id: number; libelle: string };
   dateSoumission: string;
   dateDecision: string | null;
   commentaireDecision: string | null;
@@ -22,15 +26,27 @@ interface CongeDemandeApiResponse {
 interface CongeDemandeCreateApiRequest {
   employeId: number;
   congeTypeId: number;
+  nature: LeaveRequestResponse['nature'];
+  raisonId: number | null;
+  autreMotif: string | null;
   dateDebut: string;
   dateFin: string;
+  heureDebut: string | null;
+  heureFin: string | null;
+  nombreJours: number;
   commentaireEmploye: string | null;
 }
 
 interface CongeDemandeUpdateApiRequest {
   congeTypeId: number;
+  nature: LeaveRequestResponse['nature'];
+  raisonId: number | null;
+  autreMotif: string | null;
   dateDebut: string;
   dateFin: string;
+  heureDebut: string | null;
+  heureFin: string | null;
+  nombreJours: number;
   commentaireEmploye: string | null;
 }
 
@@ -83,23 +99,40 @@ function toLeaveRequest(response: CongeDemandeApiResponse): LeaveRequestResponse
     requester: { id: response.employe.id, firstName: response.employe.prenom, lastName: response.employe.nom, email: response.employe.email },
     approver: response.decideur ? { id: response.decideur.id, firstName: response.decideur.prenom, lastName: response.decideur.nom, email: response.decideur.email } : null,
     leaveType: { id: response.congeType.id, name: response.congeType.nom },
+    nature: response.nature,
     startDate: response.dateDebut,
     endDate: response.dateFin,
+    startTime: response.heureDebut,
+    endTime: response.heureFin,
     requestedDays: response.nombreJours,
-    reason: response.commentaireEmploye,
-    status: response.statut,
+    reason: response.raison,
+    status: toLeaveRequestStatus(response.statut.libelle),
     submittedAt: response.dateSoumission,
     decisionAt: response.dateDecision,
     decisionComment: response.commentaireDecision
   };
 }
 
+function toLeaveRequestStatus(libelle: string): LeaveRequestResponse['status'] {
+  switch (libelle) {
+    case 'APPROUVEE':
+      return 'APPROVED';
+    case 'REFUSEE':
+      return 'REJECTED';
+    case 'ANNULEE':
+      return 'CANCELLED';
+    case 'EN_ATTENTE':
+    default:
+      return 'PENDING';
+  }
+}
+
 function toCreateRequest(request: LeaveRequestCreateRequest): CongeDemandeCreateApiRequest {
-  return { employeId: request.requesterId, congeTypeId: request.leaveTypeId, dateDebut: request.startDate, dateFin: request.endDate, commentaireEmploye: request.reason?.trim() || null };
+  return { employeId: request.requesterId, congeTypeId: request.leaveTypeId, nature: request.nature, raisonId: request.reasonId, autreMotif: request.otherReason, dateDebut: request.startDate, dateFin: request.endDate, heureDebut: request.startTime, heureFin: request.endTime, nombreJours: request.numberOfDays, commentaireEmploye: request.reason?.trim() || null };
 }
 
 function toUpdateRequest(request: LeaveRequestUpdateRequest): CongeDemandeUpdateApiRequest {
-  return { congeTypeId: request.leaveTypeId, dateDebut: request.startDate, dateFin: request.endDate, commentaireEmploye: request.reason?.trim() || null };
+  return { congeTypeId: request.leaveTypeId, nature: request.nature, raisonId: request.reasonId, autreMotif: request.otherReason, dateDebut: request.startDate, dateFin: request.endDate, heureDebut: request.startTime, heureFin: request.endTime, nombreJours: request.numberOfDays, commentaireEmploye: request.reason?.trim() || null };
 }
 
 function toDecisionRequest(request: LeaveDecisionRequest): CongeDecisionApiRequest {

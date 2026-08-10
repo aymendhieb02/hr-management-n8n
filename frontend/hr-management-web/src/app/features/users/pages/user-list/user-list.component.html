@@ -2,10 +2,10 @@
   <header class="page-header">
     <div>
       <h1>{{ title() }}</h1>
-      <p>{{ isTeamMode() ? 'View assigned team members.' : 'Manage employee accounts and organization assignments.' }}</p>
+      <p>{{ isTeamMode() ? 'Gérez les employés affectés à votre équipe.' : 'Gérez les comptes employés et leurs affectations.' }}</p>
     </div>
     @if (canManage()) {
-      <button class="primary-button" type="button" (click)="openCreate()">Add User</button>
+      <button class="primary-button" type="button" (click)="openCreate()">Ajouter un employé</button>
     }
   </header>
 
@@ -26,11 +26,11 @@
         </select>
       </label>
       <label class="form-field">
-        <span>Department</span>
-        <select [ngModel]="departmentFilter()" (ngModelChange)="departmentFilter.set($event)">
-          <option value="">All departments</option>
-          @for (department of departments(); track department.id) {
-            <option [ngValue]="department.id">{{ department.name }}</option>
+        <span>Type de contrat</span>
+        <select [ngModel]="typeContractFilter()" (ngModelChange)="typeContractFilter.set($event)">
+          <option value="">Tous les types de contrat</option>
+          @for (contract of typeContracts(); track contract.id) {
+            <option [ngValue]="contract.id">{{ contract.name }}</option>
           }
         </select>
       </label>
@@ -55,8 +55,7 @@
             <th>Username</th>
             <th>Email</th>
             <th>Role</th>
-            <th>Department</th>
-            <th>Position</th>
+            <th>Type de contrat</th>
             <th>Manager</th>
             <th>Status</th>
             <th>Enabled</th>
@@ -70,8 +69,7 @@
               <td>{{ user.username }}</td>
               <td>{{ user.email }}</td>
               <td>{{ user.role }}</td>
-              <td>{{ user.department?.name || 'None' }}</td>
-              <td>{{ user.position?.name || 'None' }}</td>
+              <td>{{ user.typeContract?.name || 'Aucun' }}</td>
               <td>{{ user.manager ? user.manager.firstName + ' ' + user.manager.lastName : 'None' }}</td>
               <td>
                 <span class="badge" [class.success]="user.status === 'ACTIVE'" [class.muted]="user.status !== 'ACTIVE'">
@@ -88,7 +86,8 @@
                   <button class="secondary-button" type="button" (click)="detailUser.set(user)">View Details</button>
                   @if (canManage()) {
                     <button class="secondary-button" type="button" (click)="openEdit(user)">Edit</button>
-                    <button class="secondary-button" type="button" (click)="openPassword(user)">Reset Password</button>
+                    <button class="secondary-button" type="button" (click)="askResetPassword(user)">Mot de passe par défaut</button>
+                    <button class="secondary-button" type="button" (click)="toggleActive(user)">{{ user.enabled ? 'Bloquer' : 'Débloquer' }}</button>
                     <button class="danger-button" type="button" (click)="requestDelete(user)">Delete</button>
                   }
                 </div>
@@ -105,10 +104,10 @@
   <app-user-form
     [user]="editingUser()"
     [users]="allUsersForManagers()"
-    [departments]="departments()"
-    [positions]="positions()"
+    [typeContracts]="typeContracts()"
     [loading]="isSaving()"
     [validationErrors]="formErrors()"
+    [managerMode]="isTeamMode()"
     (save)="saveUser($event)"
     (cancel)="formOpen.set(false)"
   />
@@ -135,4 +134,17 @@
 
 @if (detailUser()) {
   <app-user-details [user]="detailUser()!" (close)="detailUser.set(null)" />
+}
+
+@if (resetPasswordUser(); as user) {
+  <div class="dialog-backdrop">
+    <section class="dialog" role="alertdialog" aria-modal="true">
+      <h2>Confirmer la réinitialisation</h2>
+      <p>Êtes-vous sûr de vouloir remettre le mot de passe par défaut de {{ user.firstName }} {{ user.lastName }} ?</p>
+      <div class="dialog-actions">
+        <button class="secondary-button" type="button" (click)="resetPasswordUser.set(null)">Non</button>
+        <button class="primary-button" type="button" (click)="resetPasswordToDefault()">Oui</button>
+      </div>
+    </section>
+  </div>
 }

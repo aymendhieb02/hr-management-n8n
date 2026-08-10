@@ -7,9 +7,7 @@ import { CalendarEvent } from '../models/calendar-event.model';
 export class CalendarService {
   toEvents(requests: LeaveRequestResponse[], users: UserResponse[] = []): CalendarEvent[] {
     const userDepartment = new Map(users.map((user) => [user.id, user.department?.name ?? null]));
-    return requests
-      .filter((request) => request.status === 'APPROVED')
-      .map((request) => ({
+    return requests.map((request) => ({
         leaveRequestId: request.id,
         userId: request.requester.id,
         employeeName: `${request.requester.firstName} ${request.requester.lastName}`,
@@ -17,7 +15,11 @@ export class CalendarService {
         departmentName: userDepartment.get(request.requester.id) ?? null,
         startDate: request.startDate,
         endDate: request.endDate,
-        status: request.status
+        status: request.status,
+        nature: request.nature,
+        startTime: request.startTime,
+        endTime: request.endTime,
+        reason: request.reason
       }));
   }
 }

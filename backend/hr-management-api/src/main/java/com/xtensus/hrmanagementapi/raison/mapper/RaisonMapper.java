@@ -18,11 +18,13 @@ public class RaisonMapper {
         RaisonResponse response = new RaisonResponse();
         response.setId(raison.getId());
         response.setCommentaire(raison.getCommentaire());
+        response.setDisponible(raison.getDisponible());
         response.setDateCreation(raison.getDateCreation());
         return response;
     }
 
     public void updateEntity(RaisonRequest request, Raison raison) {
         raison.setCommentaire(request.getCommentaire() == null ? null : request.getCommentaire().trim());
+        raison.setDisponible(request.getDisponible() == null ? true : request.getDisponible());
     }
 }

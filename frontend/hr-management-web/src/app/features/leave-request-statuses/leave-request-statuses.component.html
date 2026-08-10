@@ -1,0 +1,80 @@
+<section class="resource-page">
+  <header class="page-header">
+    <div>
+      <h1>Statuts des demandes de conge</h1>
+      <p>Gerez le cycle de validation des demandes.</p>
+    </div>
+    <button class="primary-button" type="button" (click)="openCreate()">Ajouter un statut</button>
+  </header>
+
+  <div class="toolbar">
+    <input class="search-input" type="search" placeholder="Rechercher par libelle" [ngModel]="searchTerm()" (ngModelChange)="searchTerm.set($event)" />
+    <label class="checkbox-field">
+      <input type="checkbox" [ngModel]="activeOnly()" (ngModelChange)="activeOnly.set($event)" />
+      Actifs uniquement
+    </label>
+    <button class="secondary-button" type="button" (click)="load()">Actualiser</button>
+  </div>
+
+  @if (error()) { <p class="state error" role="alert">{{ error() }}</p> }
+  @if (loading()) {
+    <p class="state">Chargement...</p>
+  } @else if (filtered().length === 0) {
+    <p class="state">Aucun statut trouve.</p>
+  } @else {
+    <div class="table-card">
+      <table>
+        <thead><tr><th>Libelle</th><th>Description</th><th>Etat</th><th>Actions</th></tr></thead>
+        <tbody>
+          @for (status of filtered(); track status.id) {
+            <tr>
+              <td>{{ status.libelle }}</td>
+              <td class="description">{{ status.description || 'Aucune description' }}</td>
+              <td><span class="badge" [class.success]="status.actif" [class.muted]="!status.actif">{{ status.actif ? 'Actif' : 'Inactif' }}</span></td>
+              <td><div class="actions">
+                <button class="secondary-button" type="button" (click)="openEdit(status)">Modifier</button>
+                <button class="danger-button" type="button" (click)="deleteError.set(null); pendingDelete.set(status)">Supprimer</button>
+              </div></td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</section>
+
+@if (formOpen()) {
+  <div class="dialog-backdrop">
+    <section class="dialog" aria-labelledby="status-form-title">
+      <h2 id="status-form-title">{{ editing() ? 'Modifier le statut' : 'Ajouter un statut' }}</h2>
+      <form class="form" [formGroup]="form" (ngSubmit)="save()" novalidate>
+        <label class="form-field"><span>Libelle</span><input formControlName="libelle" maxlength="100" />
+          @if (fieldError('libelle')) { <p class="field-error">{{ fieldError('libelle') }}</p> }
+        </label>
+        <label class="form-field"><span>Description</span><textarea formControlName="description" maxlength="255"></textarea>
+          @if (fieldError('description')) { <p class="field-error">{{ fieldError('description') }}</p> }
+        </label>
+        <label class="checkbox-field"><input formControlName="actif" type="checkbox" /> Actif</label>
+        <div class="dialog-actions">
+          <button class="secondary-button" type="button" (click)="formOpen.set(false)" [disabled]="saving()">Annuler</button>
+          <button class="primary-button" type="submit" [disabled]="form.invalid || saving()">{{ saving() ? 'Enregistrement...' : 'Enregistrer' }}</button>
+        </div>
+      </form>
+    </section>
+  </div>
+}
+
+@if (pendingDelete()) {
+  <div class="dialog-backdrop">
+    <section class="dialog" aria-labelledby="delete-status-title">
+      <h2 id="delete-status-title">Supprimer le statut</h2>
+      <p>Supprimer <strong>{{ pendingDelete()!.libelle }}</strong> ?</p>
+      <p class="description">La suppression sera refusee si des demandes utilisent ce statut.</p>
+      @if (deleteError()) { <p class="form-error" role="alert">{{ deleteError() }}</p> }
+      <div class="dialog-actions">
+        <button class="secondary-button" type="button" (click)="pendingDelete.set(null)" [disabled]="deleting()">Annuler</button>
+        <button class="danger-button" type="button" (click)="confirmDelete()" [disabled]="deleting()">{{ deleting() ? 'Suppression...' : 'Supprimer' }}</button>
+      </div>
+    </section>
+  </div>
+}

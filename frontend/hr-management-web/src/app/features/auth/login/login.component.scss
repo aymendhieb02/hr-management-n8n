@@ -2,7 +2,7 @@
   display: block;
   min-height: 100dvh;
   background:
-    linear-gradient(135deg, rgba(20, 64, 82, 0.9), rgba(26, 46, 67, 0.86)),
+    linear-gradient(135deg, rgba(59, 49, 43, 0.92), rgba(116, 67, 29, 0.82)),
     url('https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=1600&q=80') center/cover;
 }
 
@@ -16,9 +16,9 @@
 
 .login-panel {
   background: #ffffff;
-  border: 1px solid #dbe4ea;
-  border-radius: 8px;
-  box-shadow: 0 24px 70px rgba(7, 24, 38, 0.28);
+  border: 1px solid #eadfd5;
+  border-radius: 18px;
+  box-shadow: 0 24px 70px rgba(54, 39, 28, 0.28);
   max-width: 430px;
   padding: 32px;
   width: 100%;
@@ -43,7 +43,7 @@
 }
 
 .eyebrow {
-  color: #64748b;
+  color: #8a7462;
   font-size: 0.74rem;
   font-weight: 700;
   margin: 0 0 4px;
@@ -51,7 +51,7 @@
 }
 
 h1 {
-  color: #172033;
+  color: #34312f;
   font-size: 1.8rem;
   line-height: 1.15;
   margin: 0;
@@ -63,7 +63,7 @@ form {
 }
 
 label {
-  color: #334155;
+  color: #625a54;
   display: grid;
   font-size: 0.92rem;
   font-weight: 600;
@@ -71,17 +71,17 @@ label {
 }
 
 input {
-  border: 1px solid #cbd5e1;
-  border-radius: 6px;
-  color: #172033;
+  border: 1px solid #ddd1c5;
+  border-radius: 8px;
+  color: #34312f;
   font: inherit;
   height: 44px;
   padding: 0 12px;
 }
 
 input:focus {
-  border-color: #0f766e;
-  box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.15);
+  border-color: #ed8a2b;
+  box-shadow: 0 0 0 3px rgba(237, 138, 43, 0.15);
   outline: none;
 }
 
@@ -92,21 +92,21 @@ input:focus {
 }
 
 .field-error {
-  color: #b91c1c;
+  color: #7e403c;
 }
 
 .form-error {
-  background: #fef2f2;
-  border: 1px solid #fecaca;
-  border-radius: 6px;
-  color: #991b1b;
+  background: #f7e9e7;
+  border: 1px solid #dfbfbc;
+  border-radius: 8px;
+  color: #7e403c;
   padding: 10px 12px;
 }
 
 button {
-  background: #0f766e;
+  background: #ed8a2b;
   border: 0;
-  border-radius: 6px;
+  border-radius: 8px;
   color: #ffffff;
   cursor: pointer;
   font: inherit;

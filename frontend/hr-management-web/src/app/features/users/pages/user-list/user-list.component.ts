@@ -4,16 +4,13 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { forkJoin, of } from 'rxjs';
 import { AuthService } from '../../../../core/services/auth.service';
-import { Department } from '../../../departments/models/department.model';
-import { DepartmentService } from '../../../departments/services/department.service';
-import { Position } from '../../../positions/models/position.model';
-import { PositionService } from '../../../positions/services/position.service';
 import { safeApiMessage, validationErrors } from '../../../shared/api-error.util';
 import { DeleteUserDialogComponent } from '../../components/delete-user-dialog/delete-user-dialog.component';
 import { PasswordUpdateDialogComponent } from '../../components/password-update-dialog/password-update-dialog.component';
 import { UserDetailsComponent } from '../../components/user-details/user-details.component';
 import { UserFormComponent } from '../../components/user-form/user-form.component';
-import { PasswordUpdateRequest, RoleType, UserCreateRequest, UserResponse, UserUpdateRequest } from '../../models/user.model';
+import { PasswordUpdateRequest, RoleType, UserCreateRequest, UserReferenceSummary, UserResponse, UserUpdateRequest } from '../../models/user.model';
+import { TypeContractService } from '../../services/type-contract.service';
 import { UserService } from '../../services/user.service';
 
 @Component({
@@ -24,14 +21,12 @@ import { UserService } from '../../services/user.service';
 })
 export class UserListComponent implements OnInit {
   private readonly userService = inject(UserService);
-  private readonly departmentService = inject(DepartmentService);
-  private readonly positionService = inject(PositionService);
+  private readonly typeContractService = inject(TypeContractService);
   private readonly authService = inject(AuthService);
   private readonly route = inject(ActivatedRoute);
 
   protected readonly users = signal<UserResponse[]>([]);
-  protected readonly departments = signal<Department[]>([]);
-  protected readonly positions = signal<Position[]>([]);
+  protected readonly typeContracts = signal<UserReferenceSummary[]>([]);
   protected readonly allUsersForManagers = signal<UserResponse[]>([]);
   protected readonly isLoading = signal(false);
   protected readonly isSaving = signal(false);
@@ -42,20 +37,21 @@ export class UserListComponent implements OnInit {
   protected readonly deleteError = signal<string | null>(null);
   protected readonly searchTerm = signal('');
   protected readonly roleFilter = signal<RoleType | ''>('');
-  protected readonly departmentFilter = signal<number | ''>('');
+  protected readonly typeContractFilter = signal<number | ''>('');
   protected readonly formOpen = signal(false);
   protected readonly editingUser = signal<UserResponse | null>(null);
   protected readonly passwordUser = signal<UserResponse | null>(null);
   protected readonly deletingUser = signal<UserResponse | null>(null);
   protected readonly detailUser = signal<UserResponse | null>(null);
+  protected readonly resetPasswordUser = signal<UserResponse | null>(null);
   protected readonly roles: RoleType[] = ['EMPLOYEE', 'MANAGER', 'HR', 'ADMIN'];
-  protected readonly canManage = computed(() => this.authService.hasAnyRole('HR', 'ADMIN') && !this.isTeamMode());
+  protected readonly canManage = computed(() => this.authService.hasAnyRole('HR', 'ADMIN') || (this.authService.hasAnyRole('MANAGER') && this.isTeamMode()));
   protected readonly isTeamMode = computed(() => this.route.snapshot.routeConfig?.path === 'team-members');
   protected readonly title = computed(() => this.isTeamMode() ? 'Team Members' : 'Users');
   protected readonly filteredUsers = computed(() => {
     const search = this.searchTerm().trim().toLowerCase();
     const role = this.roleFilter();
-    const departmentId = this.departmentFilter();
+    const typeContractId = this.typeContractFilter();
 
     return this.users()
       .filter((user) => !search || [
@@ -66,7 +62,7 @@ export class UserListComponent implements OnInit {
         user.email
       ].some((value) => value.toLowerCase().includes(search)))
       .filter((user) => !role || user.role === role)
-      .filter((user) => !departmentId || user.department?.id === Number(departmentId));
+      .filter((user) => !typeContractId || user.typeContract?.id === Number(typeContractId));
   });
 
   ngOnInit(): void {
@@ -161,6 +157,26 @@ export class UserListComponent implements OnInit {
     this.deletingUser.set(user);
   }
 
+  protected toggleActive(user: UserResponse): void {
+    this.userService.setActive(user.id, !user.enabled).subscribe({
+      next: () => this.loadUsers(),
+      error: (error) => this.error.set(safeApiMessage(error, "Le statut de l'employé n'a pas pu être modifié."))
+    });
+  }
+
+  protected askResetPassword(user: UserResponse): void {
+    this.resetPasswordUser.set(user);
+  }
+
+  protected resetPasswordToDefault(): void {
+    const user = this.resetPasswordUser();
+    if (!user) return;
+    this.userService.resetPasswordToDefault(user.id).subscribe({
+      next: () => { this.error.set(null); this.resetPasswordUser.set(null); },
+      error: (error) => this.error.set(safeApiMessage(error, "Le mot de passe n'a pas pu être réinitialisé."))
+    });
+  }
+
   protected deleteUser(): void {
     const user = this.deletingUser();
     if (!user) {
@@ -182,18 +198,16 @@ export class UserListComponent implements OnInit {
   }
 
   private loadReferenceData(): void {
-    if (!this.authService.hasAnyRole('HR', 'ADMIN')) {
+    if (!this.authService.hasAnyRole('MANAGER', 'HR', 'ADMIN')) {
       return;
     }
 
     forkJoin({
-      departments: this.departmentService.findAll(),
-      positions: this.positionService.findAll(),
-      managers: this.canManage() ? this.userService.findAll() : of([])
+      typeContracts: this.typeContractService.findAll(),
+      managers: this.authService.hasAnyRole('HR', 'ADMIN') ? this.userService.findAll() : of([])
     }).subscribe({
-      next: ({ departments, positions, managers }) => {
-        this.departments.set(departments);
-        this.positions.set(positions);
+      next: ({ typeContracts, managers }) => {
+        this.typeContracts.set(typeContracts);
         this.allUsersForManagers.set(managers);
       },
       error: () => {

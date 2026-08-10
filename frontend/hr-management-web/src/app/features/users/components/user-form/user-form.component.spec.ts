@@ -12,32 +12,30 @@ describe('UserFormComponent', () => {
     await TestBed.configureTestingModule({ imports: [UserFormComponent] }).compileComponents();
     fixture = TestBed.createComponent(UserFormComponent);
     fixture.componentRef.setInput('users', [manager, hr, employee]);
-    fixture.componentRef.setInput('departments', [{ id: 1, name: 'HR', description: null, createdAt: '', updatedAt: null }]);
-    fixture.componentRef.setInput('positions', [{ id: 1, title: 'Engineer', description: null, createdAt: '', updatedAt: null }]);
+    fixture.componentRef.setInput('typeContracts', [{ id: 1, name: 'CDI' }]);
     fixture.detectChanges();
   });
 
-  it('requires core fields and creation password', () => {
+  it('requires core fields and uses the configured default password', () => {
     const save = fixture.nativeElement.querySelector('.primary-button') as HTMLButtonElement;
 
     expect(save.disabled).toBe(true);
-    expect(fixture.nativeElement.textContent).toContain('Password');
+    expect(fixture.nativeElement.textContent).not.toContain('Password');
   });
 
-  it('trims text, lowercases email, and includes password on create', () => {
+  it('trims text, lowercases email, and lets the backend assign the default password', () => {
     const saveSpy = vi.spyOn(fixture.componentInstance.save, 'emit');
     setValue(0, '  new.user  ');
     setValue(1, '  NEW.USER@TEST.COM  ');
-    setValue(2, 'password1');
-    setValue(3, '  New  ');
-    setValue(4, '  User  ');
+    setValue(2, '  New  ');
+    setValue(3, '  User  ');
 
     fixture.nativeElement.querySelector('form').dispatchEvent(new Event('submit'));
 
     expect(saveSpy).toHaveBeenCalledWith(expect.objectContaining({
       username: 'new.user',
       email: 'new.user@test.com',
-      password: 'password1',
+      password: '',
       firstName: 'New',
       lastName: 'User'
     }));

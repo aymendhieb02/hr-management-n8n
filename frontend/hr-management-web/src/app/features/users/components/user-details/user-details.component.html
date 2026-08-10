@@ -9,8 +9,7 @@
       <div><dt>Role</dt><dd>{{ user().role }}</dd></div>
       <div><dt>Status</dt><dd>{{ user().status }}</dd></div>
       <div><dt>Enabled</dt><dd>{{ user().enabled ? 'Enabled' : 'Disabled' }}</dd></div>
-      <div><dt>Department</dt><dd>{{ user().department?.name || 'None' }}</dd></div>
-      <div><dt>Position</dt><dd>{{ user().position?.name || 'None' }}</dd></div>
+      <div><dt>Type de contrat</dt><dd>{{ user().typeContract?.name || 'Aucun' }}</dd></div>
       <div><dt>Manager</dt><dd>{{ user().manager ? user().manager?.firstName + ' ' + user().manager?.lastName : 'None' }}</dd></div>
     </dl>
     <div class="dialog-actions">

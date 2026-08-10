@@ -14,4 +14,6 @@ public class RaisonRequest {
     @NotBlank(message = "Le commentaire est obligatoire")
     @Size(max = 255, message = "Le commentaire ne doit pas depasser 255 caracteres")
     private String commentaire;
+
+    private Boolean disponible = true;
 }

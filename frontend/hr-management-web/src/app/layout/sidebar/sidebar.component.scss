@@ -1,6 +1,7 @@
 :host {
-  background: #123847;
-  color: #ffffff;
+  background: linear-gradient(180deg, #f8f8f7 0%, #eff0f1 100%);
+  border-right: 1px solid #d8dadd;
+  color: #34383e;
   display: block;
   height: 100%;
   overflow-y: auto;
@@ -8,28 +9,32 @@
 
 .sidebar-nav {
   display: grid;
-  gap: 4px;
-  padding: 18px 12px;
+  grid-auto-rows: minmax(43px, auto);
+  gap: 6px;
+  padding: 20px 14px 28px;
 }
 
 a {
-  border-radius: 6px;
-  color: #dbeafe;
+  border-radius: 9px;
+  color: #a95b17;
   font-size: 0.94rem;
   font-weight: 650;
   min-height: 40px;
-  padding: 10px 12px;
+  display: flex;
+  align-items: center;
+  padding: 10px 14px;
   text-decoration: none;
 }
 
 a:hover,
 a:focus-visible {
-  background: rgba(255, 255, 255, 0.1);
-  color: #ffffff;
+  background: #f9e5d2;
+  color: #93490b;
   outline: none;
 }
 
 a.active {
-  background: #ffffff;
-  color: #123847;
+  background: linear-gradient(90deg, #fff 0%, #fff9f2 100%);
+  color: #b85c0d;
+  box-shadow: inset 3px 0 0 #ed8a2b, 0 6px 16px rgba(55, 58, 62, .1);
 }

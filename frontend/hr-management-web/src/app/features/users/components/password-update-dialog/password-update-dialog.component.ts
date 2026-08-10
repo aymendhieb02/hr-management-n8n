@@ -21,6 +21,7 @@ export class PasswordUpdateDialogComponent {
   @Output() readonly cancel = new EventEmitter<void>();
 
   protected readonly form = new FormBuilder().nonNullable.group({
+    currentPassword: ['', Validators.required],
     newPassword: ['', [Validators.required, Validators.minLength(8), Validators.maxLength(100)]],
     confirmPassword: ['', [Validators.required]]
   }, { validators: passwordMatch });
@@ -30,7 +31,7 @@ export class PasswordUpdateDialogComponent {
     if (this.form.invalid || this.loading()) {
       return;
     }
-    this.save.emit({ newPassword: this.form.controls.newPassword.value });
+    this.save.emit({ currentPassword: this.form.controls.currentPassword.value, newPassword: this.form.controls.newPassword.value });
     this.form.reset();
   }
 

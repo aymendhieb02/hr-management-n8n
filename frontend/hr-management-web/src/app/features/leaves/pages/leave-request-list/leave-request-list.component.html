@@ -1,37 +1,46 @@
-<section class="resource-page">
+<section class="resource-page" [class.employee-leave-theme]="!isManagerMode()">
   <header class="page-header">
     <div>
       <h1>{{ title() }}</h1>
-      <p>{{ isManagerMode() ? 'Review assigned team leave requests.' : 'Create and track your leave requests.' }}</p>
+      <p>{{ isManagerMode() ? "Examinez les demandes de conge assignees a votre equipe." : isCreateMode() ? 'Remplissez le formulaire pour envoyer une nouvelle demande.' : 'Consultez et suivez vos demandes de conge.' }}</p>
     </div>
-    @if (!isManagerMode()) {
-      <button class="primary-button" type="button" (click)="openCreate()">Create Leave Request</button>
+    @if (!isManagerMode() && !isCreateMode()) {
+      <button class="primary-button" type="button" (click)="openCreate()">Nouvelle demande de conge</button>
     }
   </header>
+  @if (!isManagerMode() && !isCreateMode()) {
+    <div class="leave-summary" aria-label="Résumé des demandes">
+      <article><span>En attente</span><strong>{{ countStatus('PENDING') }}</strong><i class="pending-dot"></i></article>
+      <article><span>Approuvées</span><strong>{{ countStatus('APPROVED') }}</strong><i class="approved-dot"></i></article>
+      <article><span>Refusées</span><strong>{{ countStatus('REJECTED') }}</strong><i class="rejected-dot"></i></article>
+    </div>
+  }
+  @if (!isCreateMode()) {
   <div class="toolbar">
-    <input class="search-input" type="search" placeholder="Search requests" [ngModel]="searchTerm()" (ngModelChange)="searchTerm.set($event)" />
+    <input class="search-input" type="search" placeholder="Rechercher une demande" [ngModel]="searchTerm()" (ngModelChange)="searchTerm.set($event)" />
     <label class="form-field">
-      <span>Status</span>
+      <span>Statut</span>
       <select [ngModel]="statusFilter()" (ngModelChange)="statusFilter.set($event)">
-        <option value="">All statuses</option>
-        @for (status of statuses; track status) { <option [value]="status">{{ status }}</option> }
+        <option value="">Tous les statuts</option>
+        @for (status of statuses; track status) { <option [value]="status">{{ statusLabel(status) }}</option> }
       </select>
     </label>
-    <button class="secondary-button" type="button" (click)="loadRequests()">Refresh</button>
+    <button class="secondary-button" type="button" (click)="loadRequests()">Actualiser</button>
   </div>
+  }
   @if (success()) { <p class="state">{{ success() }}</p> }
   @if (error()) { <p class="state error" role="alert">{{ error() }}</p> }
-  @if (isLoading()) {
-    <p class="state">Loading leave requests...</p>
-  } @else if (filteredRequests().length === 0) {
-    <p class="state">No leave requests found.</p>
-  } @else {
+  @if (!isCreateMode() && isLoading()) {
+    <p class="state">Chargement des demandes de conge...</p>
+  } @else if (!isCreateMode() && filteredRequests().length === 0) {
+    <p class="state">Aucune demande de conge trouvee.</p>
+  } @else if (!isCreateMode()) {
     <div class="table-card">
       <table>
         <thead>
           <tr>
-            @if (isManagerMode()) { <th>Requester</th> }
-            <th>Leave Type</th><th>Dates</th><th>Days</th><th>Status</th><th>Approver</th><th>Actions</th>
+            @if (isManagerMode()) { <th>Demandeur</th> }
+            <th>Type de conge</th><th>Dates</th><th>Jours</th><th>Statut</th><th>Decideur</th><th>Actions</th>
           </tr>
         </thead>
         <tbody>
@@ -39,20 +48,20 @@
             <tr>
               @if (isManagerMode()) { <td>{{ request.requester.firstName }} {{ request.requester.lastName }}</td> }
               <td>{{ request.leaveType.name }}</td>
-              <td>{{ request.startDate }} to {{ request.endDate }}</td>
+              <td>{{ request.startDate }} au {{ request.endDate }}</td>
               <td>{{ request.requestedDays }}</td>
-              <td><span class="badge" [class.success]="request.status === 'APPROVED'" [class.warning]="request.status === 'PENDING'" [class.muted]="request.status !== 'APPROVED' && request.status !== 'PENDING'">{{ request.status }}</span></td>
-              <td>{{ request.approver ? request.approver.firstName + ' ' + request.approver.lastName : 'Not assigned' }}</td>
+              <td><span class="badge" [class.success]="request.status === 'APPROVED'" [class.warning]="request.status === 'PENDING'" [class.muted]="request.status !== 'APPROVED' && request.status !== 'PENDING'">{{ statusLabel(request.status) }}</span></td>
+              <td>{{ request.approver ? request.approver.firstName + ' ' + request.approver.lastName : 'Non assigne' }}</td>
               <td>
                 <div class="actions">
-                  <button class="secondary-button" type="button" (click)="detailRequest.set(request)">View Details</button>
+                  <button class="secondary-button" type="button" (click)="detailRequest.set(request)">Voir les details</button>
                   @if (!isManagerMode() && request.status === 'PENDING') {
-                    <button class="secondary-button" type="button" (click)="openEdit(request)">Edit</button>
-                    <button class="danger-button" type="button" (click)="deleteRequest(request)" [disabled]="isSaving()">Delete</button>
+                    <button class="secondary-button" type="button" (click)="openEdit(request)">Modifier</button>
+                    <button class="danger-button" type="button" (click)="deleteRequest(request)" [disabled]="isSaving()">Supprimer</button>
                   }
                   @if (isManagerMode() && request.status === 'PENDING') {
-                    <button class="primary-button" type="button" (click)="openDecision(request, 'approve')">Approve</button>
-                    <button class="danger-button" type="button" (click)="openDecision(request, 'reject')">Reject</button>
+                    <button class="primary-button" type="button" (click)="openDecision(request, 'approve')">Approuver</button>
+                    <button class="danger-button" type="button" (click)="openDecision(request, 'reject')">Refuser</button>
                   }
                 </div>
               </td>
@@ -64,7 +73,7 @@
   }
 </section>
 @if (formOpen()) {
-  <app-leave-request-form [request]="editingRequest()" [leaveTypes]="leaveTypes()" [loading]="isSaving()" [validationErrors]="formErrors()" (save)="saveRequest($event)" (cancel)="formOpen.set(false)" />
+  <app-leave-request-form [inline]="isCreateMode()" [request]="editingRequest()" [leaveTypes]="leaveTypes()" [reasons]="reasons()" [holidays]="holidays()" [loading]="isSaving()" [validationErrors]="formErrors()" (save)="saveRequest($event)" (cancel)="closeForm()" />
 }
 @if (detailRequest()) {
   <app-leave-details [request]="detailRequest()!" (close)="detailRequest.set(null)" />

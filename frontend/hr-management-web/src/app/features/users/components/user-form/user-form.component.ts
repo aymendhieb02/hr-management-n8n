@@ -1,8 +1,6 @@
 import { Component, computed, EventEmitter, input, OnChanges, Output, SimpleChanges } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Department } from '../../../departments/models/department.model';
-import { Position } from '../../../positions/models/position.model';
-import { RoleType, UserCreateRequest, UserResponse, UserStatus, UserUpdateRequest } from '../../models/user.model';
+import { RoleType, UserCreateRequest, UserReferenceSummary, UserResponse, UserStatus, UserUpdateRequest } from '../../models/user.model';
 
 @Component({
   selector: 'app-user-form',
@@ -13,10 +11,10 @@ import { RoleType, UserCreateRequest, UserResponse, UserStatus, UserUpdateReques
 export class UserFormComponent implements OnChanges {
   readonly user = input<UserResponse | null>(null);
   readonly users = input<UserResponse[]>([]);
-  readonly departments = input<Department[]>([]);
-  readonly positions = input<Position[]>([]);
+  readonly typeContracts = input<UserReferenceSummary[]>([]);
   readonly loading = input(false);
   readonly validationErrors = input<Record<string, string>>({});
+  readonly managerMode = input(false);
   @Output() readonly save = new EventEmitter<UserCreateRequest | UserUpdateRequest>();
   @Output() readonly cancel = new EventEmitter<void>();
 
@@ -29,15 +27,17 @@ export class UserFormComponent implements OnChanges {
     firstName: ['', [Validators.required, Validators.maxLength(100)]],
     lastName: ['', [Validators.required, Validators.maxLength(100)]],
     phone: ['', Validators.maxLength(30)],
+    address: ['', Validators.maxLength(255)],
+    birthDate: [''],
+    sex: ['HOMME', Validators.required],
     hireDate: [''],
     role: ['EMPLOYEE' as RoleType, Validators.required],
     status: ['ACTIVE' as UserStatus, Validators.required],
     enabled: true,
     managerId: new FormBuilder().control<number | null>(null),
-    departmentId: new FormBuilder().control<number | null>(null),
-    positionId: new FormBuilder().control<number | null>(null)
+    typeContractId: new FormBuilder().control<number | null>(null)
   });
-  protected readonly title = computed(() => this.user() ? 'Edit User' : 'Add User');
+  protected readonly title = computed(() => this.user() ? "Modifier l'employé" : 'Ajouter un employé');
   protected readonly eligibleManagers = computed(() => {
     const editedId = this.user()?.id;
     return this.users().filter((candidate) =>
@@ -49,11 +49,7 @@ export class UserFormComponent implements OnChanges {
     if (changes['user']) {
       const user = this.user();
       const password = this.form.controls.password;
-      if (user) {
-        password.clearValidators();
-      } else {
-        password.setValidators([Validators.required, Validators.minLength(8), Validators.maxLength(100)]);
-      }
+      password.clearValidators();
       password.updateValueAndValidity({ emitEvent: false });
       this.form.reset({
         username: user?.username ?? '',
@@ -62,13 +58,15 @@ export class UserFormComponent implements OnChanges {
         firstName: user?.firstName ?? '',
         lastName: user?.lastName ?? '',
         phone: user?.phone ?? '',
+        address: user?.address ?? '',
+        birthDate: user?.birthDate ?? '',
+        sex: user?.sex ?? 'HOMME',
         hireDate: user?.hireDate ?? '',
         role: user?.role ?? 'EMPLOYEE',
         status: user?.status ?? 'ACTIVE',
         enabled: user?.enabled ?? true,
         managerId: user?.manager?.id ?? null,
-        departmentId: user?.department?.id ?? null,
-        positionId: user?.position?.id ?? null
+        typeContractId: user?.typeContract?.id ?? null
       });
     }
   }
@@ -86,13 +84,17 @@ export class UserFormComponent implements OnChanges {
       firstName: value.firstName.trim(),
       lastName: value.lastName.trim(),
       phone: value.phone.trim() || null,
+      address: value.address.trim() || null,
+      birthDate: value.birthDate || null,
+      sex: value.sex || null,
       hireDate: value.hireDate || null,
-      role: value.role,
+      role: this.managerMode() ? 'EMPLOYEE' : value.role,
       status: value.status,
       enabled: value.enabled,
-      managerId: value.managerId || null,
-      departmentId: value.departmentId || null,
-      positionId: value.positionId || null
+      managerId: this.managerMode() ? null : value.managerId || null,
+      departmentId: null,
+      positionId: null,
+      typeContractId: value.typeContractId || null
     };
 
     if (this.user()) {
@@ -100,7 +102,7 @@ export class UserFormComponent implements OnChanges {
       return;
     }
 
-    this.save.emit({ ...base, password: value.password.trim() });
+    this.save.emit({ ...base, password: '' });
   }
 
   protected fieldError(field: keyof typeof this.form.controls): string | null {

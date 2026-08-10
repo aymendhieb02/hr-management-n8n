@@ -51,6 +51,7 @@ describe('app route role data', () => {
     expect(rolesFor('leave-balances')).toContain('ADMIN');
     expect(rolesFor('reports')).toContain('ADMIN');
     expect(rolesFor('calendar')).toContain('ADMIN');
+    expect(rolesFor('leave-request-statuses')).toEqual(['ADMIN']);
     expect(rolesFor('system-configuration')).toEqual(['ADMIN']);
   });
 

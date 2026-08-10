@@ -18,6 +18,7 @@ public class CongeDemandeResponse {
     private TypeCongeResume congeType;
     private StatutResume statut;
     private String raison;
+    private String nature;
     private LocalDate dateDebut;
     private LocalTime heureDebut;
     private LocalDate dateFin;

@@ -1,0 +1,52 @@
+.employee-leave-theme {
+  --orange: #f28c28;
+  --orange-dark: #d96d0b;
+  --orange-soft: #fff3e5;
+  --ink: #30343b;
+  --muted: #7b8088;
+  --line: #eadfd4;
+  margin: 20px;
+  padding: 30px;
+  border-radius: 24px;
+  background: linear-gradient(145deg, #fffaf5 0%, #f8f5f1 55%, #fff 100%);
+  box-shadow: 0 18px 48px rgba(76, 54, 33, .08);
+}
+
+.employee-leave-theme .page-header {
+  padding: 22px 24px;
+  border: 1px solid #f5dcc4;
+  border-radius: 18px;
+  background: linear-gradient(110deg, #fff 0%, #fff8ef 68%, #ffe9d0 100%);
+}
+
+.employee-leave-theme .page-header h1 { color: var(--ink); font-size: 2rem; }
+.employee-leave-theme .page-header p { color: var(--muted); }
+.employee-leave-theme .primary-button { min-height: 48px; padding: 0 20px; border-radius: 8px; background: var(--orange); box-shadow: 0 8px 18px rgba(242, 140, 40, .25); }
+.employee-leave-theme .primary-button:hover { background: var(--orange-dark); }
+
+.leave-summary { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+.leave-summary article { position: relative; display: grid; gap: 6px; padding: 18px 20px; overflow: hidden; border: 1px solid var(--line); border-radius: 14px; background: #fff; box-shadow: 0 8px 22px rgba(48, 52, 59, .05); }
+.leave-summary span { color: var(--muted); font-size: .82rem; font-weight: 700; }
+.leave-summary strong { color: var(--ink); font-size: 1.8rem; }
+.leave-summary i { position: absolute; top: 18px; right: 18px; width: 10px; height: 10px; border-radius: 50%; }
+.pending-dot { background: #f5a524; box-shadow: 0 0 0 6px #fff0d5; }.approved-dot { background: #34a853; box-shadow: 0 0 0 6px #e6f7eb; }.rejected-dot { background: #e05252; box-shadow: 0 0 0 6px #fde8e8; }
+
+.employee-leave-theme .toolbar { padding: 16px; border: 1px solid var(--line); border-radius: 14px; background: rgba(255,255,255,.8); }
+.employee-leave-theme .search-input,
+.employee-leave-theme .form-field select { min-height: 48px; padding: 12px 16px; border: 1px solid #ded3c8; border-radius: 8px; background: #fff; }
+.employee-leave-theme .search-input:focus,
+.employee-leave-theme .form-field select:focus { border-color: var(--orange); outline: 2px solid rgba(242,140,40,.15); }
+.employee-leave-theme .form-field span { color: var(--muted); font-size: 12px; }
+.employee-leave-theme .secondary-button { min-height: 44px; border-radius: 8px; background: var(--orange-soft); color: var(--orange-dark); }
+
+.employee-leave-theme .table-card { border-color: var(--line); border-radius: 16px; box-shadow: 0 12px 30px rgba(48,52,59,.06); }
+.employee-leave-theme th { padding: 16px; background: #fff8f0; color: #8d725b; }
+.employee-leave-theme td { padding: 16px; border-bottom-color: #f1e8df; }
+.employee-leave-theme tbody tr { transition: background .15s; }.employee-leave-theme tbody tr:hover { background: #fffaf5; }
+.employee-leave-theme .badge.warning { background: #fff0d5; color: #a65d09; }.employee-leave-theme .badge.success { background: #e7f7eb; color: #26723b; }
+
+@media (max-width: 760px) {
+  .employee-leave-theme { margin: 8px; padding: 16px; }
+  .employee-leave-theme .page-header { align-items: stretch; flex-direction: column; }
+  .leave-summary { grid-template-columns: 1fr; }
+}

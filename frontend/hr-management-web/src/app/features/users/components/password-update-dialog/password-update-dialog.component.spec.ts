@@ -11,8 +11,9 @@ describe('PasswordUpdateDialogComponent', () => {
   });
 
   it('rejects password confirmation mismatch', () => {
-    setValue(0, 'password1');
-    setValue(1, 'password2');
+    setValue(0, 'old-password');
+    setValue(1, 'password1');
+    setValue(2, 'password2');
     fixture.detectChanges();
 
     const button = fixture.nativeElement.querySelector('.primary-button') as HTMLButtonElement;
@@ -21,11 +22,12 @@ describe('PasswordUpdateDialogComponent', () => {
 
   it('emits password update and clears values on success', () => {
     const saveSpy = vi.spyOn(fixture.componentInstance.save, 'emit');
-    setValue(0, 'password1');
+    setValue(0, 'old-password');
     setValue(1, 'password1');
+    setValue(2, 'password1');
     fixture.nativeElement.querySelector('form').dispatchEvent(new Event('submit'));
 
-    expect(saveSpy).toHaveBeenCalledWith({ newPassword: 'password1' });
+    expect(saveSpy).toHaveBeenCalledWith({ currentPassword: 'old-password', newPassword: 'password1' });
     expect((fixture.nativeElement.querySelectorAll('input')[0] as HTMLInputElement).value).toBe('');
   });
 

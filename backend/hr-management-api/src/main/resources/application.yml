@@ -6,9 +6,9 @@ spring:
     name: hr-management-api
 
   datasource:
-    url: ${DB_URL:jdbc:postgresql://localhost:5432/RH_XTENSUS}
-    username: ${DB_USERNAME:postgres}
-    password: ${DB_PASSWORD:admin}
+    url: ${DB_URL:jdbc:mysql://127.0.0.1:3306/rh_xtensus?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Africa/Tunis}
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:}
 
   jpa:
     hibernate:
@@ -17,10 +17,11 @@ spring:
     show-sql: false
     properties:
       hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
         format_sql: true
 
   flyway:
-    enabled: true
+    enabled: ${FLYWAY_ENABLED:false}
     locations: classpath:db/migration
     baseline-on-migrate: true
 

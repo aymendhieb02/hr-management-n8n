@@ -1,8 +1,9 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { of } from 'rxjs';
 import { AuthService } from '../../../../core/services/auth.service';
 import { LeaveTypeService } from '../../../leave-types/services/leave-type.service';
+import { ReasonService } from '../../../reasons/reason.service';
 import { LeaveRequestResponse } from '../../models/leave-request.model';
 import { LeaveRequestService } from '../../services/leave-request.service';
 import { LeaveRequestListComponent } from './leave-request-list.component';
@@ -27,8 +28,10 @@ describe('LeaveRequestListComponent', () => {
       providers: [
         { provide: LeaveRequestService, useValue: service },
         { provide: LeaveTypeService, useValue: { findActive: vi.fn(() => of([{ id: 1, name: 'Annual', description: null, maxDays: null, requiresMedicalCertificate: false, active: true, createdAt: '', updatedAt: null }])) } },
+        { provide: ReasonService, useValue: { findAvailable: vi.fn(() => of([{ id: 1, commentaire: 'Conge de maladie', disponible: true, dateCreation: '' }])) } },
         { provide: AuthService, useValue: { getCurrentUser: vi.fn(() => ({ id: 7, role: 'MANAGER' })) } },
         { provide: ActivatedRoute, useValue: { snapshot: { routeConfig: { path } } } }
+        ,{ provide: Router, useValue: { navigate: vi.fn(() => Promise.resolve(true)) } }
       ]
     });
     fixture = TestBed.createComponent(LeaveRequestListComponent);
@@ -39,31 +42,38 @@ describe('LeaveRequestListComponent', () => {
     setup();
     expect(service.findByRequester).toHaveBeenCalledWith(7);
     expect(text()).toContain('Annual');
-    button('Create Leave Request').click();
+    button('Nouvelle demande de conge').click();
     fixture.detectChanges();
-    (fixture.componentInstance as any).saveRequest({ leaveTypeId: 1, startDate: '2026-08-01', endDate: '2026-08-02', reason: 'Rest' });
+    (fixture.componentInstance as any).saveRequest({ nature: 'CONGE', leaveTypeId: 1, reasonId: 1, otherReason: null, startDate: '2026-08-01', endDate: '2026-08-02', startTime: null, endTime: null, reason: null });
     expect(service.create).toHaveBeenCalledWith(expect.objectContaining({ requesterId: 7 }));
-    button('Edit').click();
+    button('Modifier').click();
     fixture.detectChanges();
-    (fixture.componentInstance as any).saveRequest({ leaveTypeId: 1, startDate: '2026-08-01', endDate: '2026-08-02', reason: 'Rest' });
+    (fixture.componentInstance as any).saveRequest({ nature: 'CONGE', leaveTypeId: 1, reasonId: 1, otherReason: null, startDate: '2026-08-01', endDate: '2026-08-02', startTime: null, endTime: null, reason: null });
     expect(service.update).toHaveBeenCalled();
-    button('Delete').click();
+    button('Supprimer').click();
     expect(service.delete).toHaveBeenCalledWith(1);
   });
 
   it('loads manager team requests and approves/rejects', () => {
     setup('team-requests');
     expect(service.findByApprover).toHaveBeenCalledWith(7);
-    expect(text()).toContain('Team Requests');
-    expect(text()).toContain('Approve');
-    button('Approve').click();
+    expect(text()).toContain("Demandes de l'equipe");
+    expect(text()).toContain('Approuver');
+    button('Approuver').click();
     fixture.detectChanges();
     (fixture.componentInstance as any).saveDecision(null);
     expect(service.approve).toHaveBeenCalledWith(1, { approverId: 7, comment: null });
-    button('Reject').click();
+    button('Refuser').click();
     fixture.detectChanges();
     (fixture.componentInstance as any).saveDecision('No coverage');
     expect(service.reject).toHaveBeenCalledWith(1, { approverId: 7, comment: 'No coverage' });
+  });
+
+  it('opens the creation form directly on request-leave', () => {
+    setup('request-leave');
+    expect(text()).toContain('Demander un conge');
+    expect(text()).toContain('Nouvelle demande de cong');
+    expect(fixture.nativeElement.querySelector('.table-card')).toBeNull();
   });
 
   function text(): string { return fixture.nativeElement.textContent; }
@@ -77,8 +87,11 @@ describe('LeaveRequestListComponent', () => {
       requester: { id: 7, firstName: 'Eli', lastName: 'Employee', email: 'eli@test.com' },
       approver: { id: 8, firstName: 'Mona', lastName: 'Manager', email: 'mona@test.com' },
       leaveType: { id: 1, name: 'Annual' },
+      nature: 'CONGE',
       startDate: '2026-08-01',
       endDate: '2026-08-02',
+      startTime: null,
+      endTime: null,
       requestedDays: 2,
       reason: 'Rest',
       status,

@@ -1,19 +1,19 @@
 <div class="dialog-backdrop">
   <section class="dialog" aria-labelledby="decision-title">
-    <h2 id="decision-title">{{ mode() === 'approve' ? 'Approve Request' : 'Reject Request' }}</h2>
+    <h2 id="decision-title">{{ mode() === 'approve' ? 'Approuver la demande' : 'Refuser la demande' }}</h2>
     <form class="form" [formGroup]="form" (ngSubmit)="submit()" novalidate>
       <label class="form-field">
-        <span>Comment</span>
+        <span>Commentaire</span>
         <textarea formControlName="comment" maxlength="1000"></textarea>
         @if (form.controls.comment.touched && form.controls.comment.hasError('required')) {
-          <p class="field-error">Comment is required.</p>
+          <p class="field-error">Le commentaire est obligatoire.</p>
         }
       </label>
       @if (error()) { <p class="form-error" role="alert">{{ error() }}</p> }
       <div class="dialog-actions">
-        <button class="secondary-button" type="button" (click)="cancel.emit()" [disabled]="loading()">Cancel</button>
+        <button class="secondary-button" type="button" (click)="cancel.emit()" [disabled]="loading()">Annuler</button>
         <button class="primary-button" type="submit" [disabled]="form.invalid || loading()">
-          {{ loading() ? 'Saving...' : (mode() === 'approve' ? 'Approve' : 'Reject') }}
+          {{ loading() ? 'Enregistrement...' : (mode() === 'approve' ? 'Approuver' : 'Refuser') }}
         </button>
       </div>
     </form>

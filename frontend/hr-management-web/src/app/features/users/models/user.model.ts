@@ -20,6 +20,9 @@ export interface UserCreateRequest {
   firstName: string;
   lastName: string;
   phone: string | null;
+  address?: string | null;
+  birthDate?: string | null;
+  sex?: string | null;
   hireDate: string | null;
   role: RoleType;
   status: UserStatus;
@@ -27,6 +30,7 @@ export interface UserCreateRequest {
   managerId: number | null;
   departmentId: number | null;
   positionId: number | null;
+  typeContractId?: number | null;
 }
 
 export interface UserUpdateRequest {
@@ -35,6 +39,9 @@ export interface UserUpdateRequest {
   firstName: string;
   lastName: string;
   phone: string | null;
+  address?: string | null;
+  birthDate?: string | null;
+  sex?: string | null;
   hireDate: string | null;
   role: RoleType;
   status: UserStatus;
@@ -42,9 +49,11 @@ export interface UserUpdateRequest {
   managerId: number | null;
   departmentId: number | null;
   positionId: number | null;
+  typeContractId?: number | null;
 }
 
 export interface PasswordUpdateRequest {
+  currentPassword: string;
   newPassword: string;
 }
 
@@ -55,6 +64,9 @@ export interface UserResponse {
   firstName: string;
   lastName: string;
   phone: string | null;
+  address?: string | null;
+  birthDate?: string | null;
+  sex?: string | null;
   hireDate: string | null;
   role: RoleType;
   status: UserStatus;
@@ -62,6 +74,7 @@ export interface UserResponse {
   manager: UserSummary | null;
   department: UserReferenceSummary | null;
   position: UserReferenceSummary | null;
+  typeContract?: UserReferenceSummary | null;
   createdAt: string;
   updatedAt: string | null;
 }

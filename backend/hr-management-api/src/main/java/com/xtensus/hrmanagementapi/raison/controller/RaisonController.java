@@ -36,6 +36,11 @@ public class RaisonController {
         return ResponseEntity.ok(service.lister());
     }
 
+    @GetMapping("/disponibles")
+    public ResponseEntity<List<RaisonResponse>> listerDisponibles() {
+        return ResponseEntity.ok(service.listerDisponibles());
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<RaisonResponse> trouverParId(@PathVariable Long id) {
         return ResponseEntity.ok(service.trouverParId(id));

@@ -68,12 +68,12 @@ describe('SidebarComponent', () => {
     expect(text()).toContain('Demander un conge');
   });
 
-  it('shows reference read menu items to managers', () => {
+  it('shows only applicable reference menu items to managers', () => {
     currentUser.set({ ...user, role: 'MANAGER' });
     fixture.detectChanges();
 
     expect(text()).toContain('Postes');
-    expect(text()).toContain('Types de conge');
+    expect(text()).not.toContain('Types de conge');
   });
 
   it('does not show restricted medical or system configuration items to managers', () => {
@@ -106,6 +106,8 @@ describe('SidebarComponent', () => {
     expect(text()).toContain('Documents medicaux');
     expect(text()).toContain('Rapports');
     expect(text()).toContain('Calendrier');
+    expect(text()).toContain('Statuts des demandes');
+    expect(text()).toContain('Types de conge');
     expect(text()).toContain('Configuration systeme');
   });
 

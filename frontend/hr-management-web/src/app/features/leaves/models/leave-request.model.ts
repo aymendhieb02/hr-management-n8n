@@ -1,4 +1,5 @@
 export type LeaveRequestStatus = 'PENDING' | 'APPROVED' | 'REJECTED' | 'CANCELLED';
+export type LeaveRequestNature = 'CONGE' | 'AUTORISATION_ABSENCE';
 
 export interface PersonSummary {
   id: number;
@@ -15,15 +16,27 @@ export interface LeaveTypeSummary {
 export interface LeaveRequestCreateRequest {
   requesterId: number;
   leaveTypeId: number;
+  nature: LeaveRequestNature;
+  reasonId: number | null;
+  otherReason: string | null;
   startDate: string;
   endDate: string;
+  startTime: string | null;
+  endTime: string | null;
+  numberOfDays: number;
   reason: string | null;
 }
 
 export interface LeaveRequestUpdateRequest {
   leaveTypeId: number;
+  nature: LeaveRequestNature;
+  reasonId: number | null;
+  otherReason: string | null;
   startDate: string;
   endDate: string;
+  startTime: string | null;
+  endTime: string | null;
+  numberOfDays: number;
   reason: string | null;
 }
 
@@ -37,8 +50,11 @@ export interface LeaveRequestResponse {
   requester: PersonSummary;
   approver: PersonSummary | null;
   leaveType: LeaveTypeSummary;
+  nature: LeaveRequestNature;
   startDate: string;
   endDate: string;
+  startTime: string | null;
+  endTime: string | null;
   requestedDays: number;
   reason: string | null;
   status: LeaveRequestStatus;

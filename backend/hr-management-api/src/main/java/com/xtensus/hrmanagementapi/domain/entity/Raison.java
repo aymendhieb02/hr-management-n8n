@@ -26,6 +26,9 @@ public class Raison {
     @Column(name = "raison_commentaire", nullable = false, length = 255)
     private String commentaire;
 
+    @Column(name = "raison_disponible", nullable = false)
+    private Boolean disponible = true;
+
     @Column(name = "raison_date_creation", nullable = false)
     private LocalDateTime dateCreation;
 }

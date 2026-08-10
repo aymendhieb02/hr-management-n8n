@@ -13,9 +13,16 @@ export class LeaveDetailsComponent {
   private readonly authService = inject(AuthService);
   readonly request = input.required<LeaveRequestResponse>();
   @Output() readonly close = new EventEmitter<void>();
-  protected readonly isSickLeave = computed(() => this.request().leaveType.name.toLowerCase().includes('sick'));
+  protected readonly isSickLeave = computed(() => {
+    const name = this.request().leaveType.name.toLowerCase();
+    return name.includes('sick') || name.includes('maladie');
+  });
   protected readonly canUploadMedicalDocument = computed(() => {
     const currentUser = this.authService.getCurrentUser();
     return Boolean(currentUser && currentUser.id === this.request().requester.id && this.isSickLeave());
   });
+
+  protected statusLabel(): string {
+    return { PENDING: 'En attente', APPROVED: 'Approuvee', REJECTED: 'Refusee', CANCELLED: 'Annulee' }[this.request().status];
+  }
 }

@@ -17,16 +17,19 @@ export class UserService {
   findByRole(role: RoleType): Observable<UserResponse[]> { return this.findAll().pipe(map((users) => users.filter((user) => user.role === role))); }
   findByDepartment(_departmentId: number): Observable<UserResponse[]> { return of([]); }
   findTeamMembers(managerId: number): Observable<UserResponse[]> { return this.http.get<EmployeApiResponse[]>(`${this.baseUrl}/${managerId}/equipe`).pipe(map((items) => items.map(toUser))); }
+  findMe(): Observable<UserResponse> { return this.http.get<EmployeApiResponse>(`${this.baseUrl}/me`).pipe(map(toUser)); }
   create(request: UserCreateRequest): Observable<UserResponse> { return this.http.post<EmployeApiResponse>(this.baseUrl, toEmployeRequest(request)).pipe(map(toUser)); }
   update(id: number, request: UserUpdateRequest): Observable<UserResponse> { return this.http.put<EmployeApiResponse>(`${this.baseUrl}/${id}`, toEmployeRequest(request)).pipe(map(toUser)); }
-  updatePassword(_id: number, _request: PasswordUpdateRequest): Observable<void> { return of(void 0); }
+  updatePassword(_id: number, request: PasswordUpdateRequest): Observable<void> { return this.http.put<void>(`${this.baseUrl}/me/password`, { motDePasseActuel: request.currentPassword, nouveauMotDePasse: request.newPassword }); }
+  setActive(id: number, active: boolean): Observable<UserResponse> { return this.http.patch<EmployeApiResponse>(`${this.baseUrl}/${id}/active/${active}`, {}).pipe(map(toUser)); }
+  resetPasswordToDefault(id: number): Observable<void> { return this.http.patch<void>(`${this.baseUrl}/${id}/password/default`, {}); }
   delete(id: number): Observable<void> { return this.http.delete<void>(`${this.baseUrl}/${id}`); }
 }
 
 function toUser(response: EmployeApiResponse): UserResponse {
-  return { id: response.id, username: response.email, email: response.email, firstName: response.prenom, lastName: response.nom, phone: response.telephone, hireDate: response.dateEmbauche, role: response.role ?? 'EMPLOYEE', status: response.actif ? 'ACTIVE' : 'INACTIVE', enabled: response.actif, manager: response.manager ? { id: response.manager.id, firstName: response.manager.prenom, lastName: response.manager.nom, email: response.manager.email } : null, department: response.typeContrat ? { id: response.typeContrat.id, name: response.typeContrat.libelle } : null, position: response.poste ? { id: response.poste.id, name: response.poste.intitule } : null, createdAt: response.createdAt, updatedAt: response.updatedAt };
+  return { id: response.id, username: response.email, email: response.email, firstName: response.prenom, lastName: response.nom, phone: response.telephone, address: response.adresse, birthDate: response.dateNaissance, sex: response.sexe, hireDate: response.dateEmbauche, role: response.role ?? 'EMPLOYEE', status: response.actif ? 'ACTIVE' : 'INACTIVE', enabled: response.actif, manager: response.manager ? { id: response.manager.id, firstName: response.manager.prenom, lastName: response.manager.nom, email: response.manager.email } : null, department: null, position: null, typeContract: response.typeContrat ? { id: response.typeContrat.id, name: response.typeContrat.libelle } : null, createdAt: response.createdAt, updatedAt: response.updatedAt };
 }
 function toEmployeRequest(request: UserCreateRequest | UserUpdateRequest): EmployeApiRequest {
-  return { nom: request.lastName.trim(), prenom: request.firstName.trim(), email: request.email.trim(), telephone: request.phone, adresse: null, dateNaissance: null, dateEmbauche: request.hireDate, sexe: null, actif: request.enabled && request.status === 'ACTIVE', role: request.role, posteId: request.positionId, typeContratId: request.departmentId, managerId: request.managerId };
+  return { nom: request.lastName.trim(), prenom: request.firstName.trim(), email: request.email.trim(), telephone: request.phone, adresse: request.address ?? null, dateNaissance: request.birthDate ?? null, dateEmbauche: request.hireDate, sexe: request.sex ?? null, actif: request.enabled && request.status === 'ACTIVE', role: request.role, posteId: null, typeContratId: request.typeContractId ?? null, managerId: request.managerId };
 }
 

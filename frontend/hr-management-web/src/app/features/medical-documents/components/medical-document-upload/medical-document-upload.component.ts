@@ -28,22 +28,22 @@ export class MedicalDocumentUploadComponent {
     this.success.set(null);
     if (!file) {
       this.selectedFile.set(null);
-      this.error.set('File is required.');
+      this.error.set('Le fichier est obligatoire.');
       return;
     }
     if (file.size === 0) {
       this.selectedFile.set(null);
-      this.error.set('File cannot be empty.');
+      this.error.set('Le fichier ne peut pas etre vide.');
       return;
     }
     if (!this.allowed.includes(file.type)) {
       this.selectedFile.set(null);
-      this.error.set('Only PDF, JPEG, or PNG files are allowed.');
+      this.error.set('Seuls les fichiers PDF, JPEG ou PNG sont autorises.');
       return;
     }
     if (file.size > this.maxSize) {
       this.selectedFile.set(null);
-      this.error.set('File must be 5 MB or smaller.');
+      this.error.set('Le fichier ne doit pas depasser 5 Mo.');
       return;
     }
     this.selectedFile.set(file);
@@ -56,12 +56,12 @@ export class MedicalDocumentUploadComponent {
     this.service.upload(this.leaveRequestId(), file).subscribe({
       next: (response) => {
         this.loading.set(false);
-        this.success.set('Medical certificate uploaded.');
+        this.success.set('Certificat medical televerse.');
         this.selectedFile.set(null);
         this.uploaded.emit(response);
       },
       error: (error) => {
-        this.error.set(safeApiMessage(error, 'Medical certificate could not be uploaded.'));
+        this.error.set(safeApiMessage(error, 'Impossible de televerser le certificat medical.'));
         this.loading.set(false);
       }
     });

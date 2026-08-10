@@ -7,6 +7,7 @@ import { DepartmentService } from '../../../departments/services/department.serv
 import { PositionService } from '../../../positions/services/position.service';
 import { UserResponse } from '../../models/user.model';
 import { UserService } from '../../services/user.service';
+import { TypeContractService } from '../../services/type-contract.service';
 import { UserListComponent } from './user-list.component';
 
 describe('UserListComponent', () => {
@@ -22,6 +23,8 @@ describe('UserListComponent', () => {
     create: ReturnType<typeof vi.fn>;
     update: ReturnType<typeof vi.fn>;
     updatePassword: ReturnType<typeof vi.fn>;
+    setActive: ReturnType<typeof vi.fn>;
+    resetPasswordToDefault: ReturnType<typeof vi.fn>;
     delete: ReturnType<typeof vi.fn>;
   };
   let authService: {
@@ -41,6 +44,8 @@ describe('UserListComponent', () => {
       create: vi.fn(() => of(users[0])),
       update: vi.fn(() => of(users[0])),
       updatePassword: vi.fn(() => of(void 0)),
+      setActive: vi.fn(() => of(users[0])),
+      resetPasswordToDefault: vi.fn(() => of(void 0)),
       delete: vi.fn(() => of(void 0))
     };
     authService = {
@@ -53,6 +58,7 @@ describe('UserListComponent', () => {
         { provide: UserService, useValue: userService },
         { provide: DepartmentService, useValue: { findAll: vi.fn(() => of([{ id: 1, name: 'Engineering', description: null, createdAt: '', updatedAt: null }, { id: 2, name: 'Support', description: null, createdAt: '', updatedAt: null }])) } },
         { provide: PositionService, useValue: { findAll: vi.fn(() => of([{ id: 1, title: 'Engineer', description: null, createdAt: '', updatedAt: null }])) } },
+        { provide: TypeContractService, useValue: { findAll: vi.fn(() => of([{ id: 1, name: 'CDI' }, { id: 2, name: 'CDD' }])) } },
         { provide: AuthService, useValue: authService },
         { provide: ActivatedRoute, useValue: { snapshot: { routeConfig: { path } } } }
       ]
@@ -66,23 +72,24 @@ describe('UserListComponent', () => {
 
     expect(userService.findAll).toHaveBeenCalled();
     expect(text()).toContain('Alice Admin');
-    expect(text()).toContain('Add User');
+    expect(text()).toContain('Ajouter un employé');
     expect(text()).toContain('Edit');
-    expect(text()).toContain('Reset Password');
+    expect(text()).toContain('Bloquer');
     expect(text()).toContain('Delete');
   });
 
-  it('loads only team members for managers and stays read-only', () => {
+  it('loads only team members and lets managers administer their team', () => {
     configure('MANAGER', 'team-members');
 
     expect(userService.findTeamMembers).toHaveBeenCalledWith(2);
     expect(text()).toContain('Team Members');
     expect(text()).toContain('Eli Employee');
-    expect(text()).not.toContain('Add User');
-    expect(text()).not.toContain('Reset Password');
+    expect(text()).toContain('Ajouter un employé');
+    expect(text()).toContain('Edit');
+    expect(text()).toContain('Débloquer');
   });
 
-  it('searches, filters by role, and filters by department', () => {
+  it('searches, filters by role, and filters by contract type', () => {
     configure('HR');
     const search = fixture.nativeElement.querySelector('.search-input') as HTMLInputElement;
     search.value = 'eli';
@@ -98,7 +105,7 @@ describe('UserListComponent', () => {
     expect(text()).not.toContain('Eli Employee');
 
     (fixture.componentInstance as any).roleFilter.set('');
-    (fixture.componentInstance as any).departmentFilter.set(2);
+    (fixture.componentInstance as any).typeContractFilter.set(2);
     fixture.detectChanges();
     expect(text()).toContain('Eli Employee');
     expect(text()).not.toContain('Alice Admin');
@@ -119,14 +126,14 @@ describe('UserListComponent', () => {
     expect(text()).toContain('Users could not be loaded.');
   });
 
-  it('creates, updates, resets password, deletes, and handles conflict safely', () => {
+  it('creates, updates, blocks, deletes, and handles conflict safely', () => {
     configure('HR');
 
-    buttonByText('Add User').click();
+    buttonByText('Ajouter un employé').click();
     fixture.detectChanges();
     fillCreateForm();
     fixture.nativeElement.querySelector('app-user-form form').dispatchEvent(new Event('submit'));
-    expect(userService.create).toHaveBeenCalledWith(expect.objectContaining({ username: 'new.user', email: 'new@test.com', password: 'password1' }));
+    expect(userService.create).toHaveBeenCalledWith(expect.objectContaining({ username: 'new.user', email: 'new@test.com', password: '' }));
 
     fixture.detectChanges();
     buttonByText('Edit').click();
@@ -135,15 +142,8 @@ describe('UserListComponent', () => {
     expect(userService.update).toHaveBeenCalledWith(1, expect.not.objectContaining({ password: expect.anything() }));
 
     fixture.detectChanges();
-    buttonByText('Reset Password').click();
-    fixture.detectChanges();
-    const passwordInputs = fixture.nativeElement.querySelectorAll('app-password-update-dialog input') as NodeListOf<HTMLInputElement>;
-    passwordInputs[0].value = 'password1';
-    passwordInputs[0].dispatchEvent(new Event('input'));
-    passwordInputs[1].value = 'password1';
-    passwordInputs[1].dispatchEvent(new Event('input'));
-    fixture.nativeElement.querySelector('app-password-update-dialog form').dispatchEvent(new Event('submit'));
-    expect(userService.updatePassword).toHaveBeenCalledWith(1, { newPassword: 'password1' });
+    buttonByText('Bloquer').click();
+    expect(userService.setActive).toHaveBeenCalledWith(1, false);
 
     fixture.detectChanges();
     buttonByText('Delete').click();
@@ -176,12 +176,10 @@ describe('UserListComponent', () => {
     inputs[0].dispatchEvent(new Event('input'));
     inputs[1].value = 'NEW@TEST.COM';
     inputs[1].dispatchEvent(new Event('input'));
-    inputs[2].value = 'password1';
+    inputs[2].value = 'New';
     inputs[2].dispatchEvent(new Event('input'));
-    inputs[3].value = 'New';
+    inputs[3].value = 'User';
     inputs[3].dispatchEvent(new Event('input'));
-    inputs[4].value = 'User';
-    inputs[4].dispatchEvent(new Event('input'));
   }
 
   function user(id: number, firstName: string, lastName: string, role: UserResponse['role'], departmentId: number): UserResponse {
@@ -197,8 +195,9 @@ describe('UserListComponent', () => {
       status: role === 'EMPLOYEE' ? 'INACTIVE' : 'ACTIVE',
       enabled: role !== 'EMPLOYEE',
       manager: id === 3 ? { id: 2, firstName: 'Mona', lastName: 'Manager', email: 'mona@test.com' } : null,
-      department: { id: departmentId, name: departmentId === 1 ? 'Engineering' : 'Support' },
+      department: null,
       position: { id: 1, name: 'Engineer' },
+      typeContract: { id: departmentId, name: departmentId === 1 ? 'CDI' : 'CDD' },
       createdAt: '',
       updatedAt: null
     };

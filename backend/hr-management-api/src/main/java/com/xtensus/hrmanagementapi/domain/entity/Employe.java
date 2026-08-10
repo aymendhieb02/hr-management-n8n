@@ -14,9 +14,11 @@ import java.time.LocalDateTime;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.DynamicInsert;
 
 @Entity
 @Table(name = "employes")
+@DynamicInsert
 @Getter
 @Setter
 @NoArgsConstructor
@@ -30,7 +32,7 @@ public class Employe {
     @Column(name = "username", nullable = false, unique = true, length = 100)
     private String username;
 
-    @Column(name = "mot_de_passe_hash", nullable = false, length = 255)
+    @Column(name = "mot_de_passe_hash", nullable = false, length = 255, insertable = false)
     private String motDePasseHash;
 
     @Column(name = "employe_nom", nullable = false, length = 100)

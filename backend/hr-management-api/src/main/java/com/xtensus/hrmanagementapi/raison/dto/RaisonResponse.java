@@ -12,5 +12,6 @@ public class RaisonResponse {
 
     private Long id;
     private String commentaire;
+    private Boolean disponible;
     private LocalDateTime dateCreation;
 }

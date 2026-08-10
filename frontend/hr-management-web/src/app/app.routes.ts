@@ -32,9 +32,9 @@ export const routes: Routes = [
       },
       {
         path: 'profile',
-        component: PlaceholderPageComponent,
         canActivate: [roleGuard],
-        data: { title: 'Mon profil', roles: ['EMPLOYEE', 'MANAGER', 'HR', 'ADMIN'] }
+        data: { title: 'Mon profil', roles: ['EMPLOYEE', 'MANAGER', 'HR', 'ADMIN'] },
+        loadComponent: () => import('./features/profile/profile.component').then((m) => m.ProfileComponent)
       },
       {
         path: 'notifications',
@@ -111,7 +111,7 @@ export const routes: Routes = [
       {
         path: 'positions',
         canActivate: [roleGuard],
-        data: { title: 'Postes', roles: ['EMPLOYEE', 'MANAGER', 'HR', 'ADMIN'] },
+        data: { title: 'Postes', roles: ['MANAGER', 'HR', 'ADMIN'] },
         loadComponent: () => import('./features/positions/pages/position-list/position-list.component')
           .then((m) => m.PositionListComponent)
       },
@@ -163,10 +163,34 @@ export const routes: Routes = [
           .then((m) => m.UserListComponent)
       },
       {
+        path: 'leave-request-statuses',
+        canActivate: [roleGuard],
+        data: { title: 'Statuts des demandes', roles: ['ADMIN'] },
+        loadComponent: () => import('./features/leave-request-statuses/leave-request-statuses.component')
+          .then((m) => m.LeaveRequestStatusesComponent)
+      },
+      {
+        path: 'reasons',
+        canActivate: [roleGuard],
+        data: { title: 'Raisons des demandes', roles: ['ADMIN'] },
+        loadComponent: () => import('./features/reasons/reason-admin.component').then((m) => m.ReasonAdminComponent)
+      },
+      {
+        path: 'jours-feries',
+        canActivate: [roleGuard],
+        data: { title: 'Jours fériés', roles: ['MANAGER', 'HR', 'ADMIN'] },
+        loadComponent: () => import('./features/jours-feries/pages/jour-ferie-list/jour-ferie-list.component').then((m) => m.JourFerieListComponent)
+      },
+      {
         path: 'system-configuration',
         component: PlaceholderPageComponent,
         canActivate: [roleGuard],
         data: { title: 'Configuration systeme', roles: ['ADMIN'] }
+      }
+      ,{
+        path: 'leave-history', canActivate: [roleGuard],
+        data: { title: 'Historique des demandes', roles: ['MANAGER', 'ADMIN'] },
+        loadComponent: () => import('./features/leave-history/leave-history.component').then((m) => m.LeaveHistoryComponent)
       }
     ]
   },

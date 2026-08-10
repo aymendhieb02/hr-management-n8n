@@ -11,8 +11,11 @@ describe('LeaveDetailsComponent medical certificate section', () => {
     requester: { id: 7, firstName: 'Eli', lastName: 'Employee', email: 'eli@test.com' },
     approver: null,
     leaveType: { id: 1, name: 'Sick Leave' },
+    nature: 'CONGE',
     startDate: '2026-08-01',
     endDate: '2026-08-01',
+    startTime: null,
+    endTime: null,
     requestedDays: 1,
     reason: null,
     status: 'PENDING',
@@ -36,13 +39,13 @@ describe('LeaveDetailsComponent medical certificate section', () => {
 
   it('shows upload only for requester sick leave context', () => {
     setup(7);
-    expect(fixture.nativeElement.textContent).toContain('Medical Certificate');
+    expect(fixture.nativeElement.textContent).toContain('Certificat medical');
     expect(fixture.nativeElement.querySelector('app-medical-document-upload')).toBeTruthy();
   });
 
   it('hides upload for manager/non-owner context', () => {
     setup(8);
-    expect(fixture.nativeElement.textContent).toContain('upload is available only to the requester');
+    expect(fixture.nativeElement.textContent).toContain('Seul le demandeur peut televerser');
     expect(fixture.nativeElement.querySelector('app-medical-document-upload')).toBeFalsy();
   });
 });

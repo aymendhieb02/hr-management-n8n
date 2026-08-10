@@ -51,6 +51,11 @@ public class RaisonService {
         return repository.findAll().stream().map(mapper::toResponse).toList();
     }
 
+    @Transactional(readOnly = true)
+    public List<RaisonResponse> listerDisponibles() {
+        return repository.findByDisponibleTrueOrderByCommentaireAsc().stream().map(mapper::toResponse).toList();
+    }
+
     private Raison trouverEntite(Long id) {
         return repository.findById(id).orElseThrow(() -> new RaisonIntrouvableException(id));
     }

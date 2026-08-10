@@ -16,12 +16,18 @@ public class CongeDemandeCreationRequest {
     private Long employeId;
     @NotNull(message = "Le type de conge est obligatoire")
     private Long congeTypeId;
+    @NotNull(message = "La nature de la demande est obligatoire")
+    private String nature;
+    private Long raisonId;
+    @Size(max = 255, message = "Le motif ne doit pas depasser 255 caracteres")
+    private String autreMotif;
     @NotNull(message = "La date de debut est obligatoire")
     private LocalDate dateDebut;
     private LocalTime heureDebut;
     @NotNull(message = "La date de fin est obligatoire")
     private LocalDate dateFin;
     private LocalTime heureFin;
+    private java.math.BigDecimal nombreJours;
     @Size(max = 1000, message = "Le commentaire ne doit pas depasser 1000 caracteres")
     private String commentaireEmploye;
 }

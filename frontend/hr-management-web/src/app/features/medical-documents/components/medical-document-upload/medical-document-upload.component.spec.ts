@@ -24,17 +24,17 @@ describe('MedicalDocumentUploadComponent', () => {
     ['image/png', 'cert.png']
   ])('uploads valid %s', (type, name) => {
     select(new File(['x'], name, { type }));
-    button('Upload').click();
+    button('Televerser').click();
     expect(service.upload).toHaveBeenCalledWith(4, expect.any(File));
   });
 
   it('rejects invalid, oversized, and empty files', () => {
     select(new File(['x'], 'bad.txt', { type: 'text/plain' }));
-    expect(text()).toContain('Only PDF, JPEG, or PNG files are allowed.');
+    expect(text()).toContain('Seuls les fichiers PDF, JPEG ou PNG sont autorises.');
     select(new File([''], 'empty.pdf', { type: 'application/pdf' }));
-    expect(text()).toContain('File cannot be empty.');
+    expect(text()).toContain('Le fichier ne peut pas etre vide.');
     select(new File([new Uint8Array(5 * 1024 * 1024 + 1)], 'large.pdf', { type: 'application/pdf' }));
-    expect(text()).toContain('File must be 5 MB or smaller.');
+    expect(text()).toContain('Le fichier ne doit pas depasser 5 Mo.');
   });
 
   function select(file: File): void {

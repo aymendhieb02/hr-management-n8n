@@ -2,27 +2,27 @@
   <section class="dialog" aria-labelledby="leave-details-title">
     <h2 id="leave-details-title">{{ request().leaveType.name }}</h2>
     <dl class="detail-grid">
-      <div><dt>Dates</dt><dd>{{ request().startDate }} to {{ request().endDate }}</dd></div>
-      <div><dt>Requested Days</dt><dd>{{ request().requestedDays }}</dd></div>
-      <div><dt>Status</dt><dd>{{ request().status }}</dd></div>
-      <div><dt>Approver</dt><dd>{{ request().approver ? request().approver?.firstName + ' ' + request().approver?.lastName : 'Not assigned' }}</dd></div>
-      <div><dt>Reason</dt><dd>{{ request().reason || 'None' }}</dd></div>
-      <div><dt>Decision Comment</dt><dd>{{ request().decisionComment || 'None' }}</dd></div>
-      <div><dt>Submitted</dt><dd>{{ request().submittedAt }}</dd></div>
-      <div><dt>Decision Date</dt><dd>{{ request().decisionAt || 'None' }}</dd></div>
+      <div><dt>Dates</dt><dd>{{ request().startDate }} au {{ request().endDate }}</dd></div>
+      <div><dt>Nombre de jours</dt><dd>{{ request().requestedDays }}</dd></div>
+      <div><dt>Statut</dt><dd>{{ statusLabel() }}</dd></div>
+      <div><dt>Decideur</dt><dd>{{ request().approver ? request().approver?.firstName + ' ' + request().approver?.lastName : 'Non assigne' }}</dd></div>
+      <div><dt>Motif</dt><dd>{{ request().reason || 'Aucun' }}</dd></div>
+      <div><dt>Commentaire de decision</dt><dd>{{ request().decisionComment || 'Aucun' }}</dd></div>
+      <div><dt>Date de soumission</dt><dd>{{ request().submittedAt }}</dd></div>
+      <div><dt>Date de decision</dt><dd>{{ request().decisionAt || 'Aucune' }}</dd></div>
     </dl>
     @if (isSickLeave()) {
       <section class="state">
-        <h2>Medical Certificate</h2>
+        <h2>Certificat medical</h2>
         @if (canUploadMedicalDocument()) {
           <app-medical-document-upload [leaveRequestId]="request().id" />
         } @else {
-          <p>Medical certificate upload is available only to the requester. Metadata lookup and downloads are available to HR/Admin from Medical Documents when a document id is known.</p>
+          <p>Seul le demandeur peut televerser le certificat medical. Les RH et les administrateurs peuvent le consulter depuis la page Documents medicaux.</p>
         }
       </section>
     }
     <div class="dialog-actions">
-      <button class="secondary-button" type="button" (click)="close.emit()">Close</button>
+      <button class="secondary-button" type="button" (click)="close.emit()">Fermer</button>
     </div>
   </section>
 </div>

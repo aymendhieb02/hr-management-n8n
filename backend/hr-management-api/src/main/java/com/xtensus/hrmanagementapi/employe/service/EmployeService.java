@@ -6,6 +6,7 @@ import com.xtensus.hrmanagementapi.domain.entity.TypeContrat;
 import com.xtensus.hrmanagementapi.domain.enums.RoleType;
 import com.xtensus.hrmanagementapi.employe.dto.EmployeRequest;
 import com.xtensus.hrmanagementapi.employe.dto.EmployeResponse;
+import com.xtensus.hrmanagementapi.employe.dto.MotDePasseModificationRequest;
 import com.xtensus.hrmanagementapi.employe.exception.EmployeExisteDejaException;
 import com.xtensus.hrmanagementapi.employe.exception.EmployeIntrouvableException;
 import com.xtensus.hrmanagementapi.employe.exception.EmployeInvalideException;
@@ -18,6 +19,7 @@ import com.xtensus.hrmanagementapi.typecontrat.exception.TypeContratIntrouvableE
 import java.time.LocalDateTime;
 import java.util.List;
 import org.springframework.stereotype.Service;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
@@ -27,21 +29,33 @@ public class EmployeService {
     private final PosteRepository posteRepository;
     private final TypeContratRepository typeContratRepository;
     private final EmployeMapper employeMapper;
+    private final PasswordEncoder passwordEncoder;
 
     public EmployeService(
             EmployeRepository employeRepository,
             PosteRepository posteRepository,
             TypeContratRepository typeContratRepository,
-            EmployeMapper employeMapper
+            EmployeMapper employeMapper,
+            PasswordEncoder passwordEncoder
     ) {
         this.employeRepository = employeRepository;
         this.posteRepository = posteRepository;
         this.typeContratRepository = typeContratRepository;
         this.employeMapper = employeMapper;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @Transactional
     public EmployeResponse create(EmployeRequest request) {
+        return createInternal(request, null);
+    }
+
+    @Transactional
+    public EmployeResponse createForManager(EmployeRequest request, Long managerId) {
+        return createInternal(request, findEntity(managerId));
+    }
+
+    private EmployeResponse createInternal(EmployeRequest request, Employe forcedManager) {
         String email = normalizeRequired(request.getEmail(), "L'email est obligatoire");
         if (employeRepository.existsByEmailIgnoreCase(email)) {
             throw new EmployeExisteDejaException(email);
@@ -51,6 +65,10 @@ public class EmployeService {
         employe.setEmail(email);
         applyTechnicalDefaults(employe);
         attachReferences(request, employe);
+        if (forcedManager != null) {
+            employe.setManager(forcedManager);
+            employe.setRole(RoleType.EMPLOYEE.toDatabaseRole());
+        }
         employe.setCreatedAt(LocalDateTime.now());
         return employeMapper.toResponse(employeRepository.save(employe));
     }
@@ -75,9 +93,70 @@ public class EmployeService {
     }
 
     @Transactional
+    public EmployeResponse updateForManager(Long id, EmployeRequest request, Long managerId) {
+        ensureManagedBy(id, managerId);
+        EmployeResponse response = update(id, request);
+        Employe employe = findEntity(id);
+        employe.setManager(findEntity(managerId));
+        employe.setRole(RoleType.EMPLOYEE.toDatabaseRole());
+        return employeMapper.toResponse(employeRepository.save(employe));
+    }
+
+    @Transactional
     public void delete(Long id) {
         Employe employe = findEntity(id);
         employeRepository.delete(employe);
+    }
+
+    @Transactional
+    public void deleteForManager(Long id, Long managerId) {
+        ensureManagedBy(id, managerId);
+        delete(id);
+    }
+
+    @Transactional
+    public EmployeResponse setActiveForManager(Long id, boolean active, Long managerId) {
+        ensureManagedBy(id, managerId);
+        return setActive(id, active);
+    }
+
+    @Transactional
+    public EmployeResponse setActive(Long id, boolean active) {
+        Employe employe = findEntity(id);
+        employe.setActif(active);
+        employe.setStatut(active ? "ACTIF" : "INACTIF");
+        employe.setUpdatedAt(LocalDateTime.now());
+        return employeMapper.toResponse(employeRepository.save(employe));
+    }
+
+    @Transactional
+    public void resetPasswordToDefault(Long id) {
+        findEntity(id);
+        employeRepository.resetPasswordToDatabaseDefault(id);
+    }
+
+    @Transactional
+    public void resetPasswordToDefaultForManager(Long id, Long managerId) {
+        ensureManagedBy(id, managerId);
+        employeRepository.resetPasswordToDatabaseDefault(id);
+    }
+
+    @Transactional(readOnly = true)
+    public EmployeResponse findAccessible(Long id, Long actorId, boolean manager) {
+        if (id.equals(actorId)) return findById(id);
+        if (manager) ensureManagedBy(id, actorId);
+        return findById(id);
+    }
+
+    @Transactional
+    public void updateOwnPassword(Long employeId, MotDePasseModificationRequest request) {
+        Employe employe = findEntity(employeId);
+        if (!passwordEncoder.matches(request.getMotDePasseActuel(), employe.getMotDePasseHash())) {
+            throw new EmployeInvalideException("Le mot de passe actuel est incorrect");
+        }
+        employe.setMotDePasseHash(passwordEncoder.encode(request.getNouveauMotDePasse()));
+        employe.setUpdatedAt(LocalDateTime.now());
+        employeRepository.save(employe);
     }
 
     @Transactional(readOnly = true)
@@ -102,9 +181,6 @@ public class EmployeService {
 
     private void applyTechnicalDefaults(Employe employe) {
         employe.setUsername(employe.getEmail());
-        if (employe.getMotDePasseHash() == null) {
-            employe.setMotDePasseHash("NON_AUTHENTIFICATION");
-        }
         if (employe.getRole() == null || employe.getRole().isBlank()) {
             employe.setRole(RoleType.EMPLOYEE.toDatabaseRole());
         }
@@ -112,6 +188,13 @@ public class EmployeService {
     }
     private Employe findEntity(Long id) {
         return employeRepository.findById(id).orElseThrow(() -> new EmployeIntrouvableException(id));
+    }
+
+    private void ensureManagedBy(Long employeId, Long managerId) {
+        Employe employe = findEntity(employeId);
+        if (employe.getManager() == null || !managerId.equals(employe.getManager().getId())) {
+            throw new EmployeInvalideException("Ce manager ne peut gerer que les membres de son equipe");
+        }
     }
 
     private void attachReferences(EmployeRequest request, Employe employe) {

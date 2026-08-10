@@ -49,6 +49,9 @@ public class CongeDemande {
     @JoinColumn(name = "raison_id")
     private Raison raison;
 
+    @Column(name = "conge_demande_nature", nullable = false, length = 30)
+    private String nature;
+
     @Column(name = "conge_demande_date_debut", nullable = false)
     private LocalDate dateDebut;
 
