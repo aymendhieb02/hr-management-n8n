@@ -54,7 +54,7 @@ describe('PositionListComponent', () => {
     search.dispatchEvent(new Event('input'));
     fixture.detectChanges();
 
-    expect(text()).toContain('No positions found.');
+    expect(text()).toContain('Aucun poste trouvé.');
   });
 
   it.each([
@@ -65,36 +65,36 @@ describe('PositionListComponent', () => {
   ])('sets CRUD visibility for %s', (_role, canManage) => {
     configure(canManage);
 
-    expect(text().includes('Add Position')).toBe(canManage);
-    expect(text().includes('Edit')).toBe(canManage);
-    expect(text().includes('Delete')).toBe(canManage);
+    expect(text().includes('Ajouter un poste')).toBe(canManage);
+    expect(text().includes('Modifier')).toBe(canManage);
+    expect(text().includes('Supprimer')).toBe(canManage);
   });
 
   it('creates and updates a position from the form', () => {
     configure();
 
-    buttonByText('Add Position').click();
+    buttonByText('Ajouter un poste').click();
     fixture.detectChanges();
     let title = fixture.nativeElement.querySelector('app-position-form input') as HTMLInputElement;
     title.value = '  QA Analyst  ';
     title.dispatchEvent(new Event('input'));
     fixture.nativeElement.querySelector('app-position-form form').dispatchEvent(new Event('submit'));
-    expect(positionService.create).toHaveBeenCalledWith({ title: 'QA Analyst', description: null });
+    expect(positionService.create).toHaveBeenCalledWith({ title: 'QA Analyst', description: null, level: null, active: true });
 
     fixture.detectChanges();
-    buttonByText('Edit').click();
+    buttonByText('Modifier').click();
     fixture.detectChanges();
     title = fixture.nativeElement.querySelector('app-position-form input') as HTMLInputElement;
     title.value = 'Senior Engineer';
     title.dispatchEvent(new Event('input'));
     fixture.nativeElement.querySelector('app-position-form form').dispatchEvent(new Event('submit'));
-    expect(positionService.update).toHaveBeenCalledWith(2, { title: 'Senior Engineer', description: 'Builds products' });
+    expect(positionService.update).toHaveBeenCalledWith(2, { title: 'Senior Engineer', description: 'Builds products', level: null, active: true });
   });
 
   it('deletes a position', () => {
     configure();
 
-    buttonByText('Delete').click();
+    buttonByText('Supprimer').click();
     fixture.detectChanges();
     confirmDeleteButton().click();
     expect(positionService.delete).toHaveBeenCalledWith(2);
@@ -104,11 +104,11 @@ describe('PositionListComponent', () => {
     configure();
 
     positionService.delete.mockReturnValue(throwError(() => new HttpErrorResponse({ status: 409 })));
-    buttonByText('Delete').click();
+    buttonByText('Supprimer').click();
     fixture.detectChanges();
     confirmDeleteButton().click();
     fixture.detectChanges();
 
-    expect(text()).toContain('This item cannot be deleted or saved because it is referenced elsewhere.');
+    expect(text()).toContain('Cette opération est impossible car cet élément est déjà utilisé.');
   });
 });

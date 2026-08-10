@@ -3,6 +3,7 @@ import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../../../core/services/auth.service';
 import { safeApiMessage, validationErrors } from '../../../shared/api-error.util';
+import { PaginatedTableDirective } from '../../../shared/paginated-table.directive';
 import { DeleteLeaveTypeDialogComponent } from '../../components/delete-leave-type-dialog/delete-leave-type-dialog.component';
 import { LeaveTypeFormComponent } from '../../components/leave-type-form/leave-type-form.component';
 import { LeaveType, LeaveTypeRequest } from '../../models/leave-type.model';
@@ -10,7 +11,7 @@ import { LeaveTypeService } from '../../services/leave-type.service';
 
 @Component({
   selector: 'app-leave-type-list',
-  imports: [DeleteLeaveTypeDialogComponent, FormsModule, LeaveTypeFormComponent],
+  imports: [DeleteLeaveTypeDialogComponent, FormsModule, LeaveTypeFormComponent, PaginatedTableDirective],
   templateUrl: './leave-type-list.component.html',
   styleUrl: '../../../shared/resource-page.scss'
 })

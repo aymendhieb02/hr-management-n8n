@@ -3,6 +3,7 @@ import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { environment } from '../../../environments/environment';
 import { safeApiMessage, validationErrors } from '../shared/api-error.util';
+import { PaginatedTableDirective } from '../shared/paginated-table.directive';
 
 interface LeaveRequestStatus {
   id: number;
@@ -19,7 +20,7 @@ interface LeaveRequestStatusRequest {
 
 @Component({
   selector: 'app-leave-request-statuses',
-  imports: [FormsModule, ReactiveFormsModule],
+  imports: [FormsModule, ReactiveFormsModule, PaginatedTableDirective],
   templateUrl: './leave-request-statuses.component.html',
   styleUrl: '../shared/resource-page.scss'
 })

@@ -8,13 +8,14 @@ import { LeaveTypeService } from '../../../leave-types/services/leave-type.servi
 import { UserResponse } from '../../../users/models/user.model';
 import { UserService } from '../../../users/services/user.service';
 import { safeApiMessage } from '../../../shared/api-error.util';
+import { PaginatedTableDirective } from '../../../shared/paginated-table.directive';
 import { LeaveBalanceFormComponent } from '../../components/leave-balance-form/leave-balance-form.component';
 import { LeaveBalanceRequest, LeaveBalanceResponse } from '../../models/leave-balance.model';
 import { LeaveBalanceService } from '../../services/leave-balance.service';
 
 @Component({
   selector: 'app-leave-balance-list',
-  imports: [FormsModule, LeaveBalanceFormComponent],
+  imports: [FormsModule, LeaveBalanceFormComponent, PaginatedTableDirective],
   templateUrl: './leave-balance-list.component.html',
   styleUrl: '../../../shared/resource-page.scss'
 })

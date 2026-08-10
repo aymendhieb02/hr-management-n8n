@@ -1,28 +1,42 @@
 <div class="dialog-backdrop">
-  <section class="dialog" aria-labelledby="leave-details-title">
-    <h2 id="leave-details-title">{{ request().leaveType.name }}</h2>
+  <section class="dialog leave-details-dialog" aria-labelledby="leave-details-title">
+    <header class="leave-details-header">
+      <div class="leave-details-symbol" aria-hidden="true">☀</div>
+      <div><span>Détails de la demande</span><h2 id="leave-details-title">{{ request().leaveType.name }}</h2><p>{{ request().requester.firstName }} {{ request().requester.lastName }}</p></div>
+      <span class="badge" [class.success]="request().status === 'APPROVED'" [class.warning]="request().status === 'PENDING'" [class.muted]="request().status !== 'APPROVED' && request().status !== 'PENDING'">{{ statusLabel() }}</span>
+    </header>
     <dl class="detail-grid">
-      <div><dt>Dates</dt><dd>{{ request().startDate }} au {{ request().endDate }}</dd></div>
-      <div><dt>Nombre de jours</dt><dd>{{ request().requestedDays }}</dd></div>
-      <div><dt>Statut</dt><dd>{{ statusLabel() }}</dd></div>
-      <div><dt>Decideur</dt><dd>{{ request().approver ? request().approver?.firstName + ' ' + request().approver?.lastName : 'Non assigne' }}</dd></div>
-      <div><dt>Motif</dt><dd>{{ request().reason || 'Aucun' }}</dd></div>
-      <div><dt>Commentaire de decision</dt><dd>{{ request().decisionComment || 'Aucun' }}</dd></div>
-      <div><dt>Date de soumission</dt><dd>{{ request().submittedAt }}</dd></div>
-      <div><dt>Date de decision</dt><dd>{{ request().decisionAt || 'Aucune' }}</dd></div>
+      <div><dt><i>▣</i> Période</dt><dd>{{ request().startDate }} au {{ request().endDate }}</dd></div>
+      <div><dt><i>◷</i> Nombre de jours</dt><dd class="detail-number">{{ request().requestedDays }}</dd></div>
+      <div><dt><i>✓</i> Décideur</dt><dd>{{ request().approver ? request().approver?.firstName + ' ' + request().approver?.lastName : 'Non assigné' }}</dd></div>
+      <div><dt><i>◇</i> Motif</dt><dd>{{ request().reason || 'Aucun' }}</dd></div>
+      <div class="detail-wide"><dt><i>☷</i> Commentaire de décision</dt><dd>{{ request().decisionComment || 'Aucun commentaire' }}</dd></div>
+      <div><dt><i>↥</i> Date de soumission</dt><dd>{{ request().submittedAt }}</dd></div>
+      <div><dt><i>◆</i> Date de décision</dt><dd>{{ request().decisionAt || 'Aucune' }}</dd></div>
     </dl>
     @if (isSickLeave()) {
-      <section class="state">
-        <h2>Certificat medical</h2>
-        @if (canUploadMedicalDocument()) {
-          <app-medical-document-upload [leaveRequestId]="request().id" />
+      <section class="medical-certificate-card">
+        <div class="certificate-heading"><span class="certificate-icon" aria-hidden="true">✚</span><div><h2>Certificat médical</h2><p>Document associé à cette demande de congé maladie.</p></div></div>
+        @if (certificateLoading()) {
+          <p class="state">Chargement du certificat...</p>
+        } @else if (certificate()) {
+          <div class="certificate-file">
+            <div><strong>{{ certificate()!.originalFilename }}</strong><small>{{ certificate()!.uploadedAt }}</small></div>
+            <div class="actions">
+              <button class="secondary-button" type="button" (click)="viewCertificate()">👁 Voir</button>
+              <button class="secondary-button" type="button" (click)="downloadCertificate()">⇩ Télécharger</button>
+            </div>
+          </div>
+        } @else if (canUploadMedicalDocument()) {
+          <app-medical-document-upload [leaveRequestId]="request().id" (uploaded)="certificateUploaded($event)" />
         } @else {
-          <p>Seul le demandeur peut televerser le certificat medical. Les RH et les administrateurs peuvent le consulter depuis la page Documents medicaux.</p>
+          <p class="state">Aucun certificat médical n'a encore été ajouté par l'employé.</p>
         }
+        @if (certificateError()) { <p class="form-error" role="alert">{{ certificateError() }}</p> }
       </section>
     }
     <div class="dialog-actions">
-      <button class="secondary-button" type="button" (click)="close.emit()">Fermer</button>
+      <button class="primary-button close-details-button" type="button" (click)="close.emit()">Fermer</button>
     </div>
   </section>
 </div>

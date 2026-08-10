@@ -2,18 +2,18 @@
   <section class="dialog" aria-labelledby="user-details-title">
     <h2 id="user-details-title">{{ user().firstName }} {{ user().lastName }}</h2>
     <dl class="detail-grid">
-      <div><dt>Username</dt><dd>{{ user().username }}</dd></div>
+      <div><dt>Identifiant</dt><dd>{{ user().username }}</dd></div>
       <div><dt>Email</dt><dd>{{ user().email }}</dd></div>
-      <div><dt>Phone</dt><dd>{{ user().phone || 'Not set' }}</dd></div>
-      <div><dt>Hire date</dt><dd>{{ user().hireDate || 'Not set' }}</dd></div>
-      <div><dt>Role</dt><dd>{{ user().role }}</dd></div>
-      <div><dt>Status</dt><dd>{{ user().status }}</dd></div>
-      <div><dt>Enabled</dt><dd>{{ user().enabled ? 'Enabled' : 'Disabled' }}</dd></div>
+      <div><dt>Téléphone</dt><dd>{{ user().phone || 'Non renseigné' }}</dd></div>
+      <div><dt>Date d'embauche</dt><dd>{{ user().hireDate || 'Non renseignée' }}</dd></div>
+      <div><dt>Rôle</dt><dd>{{ user().role }}</dd></div>
+      <div><dt>Statut</dt><dd>{{ user().status === 'ACTIVE' ? 'Actif' : 'Inactif' }}</dd></div>
+      <div><dt>État du compte</dt><dd>{{ user().enabled ? 'Activé' : 'Désactivé' }}</dd></div>
       <div><dt>Type de contrat</dt><dd>{{ user().typeContract?.name || 'Aucun' }}</dd></div>
-      <div><dt>Manager</dt><dd>{{ user().manager ? user().manager?.firstName + ' ' + user().manager?.lastName : 'None' }}</dd></div>
+      <div><dt>Manager</dt><dd>{{ user().manager ? user().manager?.firstName + ' ' + user().manager?.lastName : 'Aucun' }}</dd></div>
     </dl>
     <div class="dialog-actions">
-      <button class="secondary-button" type="button" (click)="close.emit()">Close</button>
+      <button class="secondary-button" type="button" (click)="close.emit()">Fermer</button>
     </div>
   </section>
 </div>

@@ -266,6 +266,8 @@ td {
   font-size: 0.86rem;
   margin: 0;
 }
+.submission-error { display:grid; gap:4px; padding:12px 14px; border:1px solid #dfbfbc; border-radius:10px; background:var(--app-danger-soft); }
+.submission-error span { color:var(--app-danger-dark); font-weight:500; }
 
 .checkbox-field {
   align-items: center;

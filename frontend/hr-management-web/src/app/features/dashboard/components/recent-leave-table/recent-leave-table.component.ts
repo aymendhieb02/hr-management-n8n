@@ -1,11 +1,13 @@
 import { Component, input } from '@angular/core';
 import { LeaveRequestResponse } from '../../../leaves/models/leave-request.model';
+import { PaginatedTableDirective } from '../../../shared/paginated-table.directive';
 
 @Component({
   selector: 'app-recent-leave-table',
+  imports: [PaginatedTableDirective],
   template: `
     <section class="table-card">
-      <table>
+      <table appPaginatedTable>
         <thead><tr><th>Employee</th><th>Leave Type</th><th>Dates</th><th>Status</th></tr></thead>
         <tbody>
           @for (request of requests(); track request.id) {

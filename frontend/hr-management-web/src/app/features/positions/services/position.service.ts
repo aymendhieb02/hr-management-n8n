@@ -52,6 +52,8 @@ function toPosition(poste: PosteApiResponse): Position {
     id: poste.id,
     title: poste.intitule,
     description: poste.description,
+    level: poste.niveauPoste,
+    active: poste.actif,
     createdAt: poste.dateCreation,
     updatedAt: poste.dateModification
   };
@@ -61,7 +63,7 @@ function toPosteRequest(request: PositionRequest): PosteApiRequest {
   return {
     intitule: request.title,
     description: request.description,
-    niveauPoste: null,
-    actif: true
+    niveauPoste: request.level ?? null,
+    actif: request.active ?? true
   };
 }

@@ -36,7 +36,7 @@
     <p class="state">Aucune demande de conge trouvee.</p>
   } @else if (!isCreateMode()) {
     <div class="table-card">
-      <table>
+      <table appPaginatedTable>
         <thead>
           <tr>
             @if (isManagerMode()) { <th>Demandeur</th> }
@@ -55,6 +55,9 @@
               <td>
                 <div class="actions">
                   <button class="secondary-button" type="button" (click)="detailRequest.set(request)">Voir les details</button>
+                  @if (!isManagerMode() && isSickLeave(request) && !hasCertificate(request.id)) {
+                    <button class="certificate-button" type="button" (click)="detailRequest.set(request)" title="Consulter le certificat médical" aria-label="Consulter le certificat médical">✚ Certificat</button>
+                  }
                   @if (!isManagerMode() && request.status === 'PENDING') {
                     <button class="secondary-button" type="button" (click)="openEdit(request)">Modifier</button>
                     <button class="danger-button" type="button" (click)="deleteRequest(request)" [disabled]="isSaving()">Supprimer</button>
@@ -73,10 +76,10 @@
   }
 </section>
 @if (formOpen()) {
-  <app-leave-request-form [inline]="isCreateMode()" [request]="editingRequest()" [leaveTypes]="leaveTypes()" [reasons]="reasons()" [holidays]="holidays()" [loading]="isSaving()" [validationErrors]="formErrors()" (save)="saveRequest($event)" (cancel)="closeForm()" />
+  <app-leave-request-form [request]="editingRequest()" [leaveTypes]="leaveTypes()" [reasons]="reasons()" [holidays]="holidays()" [loading]="isSaving()" [validationErrors]="formErrors()" [submissionError]="formSubmissionError()" (save)="saveRequest($event)" (cancel)="closeForm()" />
 }
 @if (detailRequest()) {
-  <app-leave-details [request]="detailRequest()!" (close)="detailRequest.set(null)" />
+  <app-leave-details [request]="detailRequest()!" (certificateAdded)="markCertificateAdded($event)" (close)="detailRequest.set(null)" />
 }
 @if (decisionRequest()) {
   <app-leave-decision-dialog [mode]="decisionMode()" [loading]="isSaving()" [error]="null" (save)="saveDecision($event)" (cancel)="decisionRequest.set(null)" />

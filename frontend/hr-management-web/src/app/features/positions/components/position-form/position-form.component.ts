@@ -17,7 +17,9 @@ export class PositionFormComponent implements OnChanges {
 
   protected readonly form = new FormBuilder().nonNullable.group({
     title: ['', [Validators.required, Validators.maxLength(100)]],
-    description: ['', Validators.maxLength(255)]
+    description: ['', Validators.maxLength(255)],
+    level: ['', Validators.maxLength(100)],
+    active: true
   });
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -25,7 +27,9 @@ export class PositionFormComponent implements OnChanges {
       const position = this.position();
       this.form.reset({
         title: position?.title ?? '',
-        description: position?.description ?? ''
+        description: position?.description ?? '',
+        level: position?.level ?? '',
+        active: position?.active ?? true
       });
     }
   }
@@ -40,11 +44,13 @@ export class PositionFormComponent implements OnChanges {
     const value = this.form.getRawValue();
     this.save.emit({
       title: value.title.trim(),
-      description: value.description.trim() || null
+      description: value.description.trim() || null,
+      level: value.level.trim() || null,
+      active: value.active
     });
   }
 
-  protected fieldError(field: 'title' | 'description'): string | null {
+  protected fieldError(field: 'title' | 'description' | 'level'): string | null {
     const control = this.form.controls[field];
     const backendError = this.validationErrors()[field];
 
@@ -57,11 +63,13 @@ export class PositionFormComponent implements OnChanges {
     }
 
     if (control.hasError('required')) {
-      return 'Title is required.';
+      return "L'intitulé du poste est obligatoire.";
     }
 
     if (control.hasError('maxlength')) {
-      return field === 'title' ? 'Title must be 100 characters or fewer.' : 'Description must be 255 characters or fewer.';
+      if (field === 'title') return "L'intitulé ne doit pas dépasser 100 caractères.";
+      if (field === 'level') return 'Le niveau ne doit pas dépasser 100 caractères.';
+      return 'La description ne doit pas dépasser 255 caractères.';
     }
 
     return null;

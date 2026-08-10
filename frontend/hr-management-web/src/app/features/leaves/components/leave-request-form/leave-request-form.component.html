@@ -38,6 +38,7 @@
       }
 
       @if (formLevelError) { <p class="form-error" role="alert">{{ formLevelError }}</p> }
+      @if (submissionError()) { <p class="form-error submission-error" role="alert"><strong>Impossible d'enregistrer la demande.</strong><span>{{ submissionError() }}</span></p> }
       <div class="request-signature"><span>Fait à Tunis, le {{ systemDateLabel }}</span><span>L'intéressé(e)</span></div>
       <div class="dialog-actions">
         <button class="secondary-button" type="button" (click)="cancel.emit()" [disabled]="loading()">Annuler</button>

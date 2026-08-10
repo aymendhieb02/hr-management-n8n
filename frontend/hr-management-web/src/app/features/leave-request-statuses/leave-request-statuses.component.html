@@ -23,7 +23,7 @@
     <p class="state">Aucun statut trouve.</p>
   } @else {
     <div class="table-card">
-      <table>
+      <table appPaginatedTable>
         <thead><tr><th>Libelle</th><th>Description</th><th>Etat</th><th>Actions</th></tr></thead>
         <tbody>
           @for (status of filtered(); track status.id) {

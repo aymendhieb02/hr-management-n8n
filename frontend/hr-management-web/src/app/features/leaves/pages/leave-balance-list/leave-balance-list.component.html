@@ -18,7 +18,7 @@
     <p class="state">No leave balances found.</p>
   } @else {
     <div class="table-card">
-      <table>
+      <table appPaginatedTable>
         <thead><tr>@if (isAdminMode()) { <th>User</th> }<th>Leave Type</th><th>Year</th><th>Total</th><th>Used</th><th>Remaining</th><th>Progress</th>@if (isAdminMode()) { <th>Actions</th> }</tr></thead>
         <tbody>
           @for (balance of filteredBalances(); track balance.id) {

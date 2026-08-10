@@ -2,12 +2,13 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { safeApiMessage, validationErrors } from '../../../shared/api-error.util';
+import { PaginatedTableDirective } from '../../../shared/paginated-table.directive';
 import { JourFerieResponse, JourFerieRequest } from '../../models/jour-ferie.model';
 import { JourFerieService } from '../../services/jour-ferie.service';
 
 @Component({
   selector: 'app-jour-ferie-list',
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, PaginatedTableDirective],
   templateUrl: './jour-ferie-list.component.html',
   styleUrl: '../../../shared/resource-page.scss'
 })

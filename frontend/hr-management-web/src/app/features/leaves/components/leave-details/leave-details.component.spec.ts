@@ -3,6 +3,7 @@ import { AuthService } from '../../../../core/services/auth.service';
 import { MedicalDocumentService } from '../../../medical-documents/services/medical-document.service';
 import { LeaveRequestResponse } from '../../models/leave-request.model';
 import { LeaveDetailsComponent } from './leave-details.component';
+import { of } from 'rxjs';
 
 describe('LeaveDetailsComponent medical certificate section', () => {
   let fixture: ComponentFixture<LeaveDetailsComponent>;
@@ -17,7 +18,7 @@ describe('LeaveDetailsComponent medical certificate section', () => {
     startTime: null,
     endTime: null,
     requestedDays: 1,
-    reason: null,
+    reason: 'Congé de maladie',
     status: 'PENDING',
     submittedAt: '',
     decisionAt: null,
@@ -29,7 +30,7 @@ describe('LeaveDetailsComponent medical certificate section', () => {
       imports: [LeaveDetailsComponent],
       providers: [
         { provide: AuthService, useValue: { getCurrentUser: vi.fn(() => ({ id: userId, role: 'EMPLOYEE' })) } },
-        { provide: MedicalDocumentService, useValue: { upload: vi.fn() } }
+        { provide: MedicalDocumentService, useValue: { upload: vi.fn(), findByLeaveRequest: vi.fn(() => of(null)), download: vi.fn() } }
       ]
     });
     fixture = TestBed.createComponent(LeaveDetailsComponent);
@@ -39,13 +40,13 @@ describe('LeaveDetailsComponent medical certificate section', () => {
 
   it('shows upload only for requester sick leave context', () => {
     setup(7);
-    expect(fixture.nativeElement.textContent).toContain('Certificat medical');
+    expect(fixture.nativeElement.textContent).toContain('Certificat médical');
     expect(fixture.nativeElement.querySelector('app-medical-document-upload')).toBeTruthy();
   });
 
   it('hides upload for manager/non-owner context', () => {
     setup(8);
-    expect(fixture.nativeElement.textContent).toContain('Seul le demandeur peut televerser');
+    expect(fixture.nativeElement.textContent).toContain("Aucun certificat médical n'a encore été ajouté");
     expect(fixture.nativeElement.querySelector('app-medical-document-upload')).toBeFalsy();
   });
 });

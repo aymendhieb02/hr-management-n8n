@@ -1,9 +1,9 @@
 <div class="dialog-backdrop">
   <section class="dialog" aria-labelledby="position-form-title">
-    <h2 id="position-form-title">{{ position() ? 'Edit Position' : 'Add Position' }}</h2>
+    <h2 id="position-form-title">{{ position() ? 'Modifier le poste' : 'Ajouter un poste' }}</h2>
     <form class="form" [formGroup]="form" (ngSubmit)="submit()" novalidate>
       <label class="form-field">
-        <span>Title</span>
+        <span>Intitulé du poste</span>
         <input formControlName="title" maxlength="100" />
         @if (fieldError('title')) {
           <p class="field-error">{{ fieldError('title') }}</p>
@@ -18,10 +18,21 @@
         }
       </label>
 
+      <label class="form-field">
+        <span>Niveau du poste</span>
+        <input formControlName="level" maxlength="100" />
+        @if (fieldError('level')) { <p class="field-error">{{ fieldError('level') }}</p> }
+      </label>
+
+      <label class="checkbox-field">
+        <input formControlName="active" type="checkbox" />
+        Poste actif
+      </label>
+
       <div class="dialog-actions">
-        <button class="secondary-button" type="button" (click)="cancel.emit()" [disabled]="loading()">Cancel</button>
+        <button class="secondary-button" type="button" (click)="cancel.emit()" [disabled]="loading()">Annuler</button>
         <button class="primary-button" type="submit" [disabled]="form.invalid || loading()">
-          {{ loading() ? 'Saving...' : 'Save' }}
+          {{ loading() ? 'Enregistrement...' : 'Enregistrer' }}
         </button>
       </div>
     </form>

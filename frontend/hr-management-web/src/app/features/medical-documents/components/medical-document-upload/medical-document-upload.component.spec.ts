@@ -24,7 +24,7 @@ describe('MedicalDocumentUploadComponent', () => {
     ['image/png', 'cert.png']
   ])('uploads valid %s', (type, name) => {
     select(new File(['x'], name, { type }));
-    button('Televerser').click();
+    button('Ajouter le certificat').click();
     expect(service.upload).toHaveBeenCalledWith(4, expect.any(File));
   });
 

@@ -13,16 +13,16 @@
     <input
       class="search-input"
       type="search"
-      placeholder="Search by name, username, or email"
+      placeholder="Rechercher par nom, identifiant ou email"
       [ngModel]="searchTerm()"
       (ngModelChange)="searchTerm.set($event)"
     />
     @if (canManage()) {
       <label class="form-field">
-        <span>Role</span>
+        <span>Rôle</span>
         <select [ngModel]="roleFilter()" (ngModelChange)="roleFilter.set($event)">
-          <option value="">All roles</option>
-          @for (role of roles; track role) { <option [value]="role">{{ role }}</option> }
+          <option value="">Tous les rôles</option>
+          @for (role of roles; track role) { <option [value]="role">{{ roleLabel(role) }}</option> }
         </select>
       </label>
       <label class="form-field">
@@ -35,7 +35,7 @@
         </select>
       </label>
     }
-    <button class="secondary-button" type="button" (click)="loadUsers()">Refresh</button>
+    <button class="secondary-button" type="button" (click)="loadUsers()">Actualiser</button>
   </div>
 
   @if (error()) {
@@ -43,22 +43,22 @@
   }
 
   @if (isLoading()) {
-    <p class="state">Loading users...</p>
+    <p class="state">Chargement des employés...</p>
   } @else if (filteredUsers().length === 0) {
-    <p class="state">{{ isTeamMode() ? 'No team members found.' : 'No users found.' }}</p>
+    <p class="state">{{ isTeamMode() ? "Aucun membre de l'équipe trouvé." : 'Aucun employé trouvé.' }}</p>
   } @else {
     <div class="table-card">
-      <table>
+      <table appPaginatedTable>
         <thead>
           <tr>
-            <th>Full name</th>
-            <th>Username</th>
+            <th>Nom complet</th>
+            <th>Identifiant</th>
             <th>Email</th>
-            <th>Role</th>
+            <th>Rôle</th>
             <th>Type de contrat</th>
             <th>Manager</th>
-            <th>Status</th>
-            <th>Enabled</th>
+            <th>Statut</th>
+            <th>État du compte</th>
             <th>Actions</th>
           </tr>
         </thead>
@@ -68,27 +68,27 @@
               <td>{{ user.firstName }} {{ user.lastName }}</td>
               <td>{{ user.username }}</td>
               <td>{{ user.email }}</td>
-              <td>{{ user.role }}</td>
+              <td>{{ roleLabel(user.role) }}</td>
               <td>{{ user.typeContract?.name || 'Aucun' }}</td>
-              <td>{{ user.manager ? user.manager.firstName + ' ' + user.manager.lastName : 'None' }}</td>
+              <td>{{ user.manager ? user.manager.firstName + ' ' + user.manager.lastName : 'Aucun' }}</td>
               <td>
                 <span class="badge" [class.success]="user.status === 'ACTIVE'" [class.muted]="user.status !== 'ACTIVE'">
-                  {{ user.status }}
+                  {{ user.status === 'ACTIVE' ? 'Actif' : 'Inactif' }}
                 </span>
               </td>
               <td>
                 <span class="badge" [class.success]="user.enabled" [class.muted]="!user.enabled">
-                  {{ user.enabled ? 'Enabled' : 'Disabled' }}
+                  {{ user.enabled ? 'Activé' : 'Désactivé' }}
                 </span>
               </td>
               <td>
                 <div class="actions">
-                  <button class="secondary-button" type="button" (click)="detailUser.set(user)">View Details</button>
+                  <button class="secondary-button" type="button" (click)="detailUser.set(user)">Voir les détails</button>
                   @if (canManage()) {
-                    <button class="secondary-button" type="button" (click)="openEdit(user)">Edit</button>
+                    <button class="secondary-button" type="button" (click)="openEdit(user)">Modifier</button>
                     <button class="secondary-button" type="button" (click)="askResetPassword(user)">Mot de passe par défaut</button>
                     <button class="secondary-button" type="button" (click)="toggleActive(user)">{{ user.enabled ? 'Bloquer' : 'Débloquer' }}</button>
-                    <button class="danger-button" type="button" (click)="requestDelete(user)">Delete</button>
+                    <button class="danger-button" type="button" (click)="requestDelete(user)">Supprimer</button>
                   }
                 </div>
               </td>
@@ -105,6 +105,7 @@
     [user]="editingUser()"
     [users]="allUsersForManagers()"
     [typeContracts]="typeContracts()"
+    [positions]="positions()"
     [loading]="isSaving()"
     [validationErrors]="formErrors()"
     [managerMode]="isTeamMode()"

@@ -1,11 +1,11 @@
 <section class="resource-page">
   <header class="page-header">
     <div>
-      <h1>Positions</h1>
-      <p>View and manage job positions.</p>
+      <h1>Postes</h1>
+      <p>Consultez et gérez les postes de l'entreprise.</p>
     </div>
     @if (canManage()) {
-      <button class="primary-button" type="button" (click)="openCreate()">Add Position</button>
+      <button class="primary-button" type="button" (click)="openCreate()">Ajouter un poste</button>
     }
   </header>
 
@@ -13,11 +13,11 @@
     <input
       class="search-input"
       type="search"
-      placeholder="Search by title"
+      placeholder="Rechercher par intitulé"
       [ngModel]="searchTerm()"
       (ngModelChange)="searchTerm.set($event)"
     />
-    <button class="secondary-button" type="button" (click)="loadPositions()">Refresh</button>
+    <button class="secondary-button" type="button" (click)="loadPositions()">Actualiser</button>
   </div>
 
   @if (error()) {
@@ -25,16 +25,18 @@
   }
 
   @if (isLoading()) {
-    <p class="state">Loading positions...</p>
+    <p class="state">Chargement des postes...</p>
   } @else if (filteredPositions().length === 0) {
-    <p class="state">No positions found.</p>
+    <p class="state">Aucun poste trouvé.</p>
   } @else {
     <div class="table-card">
-      <table>
+      <table appPaginatedTable>
         <thead>
           <tr>
-            <th>Title</th>
+            <th>Intitulé</th>
             <th>Description</th>
+            <th>Niveau</th>
+            <th>Statut</th>
             @if (canManage()) {
               <th>Actions</th>
             }
@@ -44,12 +46,14 @@
           @for (position of filteredPositions(); track position.id) {
             <tr>
               <td>{{ position.title }}</td>
-              <td class="description">{{ position.description || 'No description' }}</td>
+              <td class="description">{{ position.description || 'Aucune description' }}</td>
+              <td>{{ position.level || 'Non renseigné' }}</td>
+              <td><span class="badge" [class.success]="position.active" [class.muted]="!position.active">{{ position.active ? 'Actif' : 'Inactif' }}</span></td>
               @if (canManage()) {
                 <td>
                   <div class="actions">
-                    <button class="secondary-button" type="button" (click)="openEdit(position)">Edit</button>
-                    <button class="danger-button" type="button" (click)="requestDelete(position)">Delete</button>
+                    <button class="secondary-button" type="button" (click)="openEdit(position)">Modifier</button>
+                    <button class="danger-button" type="button" (click)="requestDelete(position)">Supprimer</button>
                   </div>
                 </td>
               }
