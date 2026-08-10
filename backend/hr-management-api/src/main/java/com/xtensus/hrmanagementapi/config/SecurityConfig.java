@@ -109,6 +109,9 @@ public class SecurityConfig {
                                 .requestMatchers(HttpMethod.GET, "/api/medical-documents/download/**", "/api/certificats-medicaux/download/**").hasAnyRole("HR", "ADMIN")
                                 .requestMatchers(HttpMethod.GET, "/api/medical-documents/**", "/api/certificats-medicaux/**").hasAnyRole("HR", "ADMIN")
                                 .requestMatchers(HttpMethod.DELETE, "/api/medical-documents/**", "/api/certificats-medicaux/**").hasAnyRole("HR", "ADMIN")
+                                .requestMatchers(HttpMethod.POST, "/api/certificats-medicaux-v2/televerser/**").authenticated()
+                                .requestMatchers(HttpMethod.GET, "/api/certificats-medicaux-v2/**").authenticated()
+                                .requestMatchers(HttpMethod.DELETE, "/api/certificats-medicaux-v2/**").hasAnyRole("HR", "ADMIN")
 
                                 .requestMatchers("/api/notifications-v2/**").authenticated()
                                 .requestMatchers(HttpMethod.GET, "/api/auth/me").authenticated()

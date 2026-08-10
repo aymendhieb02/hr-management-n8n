@@ -212,10 +212,10 @@ public class CongeDemandeService {
 
     private void validerDates(LocalDate debut, LocalDate fin) {
         if (debut.isAfter(fin)) throw new CongeDemandeInvalideException("La date de debut ne peut pas etre apres la date de fin");
-        LocalDate premiereDateAutorisee = LocalDate.now().plusDays(3);
+        LocalDate premiereDateAutorisee = LocalDate.now().plusDays(1);
         if (debut.isBefore(premiereDateAutorisee)) {
             throw new CongeDemandeInvalideException(
-                    "La demande doit etre deposee plus de 48 heures a l'avance. Premiere date autorisee : "
+                    "La demande doit etre deposee au moins 24 heures a l'avance. Premiere date autorisee : "
                             + premiereDateAutorisee
             );
         }
