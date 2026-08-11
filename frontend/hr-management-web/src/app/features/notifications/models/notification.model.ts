@@ -13,4 +13,6 @@ export interface NotificationResponse {
   read: boolean;
   createdAt: string;
   readAt: string | null;
+  type?: string;
+  priority?: string | null;
 }

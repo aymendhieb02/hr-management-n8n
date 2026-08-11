@@ -1,4 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { computed, signal } from '@angular/core';
 import { of, throwError } from 'rxjs';
 import { AuthService } from '../../../../core/services/auth.service';
 import { NotificationResponse } from '../../models/notification.model';
@@ -12,11 +13,29 @@ describe('NotificationListComponent', () => {
   let service: any;
 
   function setup(items: NotificationResponse[] = [read, unread]): void {
+    const itemsSignal = signal(items);
     service = {
-      findByUser: vi.fn(() => of(items)),
-      markAsRead: vi.fn(() => of({ ...unread, read: true, readAt: '2026-07-13T00:00:00' })),
-      markAllAsRead: vi.fn(() => of(items.map((item) => ({ ...item, read: true })))),
-      delete: vi.fn(() => of(void 0))
+      notifications: itemsSignal.asReadonly(),
+      unreadCount: computed(() => itemsSignal().filter((item) => !item.read).length),
+      manageableUnreadCount: computed(() => itemsSignal().filter((item) => !item.read).length),
+      canManage: vi.fn(() => true),
+      canDelete: vi.fn(() => false),
+      canMarkAll: signal(true).asReadonly(),
+      loading: signal(false).asReadonly(),
+      loadCurrentUser: vi.fn(() => of(items)),
+      markAsRead: vi.fn((id: number) => {
+        const updated = { ...itemsSignal().find((item) => item.id === id)!, read: true, readAt: '2026-07-13T00:00:00' };
+        itemsSignal.update((current) => current.map((item) => item.id === id ? updated : item));
+        return of(updated);
+      }),
+      markAllAsRead: vi.fn(() => {
+        itemsSignal.update((current) => current.map((item) => ({ ...item, read: true })));
+        return of(itemsSignal());
+      }),
+      delete: vi.fn((id: number) => {
+        itemsSignal.update((current) => current.filter((item) => item.id !== id));
+        return of(void 0);
+      })
     };
     TestBed.configureTestingModule({
       imports: [NotificationListComponent],
@@ -31,9 +50,9 @@ describe('NotificationListComponent', () => {
 
   it('loads current user notifications and shows unread badge', () => {
     setup();
-    expect(service.findByUser).toHaveBeenCalledWith(7);
-    expect(text()).toContain('1 unread');
-    expect(text()).toContain('Unread');
+    expect(service.loadCurrentUser).toHaveBeenCalled();
+    expect(text()).toContain('1non lue');
+    expect(text()).toContain('Non lue');
   });
 
   it('filters unread and marks notifications read', () => {
@@ -42,10 +61,10 @@ describe('NotificationListComponent', () => {
     fixture.detectChanges();
     expect(text()).toContain('Message 1');
     expect(text()).not.toContain('Message 2');
-    button('Mark as read').click();
+    button('Marquer comme lue').click();
     expect(service.markAsRead).toHaveBeenCalledWith(1);
     (fixture.componentInstance as any).markAllAsRead();
-    expect(service.markAllAsRead).toHaveBeenCalledWith(7);
+    expect(service.markAllAsRead).toHaveBeenCalled();
   });
 
   it('deletes notification and handles failure', () => {
@@ -59,12 +78,12 @@ describe('NotificationListComponent', () => {
     fixture.detectChanges();
     dialogDelete().click();
     fixture.detectChanges();
-    expect(text()).toContain('Notification could not be deleted.');
+    expect(text()).toContain('Impossible de supprimer cette notification.');
   });
 
   it('renders empty state', () => {
     setup([]);
-    expect(text()).toContain('No notifications found.');
+    expect(text()).toContain('Aucune notification');
   });
 
   function text(): string { return fixture.nativeElement.textContent; }

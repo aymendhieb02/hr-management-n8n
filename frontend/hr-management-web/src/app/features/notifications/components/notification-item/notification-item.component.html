@@ -1,18 +1,25 @@
-<article class="state">
-  <header class="page-header">
-    <div>
-      <h2>{{ notification().title }}</h2>
-      <p>{{ notification().createdAt }}</p>
-    </div>
-    <span class="badge" [class.warning]="!notification().read" [class.muted]="notification().read">
-      {{ notification().read ? 'Read' : 'Unread' }}
-    </span>
-  </header>
-  <p>{{ notification().message }}</p>
-  <div class="dialog-actions">
-    @if (!notification().read) {
-      <button class="secondary-button" type="button" (click)="markRead.emit(notification())">Mark as read</button>
+<article class="notification-card" [class.unread]="!notification().read">
+  <span class="notification-icon" aria-hidden="true">{{ notification().read ? '✓' : '!' }}</span>
+  <div class="notification-content">
+    <header>
+      <div>
+        <div class="notification-meta">
+          @if (notification().type) { <span>{{ notification().type === 'DECISION_CONGE' ? 'Décision de congé' : 'Demande de congé' }}</span> }
+          <span>Pour {{ notification().recipient.firstName }} {{ notification().recipient.lastName }}</span>
+        </div>
+        <h2>{{ notification().title }}</h2>
+        <time [attr.datetime]="notification().createdAt">{{ notification().createdAt | date:'dd/MM/yyyy à HH:mm' }}</time>
+      </div>
+      <span class="read-state" [class.unread-state]="!notification().read">{{ notification().read ? 'Lue' : 'Non lue' }}</span>
+    </header>
+    <p>{{ notification().message }}</p>
+  </div>
+  <div class="notification-actions">
+    @if (canManage() && !notification().read) {
+      <button class="mark-read-button" type="button" (click)="markRead.emit(notification())">Marquer comme lue</button>
     }
-    <button class="danger-button" type="button" (click)="delete.emit(notification())">Delete</button>
+    @if (canDelete()) {
+      <button class="delete-notification-button" type="button" aria-label="Supprimer la notification" (click)="delete.emit(notification())">Supprimer</button>
+    }
   </div>
 </article>

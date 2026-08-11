@@ -5,7 +5,15 @@
   display: block;
   height: 100%;
   overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-color: #d8985d transparent;
+  scrollbar-width: thin;
 }
+
+:host::-webkit-scrollbar { width: 7px; }
+:host::-webkit-scrollbar-track { background: transparent; }
+:host::-webkit-scrollbar-thumb { background: #d8a06d; border: 2px solid transparent; border-radius: 999px; background-clip: padding-box; }
+:host::-webkit-scrollbar-thumb:hover { background: #bd702c; background-clip: padding-box; }
 
 .sidebar-nav {
   display: grid;
@@ -37,4 +45,20 @@ a.active {
   background: linear-gradient(90deg, #fff 0%, #fff9f2 100%);
   color: #b85c0d;
   box-shadow: inset 3px 0 0 #ed8a2b, 0 6px 16px rgba(55, 58, 62, .1);
+}
+
+.nav-label { min-width: 0; }
+.notification-count {
+  display: grid;
+  place-items: center;
+  min-width: 24px;
+  height: 24px;
+  margin-left: auto;
+  padding: 0 7px;
+  border: 1px solid #f2c18f;
+  border-radius: 999px;
+  background: #fff3e5;
+  color: #b75308;
+  font-size: .72rem;
+  font-weight: 850;
 }

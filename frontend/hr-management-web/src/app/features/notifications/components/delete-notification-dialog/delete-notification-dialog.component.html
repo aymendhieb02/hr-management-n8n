@@ -1,11 +1,12 @@
 <div class="dialog-backdrop">
-  <section class="dialog" aria-labelledby="delete-notification-title">
-    <h2 id="delete-notification-title">Delete Notification</h2>
-    <p>Delete <strong>{{ notification().title }}</strong>?</p>
+  <section class="dialog notification-delete-dialog" role="dialog" aria-modal="true" aria-labelledby="delete-notification-title">
+    <span class="dialog-warning-icon" aria-hidden="true">!</span>
+    <h2 id="delete-notification-title">Supprimer la notification ?</h2>
+    <p>La notification <strong>« {{ notification().title }} »</strong> sera supprimée définitivement.</p>
     @if (error()) { <p class="form-error" role="alert">{{ error() }}</p> }
     <div class="dialog-actions">
-      <button class="secondary-button" type="button" (click)="cancel.emit()" [disabled]="loading()">Cancel</button>
-      <button class="danger-button" type="button" (click)="confirmDelete.emit()" [disabled]="loading()">Delete</button>
+      <button class="secondary-button" type="button" (click)="cancel.emit()" [disabled]="loading()">Annuler</button>
+      <button class="danger-button" type="button" (click)="confirmDelete.emit()" [disabled]="loading()">{{ loading() ? 'Suppression…' : 'Supprimer' }}</button>
     </div>
   </section>
 </div>
