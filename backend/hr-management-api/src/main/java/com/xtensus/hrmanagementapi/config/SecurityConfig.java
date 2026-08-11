@@ -57,6 +57,7 @@ public class SecurityConfig {
                                 .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
                                 .requestMatchers("/error").permitAll()
                                 .requestMatchers(HttpMethod.GET, "/actuator/health").permitAll()
+                                .requestMatchers("/ws-notifications/**").permitAll()
 
                                 .requestMatchers(HttpMethod.GET, "/api/departements/**").authenticated()
                                 .requestMatchers(HttpMethod.POST, "/api/departements").hasAnyRole("HR", "ADMIN")
@@ -113,6 +114,7 @@ public class SecurityConfig {
                                 .requestMatchers(HttpMethod.GET, "/api/certificats-medicaux-v2/**").authenticated()
                                 .requestMatchers(HttpMethod.DELETE, "/api/certificats-medicaux-v2/**").hasAnyRole("HR", "ADMIN")
 
+                                .requestMatchers(HttpMethod.POST, "/api/notifications-v2").hasAnyRole("HR", "ADMIN")
                                 .requestMatchers("/api/notifications-v2/**").authenticated()
                                 .requestMatchers(HttpMethod.GET, "/api/auth/me").authenticated()
                                 .anyRequest().authenticated()

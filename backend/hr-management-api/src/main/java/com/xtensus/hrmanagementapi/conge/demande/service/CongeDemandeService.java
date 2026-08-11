@@ -21,6 +21,7 @@ import com.xtensus.hrmanagementapi.repository.EmployeRepository;
 import com.xtensus.hrmanagementapi.repository.RaisonRepository;
 import com.xtensus.hrmanagementapi.domain.entity.Raison;
 import com.xtensus.hrmanagementapi.conge.demande.historique.CongeDemandeHistoriqueService;
+import com.xtensus.hrmanagementapi.notificationfr.service.NotificationFrancaiseService;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -44,11 +45,13 @@ public class CongeDemandeService {
     private final RaisonRepository raisonRepository;
     private final CongeDemandeMapper mapper;
     private final CongeDemandeHistoriqueService historiqueService;
+    private final NotificationFrancaiseService notificationService;
 
     public CongeDemandeService(CongeDemandeRepository demandeRepository, EmployeRepository employeRepository,
             CongeTypeRepository congeTypeRepository, CongeDemandeStatutRepository statutRepository,
             RaisonRepository raisonRepository, CongeDemandeMapper mapper,
-            CongeDemandeHistoriqueService historiqueService) {
+            CongeDemandeHistoriqueService historiqueService,
+            NotificationFrancaiseService notificationService) {
         this.demandeRepository = demandeRepository;
         this.employeRepository = employeRepository;
         this.congeTypeRepository = congeTypeRepository;
@@ -56,6 +59,7 @@ public class CongeDemandeService {
         this.raisonRepository = raisonRepository;
         this.mapper = mapper;
         this.historiqueService = historiqueService;
+        this.notificationService = notificationService;
     }
 
     @Transactional
@@ -86,6 +90,10 @@ public class CongeDemandeService {
         demande.setDateCreation(now);
         CongeDemande saved = demandeRepository.save(demande);
         historiqueService.enregistrer(saved, "CREATION", null, STATUT_EN_ATTENTE, saved.getCommentaireEmploye());
+        notificationService.notifier(
+                saved.getDecideur(), "DEMANDE_CONGE", "Nouvelle demande en attente",
+                saved.getEmploye().getPrenom() + " " + saved.getEmploye().getNom() + " a soumis une "
+                        + libelleNature(saved) + " pour la période du " + periode(saved) + ".", "HAUTE");
         return mapper.toResponse(saved);
     }
 
@@ -109,6 +117,10 @@ public class CongeDemandeService {
         demande.setDateModification(LocalDateTime.now());
         CongeDemande saved = demandeRepository.save(demande);
         historiqueService.enregistrer(saved, "MODIFICATION", STATUT_EN_ATTENTE, STATUT_EN_ATTENTE, saved.getCommentaireEmploye());
+        notificationService.notifier(
+                saved.getDecideur(), "DEMANDE_CONGE", "Demande en attente modifiée",
+                saved.getEmploye().getPrenom() + " " + saved.getEmploye().getNom()
+                        + " a modifié sa demande. Nouvelle période : " + periode(saved) + ".", "NORMALE");
         return mapper.toResponse(saved);
     }
 
@@ -120,6 +132,10 @@ public class CongeDemandeService {
         demande.setDateModification(LocalDateTime.now());
         CongeDemande saved = demandeRepository.save(demande);
         historiqueService.enregistrer(saved, "ANNULATION", STATUT_EN_ATTENTE, STATUT_ANNULEE, null);
+        notificationService.notifier(
+                saved.getDecideur(), "DEMANDE_CONGE", "Demande annulée par l'employé",
+                saved.getEmploye().getPrenom() + " " + saved.getEmploye().getNom()
+                        + " a annulé sa demande du " + periode(saved) + ".", "NORMALE");
     }
 
     @Transactional
@@ -129,6 +145,10 @@ public class CongeDemandeService {
         appliquerDecision(demande, request, STATUT_APPROUVEE, false);
         CongeDemande saved = demandeRepository.save(demande);
         historiqueService.enregistrer(saved, "APPROBATION", ancienStatut, STATUT_APPROUVEE, request.getCommentaire());
+        notificationService.notifier(
+                saved.getEmploye(), "DECISION_CONGE", "Demande approuvée",
+                "Votre " + libelleNature(saved) + " du " + periode(saved) + " a été approuvée."
+                        + commentaireDecision(saved), "HAUTE");
         return mapper.toResponse(saved);
     }
 
@@ -142,6 +162,10 @@ public class CongeDemandeService {
         appliquerDecision(demande, request, STATUT_REFUSEE, true);
         CongeDemande saved = demandeRepository.save(demande);
         historiqueService.enregistrer(saved, "REFUS", ancienStatut, STATUT_REFUSEE, request.getCommentaire());
+        notificationService.notifier(
+                saved.getEmploye(), "DECISION_CONGE", "Demande refusée",
+                "Votre " + libelleNature(saved) + " du " + periode(saved) + " a été refusée."
+                        + commentaireDecision(saved), "HAUTE");
         return mapper.toResponse(saved);
     }
 
@@ -242,4 +266,19 @@ public class CongeDemandeService {
     }
     private BigDecimal nombreJours(LocalDate debut, LocalDate fin) { return BigDecimal.valueOf(ChronoUnit.DAYS.between(debut, fin) + 1); }
     private String trim(String value) { if (value == null) return null; String t = value.trim(); return t.isEmpty() ? null : t; }
+
+    private String libelleNature(CongeDemande demande) {
+        return "AUTORISATION_ABSENCE".equals(demande.getNature()) ? "autorisation d'absence" : "demande de congé";
+    }
+
+    private String periode(CongeDemande demande) {
+        if ("AUTORISATION_ABSENCE".equals(demande.getNature())) {
+            return demande.getDateDebut() + " de " + demande.getHeureDebut() + " à " + demande.getHeureFin();
+        }
+        return demande.getDateDebut() + " au " + demande.getDateFin();
+    }
+
+    private String commentaireDecision(CongeDemande demande) {
+        return demande.getCommentaireDecision() == null ? "" : " Commentaire : " + demande.getCommentaireDecision();
+    }
 }

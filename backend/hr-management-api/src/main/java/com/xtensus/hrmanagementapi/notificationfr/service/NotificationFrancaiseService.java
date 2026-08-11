@@ -9,6 +9,8 @@ import com.xtensus.hrmanagementapi.notificationfr.dto.NotificationFrancaiseRespo
 import com.xtensus.hrmanagementapi.notificationfr.exception.NotificationFrancaiseIntrouvableException;
 import com.xtensus.hrmanagementapi.notificationfr.exception.NotificationTypeIntrouvableException;
 import com.xtensus.hrmanagementapi.notificationfr.mapper.NotificationFrancaiseMapper;
+import com.xtensus.hrmanagementapi.security.user.CustomUserDetails;
+import com.xtensus.hrmanagementapi.domain.enums.RoleType;
 import com.xtensus.hrmanagementapi.repository.EmployeRepository;
 import com.xtensus.hrmanagementapi.repository.NotificationFrancaiseRepository;
 import com.xtensus.hrmanagementapi.repository.NotificationTypeRepository;
@@ -73,6 +75,60 @@ public class NotificationFrancaiseService {
     @Transactional(readOnly = true)
     public List<NotificationFrancaiseResponse> nonLues(Long employeId) {
         return repository.findByEmployeIdAndLuFalseOrderByDateCreationDesc(employeId).stream().map(mapper::toResponse).toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<NotificationFrancaiseResponse> visiblesPour(CustomUserDetails utilisateur, boolean uniquementNonLues) {
+        boolean visionGlobale = utilisateur.getRole() == RoleType.MANAGER
+                || utilisateur.getRole() == RoleType.HR
+                || utilisateur.getRole() == RoleType.ADMIN;
+        List<NotificationFrancaise> notifications = visionGlobale
+                ? (uniquementNonLues ? repository.findByLuFalseOrderByDateCreationDesc() : repository.findAllByOrderByDateCreationDesc())
+                : (uniquementNonLues
+                        ? repository.findByEmployeIdAndTypeLibelleAndLuFalseOrderByDateCreationDesc(utilisateur.getId(), "DECISION_CONGE")
+                        : repository.findByEmployeIdAndTypeLibelleOrderByDateCreationDesc(utilisateur.getId(), "DECISION_CONGE"));
+        return notifications.stream().map(mapper::toResponse).toList();
+    }
+
+    @Transactional
+    public NotificationFrancaiseResponse marquerCommeLue(Long id, CustomUserDetails utilisateur) {
+        NotificationFrancaise notification = autorisee(id, utilisateur);
+        notification.setLu(true);
+        notification.setDateLecture(LocalDateTime.now());
+        NotificationFrancaiseResponse response = mapper.toResponse(repository.save(notification));
+        com.xtensus.hrmanagementapi.notificationfr.realtime.NotificationRealtimePublisher.publierApresCommit();
+        return response;
+    }
+
+    @Transactional
+    public void supprimer(Long id, CustomUserDetails utilisateur) {
+        repository.delete(autorisee(id, utilisateur));
+        com.xtensus.hrmanagementapi.notificationfr.realtime.NotificationRealtimePublisher.publierApresCommit();
+    }
+
+    @Transactional
+    public void notifier(Employe destinataire, String typeLibelle, String titre, String contenu, String priorite) {
+        if (destinataire == null) return;
+        NotificationType type = types.findByLibelle(typeLibelle)
+                .orElseThrow(() -> new NotificationTypeIntrouvableException(typeLibelle));
+        NotificationFrancaise notification = new NotificationFrancaise();
+        notification.setEmploye(destinataire);
+        notification.setType(type);
+        notification.setTitre(titre);
+        notification.setContenu(contenu);
+        notification.setPriorite(priorite);
+        notification.setLu(false);
+        notification.setDateCreation(LocalDateTime.now());
+        repository.save(notification);
+        com.xtensus.hrmanagementapi.notificationfr.realtime.NotificationRealtimePublisher.publierApresCommit();
+    }
+
+    private NotificationFrancaise autorisee(Long id, CustomUserDetails utilisateur) {
+        NotificationFrancaise notification = entite(id);
+        if (!notification.getEmploye().getId().equals(utilisateur.getId())) {
+            throw new org.springframework.security.access.AccessDeniedException("Notification non autorisee");
+        }
+        return notification;
     }
 
     private NotificationFrancaise entite(Long id) {
