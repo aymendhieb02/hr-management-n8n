@@ -22,6 +22,7 @@ export class LeaveRequestFormComponent implements OnChanges {
   readonly leaveTypes = input<LeaveType[]>([]);
   readonly reasons = input<Reason[]>([]);
   readonly holidays = input<JourFerieResponse[]>([]);
+  readonly maximumLeaveDays = input<number | null>(null);
   readonly loading = input(false);
   readonly validationErrors = input<Record<string, string>>({});
   readonly submissionError = input<string | null>(null);
@@ -86,6 +87,17 @@ export class LeaveRequestFormComponent implements OnChanges {
     }
 
     this.form.controls.endDate.setValue(this.localDate(current));
+    this.updateBalanceError();
+  }
+
+  protected updateBalanceError(): void {
+    const maximum = this.maximumLeaveDays();
+    const requested = Number(this.form.controls.numberOfDays.value);
+    if (this.form.controls.nature.value === 'CONGE' && maximum !== null && requested > maximum) {
+      this.formLevelError = `Solde insuffisant : vous pouvez demander au maximum ${maximum} jour(s), demandes en attente comprises. Votre solde ne peut pas descendre sous -5 jours.`;
+    } else if (this.formLevelError?.startsWith('Solde insuffisant')) {
+      this.formLevelError = null;
+    }
   }
 
   protected startTimeChanged(): void {
@@ -169,6 +181,10 @@ export class LeaveRequestFormComponent implements OnChanges {
     if (value.reasonChoice === 'OTHER' && !value.otherReason?.trim()) return 'Veuillez saisir votre motif.';
     if (value.startDate && value.startDate < this.firstAllowedDate) return `La demande doit être déposée au moins 24 heures à l'avance (à partir du ${new Intl.DateTimeFormat('fr-FR').format(new Date(this.firstAllowedDate + 'T12:00:00'))}).`;
     if (value.nature === 'CONGE' && (!value.numberOfDays || value.numberOfDays < 1)) return 'Le nombre de jours doit etre au minimum de 1.';
+    const maximum = this.maximumLeaveDays();
+    if (value.nature === 'CONGE' && maximum !== null && Number(value.numberOfDays) > maximum) {
+      return `Solde insuffisant : vous pouvez demander au maximum ${maximum} jour(s), demandes en attente comprises. Votre solde ne peut pas descendre sous -5 jours.`;
+    }
     if (value.nature === 'AUTORISATION_ABSENCE') {
       if (!value.startTime || !value.endTime) return 'Les heures de debut et de fin sont obligatoires.';
       const start = this.minutes(value.startTime); const end = this.minutes(value.endTime);

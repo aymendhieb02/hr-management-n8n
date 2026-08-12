@@ -5,6 +5,7 @@
       <div><span>Détails de la demande</span><h2 id="leave-details-title">{{ request().leaveType.name }}</h2><p>{{ request().requester.firstName }} {{ request().requester.lastName }}</p></div>
       <span class="badge" [class.success]="request().status === 'APPROVED'" [class.warning]="request().status === 'PENDING'" [class.muted]="request().status !== 'APPROVED' && request().status !== 'PENDING'">{{ statusLabel() }}</span>
     </header>
+    <div class="leave-details-content">
     <dl class="detail-grid">
       <div><dt><i>▣</i> Période</dt><dd>{{ request().startDate }} au {{ request().endDate }}</dd></div>
       <div><dt><i>◷</i> Nombre de jours</dt><dd class="detail-number">{{ request().requestedDays }}</dd></div>
@@ -35,6 +36,7 @@
         @if (certificateError()) { <p class="form-error" role="alert">{{ certificateError() }}</p> }
       </section>
     }
+    </div>
     <div class="dialog-actions">
       <button class="primary-button close-details-button" type="button" (click)="close.emit()">Fermer</button>
     </div>

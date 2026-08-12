@@ -76,7 +76,7 @@
   }
 </section>
 @if (formOpen()) {
-  <app-leave-request-form [request]="editingRequest()" [leaveTypes]="leaveTypes()" [reasons]="reasons()" [holidays]="holidays()" [loading]="isSaving()" [validationErrors]="formErrors()" [submissionError]="formSubmissionError()" (save)="saveRequest($event)" (cancel)="closeForm()" />
+  <app-leave-request-form [request]="editingRequest()" [leaveTypes]="leaveTypes()" [reasons]="reasons()" [holidays]="holidays()" [maximumLeaveDays]="maximumLeaveDays()" [loading]="isSaving()" [validationErrors]="formErrors()" [submissionError]="formSubmissionError()" (save)="saveRequest($event)" (cancel)="closeForm()" />
 }
 @if (detailRequest()) {
   <app-leave-details [request]="detailRequest()!" (certificateAdded)="markCertificateAdded($event)" (close)="detailRequest.set(null)" />

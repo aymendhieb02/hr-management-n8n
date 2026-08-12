@@ -11,15 +11,15 @@ export const NAVIGATION_ITEMS: NavigationItem[] = [
   { label: 'Mon profil', path: '/profile', roles: ['EMPLOYEE', 'MANAGER', 'HR', 'ADMIN'] },
   { label: 'Notifications', path: '/notifications', roles: ['EMPLOYEE', 'MANAGER', 'HR', 'ADMIN'] },
 
-  { label: 'Mes demandes de conge', path: '/my-leave-requests', roles: ['EMPLOYEE', 'MANAGER', 'HR', 'ADMIN'] },
-  { label: 'Demander un conge', path: '/request-leave', roles: ['EMPLOYEE', 'MANAGER', 'HR', 'ADMIN'] },
-  { label: 'Mon solde de congé', path: '/my-balance', roles: ['EMPLOYEE', 'MANAGER', 'HR', 'ADMIN'] },
-  { label: 'Mon calendrier', path: '/my-calendar', roles: ['EMPLOYEE', 'MANAGER', 'HR', 'ADMIN'] },
+  { label: 'Mes demandes de congé', path: '/my-leave-requests', roles: ['EMPLOYEE', 'HR', 'ADMIN'] },
+  { label: 'Demander un congé', path: '/request-leave', roles: ['EMPLOYEE', 'HR', 'ADMIN'] },
+  { label: 'Mon solde de congé', path: '/my-balance', roles: ['EMPLOYEE', 'HR', 'ADMIN'] },
+  { label: 'Mon calendrier', path: '/my-calendar', roles: ['EMPLOYEE', 'HR', 'ADMIN'] },
 
   { label: 'Demandes de l equipe', path: '/team-requests', roles: ['MANAGER', 'HR', 'ADMIN'] },
   { label: 'Membres de l equipe', path: '/team-members', roles: ['MANAGER'] },
   { label: 'Calendrier de l equipe', path: '/team-calendar', roles: ['MANAGER', 'HR', 'ADMIN'] },
-  { label: 'Disponibilite de l equipe', path: '/team-availability', roles: ['MANAGER'] },
+  { label: "Disponibilité de l'équipe", path: '/team-availability', roles: ['MANAGER'] },
   { label: 'Transactions de congé', path: '/balance-transactions', roles: ['MANAGER', 'HR', 'ADMIN'] },
 
   { label: 'Tableau de bord', path: '/dashboard', roles: ['HR', 'ADMIN'] },

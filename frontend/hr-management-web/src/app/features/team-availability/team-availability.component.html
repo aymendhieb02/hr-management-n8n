@@ -1,0 +1,38 @@
+<section class="availability-page">
+  <header class="availability-hero">
+    <div><span class="eyebrow">Organisation de l'équipe</span><h1>Disponibilité de l'équipe</h1><p>Visualisez les congés approuvés, les autorisations d'absence et les jours fériés pour organiser la charge de travail.</p></div>
+    <div class="date-control"><label for="availability-date">Date de référence</label><input id="availability-date" type="date" [ngModel]="selectedDate()" (ngModelChange)="selectedDate.set($event)" /></div>
+  </header>
+
+  @if (error()) { <p class="state error" role="alert">{{ error() }}</p> }
+  @if (loading()) { <p class="state">Chargement des disponibilités...</p> }
+  @else {
+    <section class="summary-grid">
+      <article><span>Collaborateurs actifs</span><strong>{{ selectedSummary().total }}</strong><small>{{ fullDate(selectedDate()) }}</small></article>
+      <article class="available"><span>Disponibles</span><strong>{{ selectedSummary().available }}</strong><small>Présents toute la journée</small></article>
+      <article class="absent"><span>En congé</span><strong>{{ selectedSummary().absent }}</strong><small>Absences approuvées</small></article>
+      <article class="authorization"><span>Autorisations</span><strong>{{ selectedSummary().authorization }}</strong><small>Absences horaires</small></article>
+    </section>
+
+    <section class="planning-card">
+      <header class="planning-toolbar">
+        <div><h2>Planning hebdomadaire</h2><p>Les demandes en attente ne sont pas comptées comme des absences confirmées.</p></div>
+        <div class="planning-actions"><input type="search" placeholder="Rechercher un collaborateur" [ngModel]="search()" (ngModelChange)="search.set($event)" /><button type="button" (click)="moveWeek(-1)" aria-label="Semaine précédente">‹</button><button type="button" class="today" (click)="goToCurrentWeek()">Cette semaine</button><button type="button" (click)="moveWeek(1)" aria-label="Semaine suivante">›</button></div>
+      </header>
+
+      <div class="availability-table-wrap">
+        <table class="availability-table">
+          <thead><tr><th>Collaborateur</th>@for (date of week(); track date) { <th [class.selected]="date === selectedDate()"><span>{{ dayName(date) }}</span><strong>{{ dayNumber(date) }}</strong></th> }</tr></thead>
+          <tbody>
+            @for (member of filteredMembers(); track member.id) {
+              <tr><th><div class="member"><span class="avatar">{{ initials(member) }}</span><div><strong>{{ member.firstName }} {{ member.lastName }}</strong><small>{{ member.position?.name || 'Poste non renseigné' }}</small></div></div></th>
+                @for (date of week(); track date) { @let availability = state(member, date); <td [class.selected]="date === selectedDate()"><div class="availability-state" [class.available]="availability.kind === 'AVAILABLE'" [class.leave]="availability.kind === 'LEAVE'" [class.authorization]="availability.kind === 'AUTHORIZATION'" [class.holiday]="availability.kind === 'HOLIDAY'" [title]="availability.detail"><span></span><strong>{{ availability.label }}</strong><small>{{ availability.detail }}</small></div></td> }
+              </tr>
+            } @empty { <tr><td class="empty" colspan="8">Aucun collaborateur trouvé.</td></tr> }
+          </tbody>
+        </table>
+      </div>
+      <footer class="legend"><span><i class="available"></i> Disponible</span><span><i class="leave"></i> En congé</span><span><i class="authorization"></i> Autorisation</span><span><i class="holiday"></i> Jour férié</span></footer>
+    </section>
+  }
+</section>

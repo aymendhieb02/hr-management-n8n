@@ -16,6 +16,7 @@ import { LeaveDetailsComponent } from '../../components/leave-details/leave-deta
 import { LeaveRequestFormComponent } from '../../components/leave-request-form/leave-request-form.component';
 import { LeaveRequestResponse, LeaveRequestStatus, LeaveRequestUpdateRequest } from '../../models/leave-request.model';
 import { LeaveRequestService } from '../../services/leave-request.service';
+import { LeaveBalanceService } from '../../services/leave-balance.service';
 import { MedicalDocumentService } from '../../../medical-documents/services/medical-document.service';
 
 @Component({
@@ -33,11 +34,13 @@ export class LeaveRequestListComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly medicalDocumentService = inject(MedicalDocumentService);
+  private readonly leaveBalanceService = inject(LeaveBalanceService);
 
   protected readonly requests = signal<LeaveRequestResponse[]>([]);
   protected readonly leaveTypes = signal<LeaveType[]>([]);
   protected readonly reasons = signal<Reason[]>([]);
   protected readonly holidays = signal<JourFerieResponse[]>([]);
+  protected readonly currentBalance = signal<number | null>(null);
   protected readonly isLoading = signal(false);
   protected readonly isSaving = signal(false);
   protected readonly error = signal<string | null>(null);
@@ -55,6 +58,15 @@ export class LeaveRequestListComponent implements OnInit {
   protected readonly statuses: LeaveRequestStatus[] = ['PENDING', 'APPROVED', 'REJECTED', 'CANCELLED'];
   protected readonly isManagerMode = computed(() => this.route.snapshot.routeConfig?.path === 'team-requests');
   protected readonly isCreateMode = computed(() => this.route.snapshot.routeConfig?.path === 'request-leave');
+  protected readonly maximumLeaveDays = computed(() => {
+    const balance = this.currentBalance();
+    if (balance === null) return null;
+    const editedId = this.editingRequest()?.id;
+    const pendingDays = this.requests()
+      .filter((request) => request.id !== editedId && request.status === 'PENDING' && request.nature === 'CONGE')
+      .reduce((total, request) => total + request.requestedDays, 0);
+    return Math.max(0, balance + 5 - pendingDays);
+  });
   protected readonly title = computed(() => this.isManagerMode() ? "Demandes de l'equipe" : this.isCreateMode() ? 'Demander un conge' : 'Mes demandes de conge');
   protected readonly filteredRequests = computed(() => {
     const search = this.searchTerm().trim().toLowerCase();
@@ -74,6 +86,13 @@ export class LeaveRequestListComponent implements OnInit {
     this.reasonService.findAvailable().subscribe({ next: (reasons) => this.reasons.set(reasons), error: () => {} });
     this.jourFerieService.getActive().subscribe({ next: (holidays) => this.holidays.set(holidays), error: () => {} });
     this.loadRequests();
+    const currentUser = this.authService.getCurrentUser();
+    if (currentUser && !this.isManagerMode()) {
+      this.leaveBalanceService.findByUser(currentUser.id).subscribe({
+        next: (balances) => this.currentBalance.set(balances[0]?.remainingDays ?? 0),
+        error: () => this.currentBalance.set(null)
+      });
+    }
     if (this.isCreateMode()) this.openCreate();
   }
 

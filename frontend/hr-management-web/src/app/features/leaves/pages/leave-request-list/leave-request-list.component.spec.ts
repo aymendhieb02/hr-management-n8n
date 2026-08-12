@@ -6,6 +6,7 @@ import { LeaveTypeService } from '../../../leave-types/services/leave-type.servi
 import { ReasonService } from '../../../reasons/reason.service';
 import { LeaveRequestResponse } from '../../models/leave-request.model';
 import { LeaveRequestService } from '../../services/leave-request.service';
+import { LeaveBalanceService } from '../../services/leave-balance.service';
 import { LeaveRequestListComponent } from './leave-request-list.component';
 
 describe('LeaveRequestListComponent', () => {
@@ -27,6 +28,7 @@ describe('LeaveRequestListComponent', () => {
       imports: [LeaveRequestListComponent],
       providers: [
         { provide: LeaveRequestService, useValue: service },
+        { provide: LeaveBalanceService, useValue: { findByUser: vi.fn(() => of([{ remainingDays: 10 }])) } },
         { provide: LeaveTypeService, useValue: { findActive: vi.fn(() => of([{ id: 1, name: 'Annual', description: null, maxDays: null, requiresMedicalCertificate: false, active: true, createdAt: '', updatedAt: null }])) } },
         { provide: ReasonService, useValue: { findAvailable: vi.fn(() => of([{ id: 1, commentaire: 'Conge de maladie', disponible: true, dateCreation: '' }])) } },
         { provide: AuthService, useValue: { getCurrentUser: vi.fn(() => ({ id: 7, role: 'MANAGER' })) } },

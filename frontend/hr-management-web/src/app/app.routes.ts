@@ -92,9 +92,10 @@ export const routes: Routes = [
       },
       {
         path: 'team-availability',
-        component: PlaceholderPageComponent,
         canActivate: [roleGuard],
-        data: { title: 'Disponibilite de l equipe', roles: ['MANAGER'] }
+        data: { title: "Disponibilité de l'équipe", roles: ['MANAGER'] },
+        loadComponent: () => import('./features/team-availability/team-availability.component')
+          .then((m) => m.TeamAvailabilityComponent)
       },
       {
         path: 'dashboard',
