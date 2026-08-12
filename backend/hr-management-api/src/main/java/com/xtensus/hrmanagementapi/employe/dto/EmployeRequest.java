@@ -14,6 +14,10 @@ import lombok.Setter;
 @NoArgsConstructor
 public class EmployeRequest {
 
+    @NotBlank(message = "L'identifiant est obligatoire")
+    @Size(max = 100, message = "L'identifiant ne doit pas depasser 100 caracteres")
+    private String username;
+
     @NotBlank(message = "Le nom est obligatoire")
     @Size(max = 100, message = "Le nom ne doit pas depasser 100 caracteres")
     private String nom;

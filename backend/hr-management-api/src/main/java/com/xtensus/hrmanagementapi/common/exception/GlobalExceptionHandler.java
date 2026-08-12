@@ -40,7 +40,18 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<ApiErrorResponse> handleDataIntegrityViolation(DataIntegrityViolationException exception, HttpServletRequest request) {
-        return buildResponse(HttpStatus.CONFLICT, "La requete viole une contrainte de donnees", request, null);
+        String details = exception.getMostSpecificCause() == null ? "" : exception.getMostSpecificCause().getMessage();
+        String message;
+        if (details != null && details.toLowerCase().contains("duplicate")) {
+            message = "Cette valeur existe deja. Utilisez un libelle ou un identifiant unique.";
+        } else if (details != null && details.toLowerCase().contains("cannot be null")) {
+            message = "Une donnee obligatoire est absente. Actualisez la page puis reessayez.";
+        } else if (details != null && details.toLowerCase().contains("foreign key")) {
+            message = "Cette donnee est encore utilisee par un autre element et ne peut pas etre modifiee ou supprimee.";
+        } else {
+            message = "Impossible d'enregistrer cette modification en raison d'une contrainte de la base de donnees.";
+        }
+        return buildResponse(HttpStatus.CONFLICT, message, request, null);
     }
 
     @ExceptionHandler(Exception.class)

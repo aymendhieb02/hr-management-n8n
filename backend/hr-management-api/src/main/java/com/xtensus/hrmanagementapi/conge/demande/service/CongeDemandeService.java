@@ -19,6 +19,7 @@ import com.xtensus.hrmanagementapi.repository.CongeDemandeStatutRepository;
 import com.xtensus.hrmanagementapi.repository.CongeTypeRepository;
 import com.xtensus.hrmanagementapi.repository.EmployeRepository;
 import com.xtensus.hrmanagementapi.repository.RaisonRepository;
+import com.xtensus.hrmanagementapi.repository.JourFerieRepository;
 import com.xtensus.hrmanagementapi.domain.entity.Raison;
 import com.xtensus.hrmanagementapi.conge.demande.historique.CongeDemandeHistoriqueService;
 import com.xtensus.hrmanagementapi.notificationfr.service.NotificationFrancaiseService;
@@ -48,13 +49,15 @@ public class CongeDemandeService {
     private final CongeDemandeHistoriqueService historiqueService;
     private final NotificationFrancaiseService notificationService;
     private final CongeSoldeTransactionService soldeTransactionService;
+    private final JourFerieRepository jourFerieRepository;
 
     public CongeDemandeService(CongeDemandeRepository demandeRepository, EmployeRepository employeRepository,
             CongeTypeRepository congeTypeRepository, CongeDemandeStatutRepository statutRepository,
             RaisonRepository raisonRepository, CongeDemandeMapper mapper,
             CongeDemandeHistoriqueService historiqueService,
             NotificationFrancaiseService notificationService,
-            CongeSoldeTransactionService soldeTransactionService) {
+            CongeSoldeTransactionService soldeTransactionService,
+            JourFerieRepository jourFerieRepository) {
         this.demandeRepository = demandeRepository;
         this.employeRepository = employeRepository;
         this.congeTypeRepository = congeTypeRepository;
@@ -64,6 +67,7 @@ public class CongeDemandeService {
         this.historiqueService = historiqueService;
         this.notificationService = notificationService;
         this.soldeTransactionService = soldeTransactionService;
+        this.jourFerieRepository = jourFerieRepository;
     }
 
     @Transactional
@@ -255,6 +259,13 @@ public class CongeDemandeService {
                     "La demande doit etre deposee au moins 24 heures a l'avance. Premiere date autorisee : "
                             + premiereDateAutorisee
             );
+        }
+        if (debut.getDayOfWeek() == java.time.DayOfWeek.SATURDAY
+                || debut.getDayOfWeek() == java.time.DayOfWeek.SUNDAY) {
+            throw new CongeDemandeInvalideException("La date de debut doit etre un jour ouvrable : les week-ends ne sont pas autorises");
+        }
+        if (jourFerieRepository.existsByDateAndActifTrue(debut)) {
+            throw new CongeDemandeInvalideException("La date de debut correspond a un jour ferie et ne peut pas etre selectionnee");
         }
     }
 

@@ -123,6 +123,12 @@ public class CertificatMedicalService {
         return repository.findById(id).orElseThrow(() -> new CertificatMedicalIntrouvableException(id));
     }
 
+    @Transactional(readOnly = true)
+    public List<CertificatMedicalResponse> lister(CustomUserDetails principal) {
+        if (!estPrivilegie(principal)) throw new AccessDeniedException("Consultation globale des certificats non autorisee");
+        return repository.findAllByOrderByDateSoumissionDesc().stream().map(mapper::toResponse).toList();
+    }
+
     private void verifierConsultation(CongeDemande demande, CustomUserDetails principal) {
         boolean proprietaire = demande.getEmploye().getId().equals(principal.getId());
         boolean manager = demande.getEmploye().getManager() != null

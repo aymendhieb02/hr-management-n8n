@@ -40,6 +40,11 @@ public class TypeContratService {
         verifierUnicite(libelle, id);
         typeContratMapper.updateEntity(request, typeContrat);
         typeContrat.setLibelle(libelle);
+        // Les anciens exports MySQL pouvaient contenir 0000-00-00, converti en
+        // null par JDBC. Réparer cette valeur avant l'UPDATE d'une colonne NOT NULL.
+        if (typeContrat.getDateCreation() == null) {
+            typeContrat.setDateCreation(LocalDateTime.now());
+        }
         typeContrat.setDateModification(LocalDateTime.now());
         return typeContratMapper.toResponse(typeContratRepository.save(typeContrat));
     }

@@ -55,6 +55,7 @@ public class SecurityConfig {
                         authorize
                                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                                 .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
+                                .requestMatchers(HttpMethod.POST, "/api/auth/logout").permitAll()
                                 .requestMatchers("/error").permitAll()
                                 .requestMatchers(HttpMethod.GET, "/actuator/health").permitAll()
                                 .requestMatchers("/ws-notifications/**").permitAll()
@@ -68,9 +69,9 @@ public class SecurityConfig {
                                 .requestMatchers(HttpMethod.POST, "/api/postes").hasAnyRole("HR", "ADMIN")
                                 .requestMatchers(HttpMethod.PUT, "/api/postes/**").hasAnyRole("HR", "ADMIN")
                                 .requestMatchers(HttpMethod.DELETE, "/api/postes/**").hasAnyRole("HR", "ADMIN")
-                                .requestMatchers(HttpMethod.POST, "/api/type-contrats").hasAnyRole("HR", "ADMIN")
-                                .requestMatchers(HttpMethod.PUT, "/api/type-contrats/**").hasAnyRole("HR", "ADMIN")
-                                .requestMatchers(HttpMethod.DELETE, "/api/type-contrats/**").hasAnyRole("HR", "ADMIN")
+                                .requestMatchers(HttpMethod.POST, "/api/type-contrats").hasRole("ADMIN")
+                                .requestMatchers(HttpMethod.PUT, "/api/type-contrats/**").hasRole("ADMIN")
+                                .requestMatchers(HttpMethod.DELETE, "/api/type-contrats/**").hasRole("ADMIN")
 
                                 .requestMatchers(HttpMethod.GET, "/api/conge-types/**", "/api/conge-demande-statuts/**", "/api/raisons/**", "/api/jours-feries/**").authenticated()
                                 .requestMatchers(HttpMethod.POST, "/api/jours-feries/**").hasAnyRole("MANAGER", "HR", "ADMIN")
@@ -110,7 +111,9 @@ public class SecurityConfig {
                                 .requestMatchers(HttpMethod.PUT, "/api/conge-demandes-v2/**").authenticated()
                                 .requestMatchers(HttpMethod.DELETE, "/api/conge-demandes-v2/**").authenticated()
                                 .requestMatchers(HttpMethod.GET, "/api/conge-demandes-v2/**").authenticated()
-                                .requestMatchers("/api/conge-demande-historiques/**").hasAnyRole("MANAGER", "ADMIN")
+                                .requestMatchers(HttpMethod.GET, "/api/conge-demande-historiques/**").authenticated()
+                                .requestMatchers(HttpMethod.PUT, "/api/conge-demande-historiques/**").hasAnyRole("MANAGER", "ADMIN")
+                                .requestMatchers(HttpMethod.DELETE, "/api/conge-demande-historiques/**").hasAnyRole("MANAGER", "ADMIN")
 
                                 .requestMatchers(HttpMethod.POST, "/api/medical-documents/upload/**", "/api/certificats-medicaux/upload/**").hasAnyRole("HR", "ADMIN")
                                 .requestMatchers(HttpMethod.GET, "/api/medical-documents/download/**", "/api/certificats-medicaux/download/**").hasAnyRole("HR", "ADMIN")
@@ -153,7 +156,7 @@ public class SecurityConfig {
                 "X-Requested-With"
         ));
         configuration.setExposedHeaders(List.of("Content-Disposition"));
-        configuration.setAllowCredentials(false);
+        configuration.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);

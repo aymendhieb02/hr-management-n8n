@@ -41,6 +41,11 @@ public class CertificatMedicalController {
         return ResponseEntity.ok(service.trouverParId(id, principal));
     }
 
+    @GetMapping
+    public ResponseEntity<List<CertificatMedicalResponse>> lister(@AuthenticationPrincipal CustomUserDetails principal) {
+        return ResponseEntity.ok(service.lister(principal));
+    }
+
     @GetMapping("/demande/{congeDemandeId}")
     public ResponseEntity<CertificatMedicalResponse> trouverParDemande(@PathVariable Long congeDemandeId,
             @AuthenticationPrincipal CustomUserDetails principal) {

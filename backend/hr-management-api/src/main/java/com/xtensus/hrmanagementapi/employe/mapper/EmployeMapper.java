@@ -20,6 +20,7 @@ public class EmployeMapper {
     public EmployeResponse toResponse(Employe employe) {
         EmployeResponse response = new EmployeResponse();
         response.setId(employe.getId());
+        response.setUsername(employe.getUsername());
         response.setNom(employe.getNom());
         response.setPrenom(employe.getPrenom());
         response.setEmail(employe.getEmail());
@@ -44,6 +45,7 @@ public class EmployeMapper {
     }
 
     private void updateSimpleFields(EmployeRequest request, Employe employe) {
+        employe.setUsername(trim(request.getUsername()));
         employe.setNom(trim(request.getNom()));
         employe.setPrenom(trim(request.getPrenom()));
         employe.setEmail(trim(request.getEmail()));

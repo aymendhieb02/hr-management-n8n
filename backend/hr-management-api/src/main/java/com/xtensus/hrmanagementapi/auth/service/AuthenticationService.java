@@ -39,7 +39,6 @@ public class AuthenticationService {
         if (!passwordEncoder.matches(request.getPassword(), employe.getMotDePasseHash())) { throw new InvalidCredentialsException(); }
         LoginResponse response = new LoginResponse();
         response.setAccessToken(jwtService.generateToken(employe));
-        response.setTokenType("Bearer");
         response.setExpiresIn(jwtService.getExpirationMs());
         response.setUser(toAuthenticatedUser(employe));
         return response;

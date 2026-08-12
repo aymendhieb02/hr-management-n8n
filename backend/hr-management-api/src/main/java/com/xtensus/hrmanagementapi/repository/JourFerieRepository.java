@@ -12,4 +12,5 @@ public interface JourFerieRepository extends JpaRepository<JourFerie, Long> {
     List<JourFerie> findAllByOrderByDateAsc();
     Optional<JourFerie> findByDate(LocalDate date);
     boolean existsByDateAndIdNot(LocalDate date, Long id);
+    boolean existsByDateAndActifTrue(LocalDate date);
 }
