@@ -58,6 +58,14 @@ export class LeaveRequestFormComponent implements OnChanges {
 
   protected startDateChanged(): void {
     const start = this.form.controls.startDate.value;
+    const unavailableReason = this.unavailableStartDateReason(start);
+    if (unavailableReason) {
+      this.form.controls.startDate.setValue('');
+      this.form.controls.endDate.setValue('');
+      this.formLevelError = unavailableReason;
+      return;
+    }
+    this.formLevelError = null;
     if (this.form.controls.nature.value === 'AUTORISATION_ABSENCE') this.form.controls.endDate.setValue(start);
     else this.calculateEndDate();
   }
@@ -180,6 +188,8 @@ export class LeaveRequestFormComponent implements OnChanges {
   private validateConditional(value: typeof this.form.value): string | null {
     if (value.reasonChoice === 'OTHER' && !value.otherReason?.trim()) return 'Veuillez saisir votre motif.';
     if (value.startDate && value.startDate < this.firstAllowedDate) return `La demande doit être déposée au moins 24 heures à l'avance (à partir du ${new Intl.DateTimeFormat('fr-FR').format(new Date(this.firstAllowedDate + 'T12:00:00'))}).`;
+    const unavailableReason = this.unavailableStartDateReason(value.startDate ?? '');
+    if (unavailableReason) return unavailableReason;
     if (value.nature === 'CONGE' && (!value.numberOfDays || value.numberOfDays < 1)) return 'Le nombre de jours doit etre au minimum de 1.';
     const maximum = this.maximumLeaveDays();
     if (value.nature === 'CONGE' && maximum !== null && Number(value.numberOfDays) > maximum) {
@@ -214,6 +224,16 @@ export class LeaveRequestFormComponent implements OnChanges {
     const date = new Date();
     date.setDate(date.getDate() + 1);
     return date;
+  }
+
+  private unavailableStartDateReason(value: string): string | null {
+    if (!value) return null;
+    const date = new Date(`${value}T12:00:00`);
+    if (date.getDay() === 0 || date.getDay() === 6) {
+      return 'La date de départ doit être un jour ouvrable. Le samedi et le dimanche ne peuvent pas être sélectionnés.';
+    }
+    const holiday = (this.holidays() || []).find((item) => item.actif && item.date === value);
+    return holiday ? `Le ${new Intl.DateTimeFormat('fr-FR').format(date)} est un jour férié${holiday.nom ? ` (${holiday.nom})` : ''}. Choisissez un jour ouvrable.` : null;
   }
 
   protected fieldError(field: keyof typeof this.form.controls): string | null {

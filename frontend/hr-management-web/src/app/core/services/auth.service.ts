@@ -4,7 +4,6 @@ import { Router } from '@angular/router';
 import { catchError, Observable, tap, throwError } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { AuthenticatedUser, LoginRequest, LoginResponse, UserRole } from '../models/auth.model';
-import { TokenStorageService } from './token-storage.service';
 
 @Injectable({
   providedIn: 'root'
@@ -12,18 +11,13 @@ import { TokenStorageService } from './token-storage.service';
 export class AuthService {
   private readonly http = inject(HttpClient);
   private readonly router = inject(Router);
-  private readonly tokenStorage = inject(TokenStorageService);
-  private readonly currentUserSignal = signal<AuthenticatedUser | null>(
-    this.tokenStorage.getAuthenticatedUser()
-  );
+  private readonly currentUserSignal = signal<AuthenticatedUser | null>(null);
 
   readonly currentUser = this.currentUserSignal.asReadonly();
 
   login(request: LoginRequest): Observable<LoginResponse> {
     return this.http.post<LoginResponse>(`${environment.apiUrl}/auth/login`, request).pipe(
       tap((response) => {
-        this.tokenStorage.saveAccessToken(response.accessToken);
-        this.tokenStorage.saveAuthenticatedUser(response.user);
         this.currentUserSignal.set(response.user);
       })
     );
@@ -32,7 +26,6 @@ export class AuthService {
   loadCurrentUser(): Observable<AuthenticatedUser> {
     return this.http.get<AuthenticatedUser>(`${environment.apiUrl}/auth/me`).pipe(
       tap((user) => {
-        this.tokenStorage.saveAuthenticatedUser(user);
         this.currentUserSignal.set(user);
       }),
       catchError((error: HttpErrorResponse) => {
@@ -46,8 +39,10 @@ export class AuthService {
   }
 
   logout(): void {
-    this.clearAuthentication();
-    void this.router.navigateByUrl('/login');
+    this.http.post<void>(`${environment.apiUrl}/auth/logout`, {}).subscribe({
+      next: () => this.finishLogout(),
+      error: () => this.finishLogout()
+    });
   }
 
   getCurrentUser(): AuthenticatedUser | null {
@@ -55,7 +50,7 @@ export class AuthService {
   }
 
   isAuthenticated(): boolean {
-    return Boolean(this.tokenStorage.getAccessToken() && this.currentUserSignal());
+    return Boolean(this.currentUserSignal());
   }
 
   hasRole(role: UserRole): boolean {
@@ -69,7 +64,11 @@ export class AuthService {
   }
 
   clearAuthentication(): void {
-    this.tokenStorage.clearAuthData();
     this.currentUserSignal.set(null);
+  }
+
+  private finishLogout(): void {
+    this.clearAuthentication();
+    void this.router.navigateByUrl('/login');
   }
 }

@@ -32,7 +32,7 @@ export class ReportsComponent implements OnInit {
     this.loading.set(true);
     this.reportService.loadData().subscribe({
       next: ({ leaveRequests, leaveBalances, users }) => { this.leaveRequests.set(leaveRequests); this.leaveBalances.set(leaveBalances); this.users.set(users); this.loading.set(false); },
-      error: () => { this.error.set('Reports data could not be loaded.'); this.loading.set(false); }
+      error: () => { this.error.set('Impossible de charger les données des rapports.'); this.loading.set(false); }
     });
   }
 
@@ -48,13 +48,13 @@ export class ReportsComponent implements OnInit {
         .filter((r) => !f.leaveType || r.leaveType.name === f.leaveType)
         .filter((r) => !f.userId || r.requester.id === Number(f.userId))
         .filter((r) => overlapsRange(r.startDate, r.endDate, f.startDate || undefined, f.endDate || undefined))
-        .map((r) => ({ Employee: `${r.requester.firstName} ${r.requester.lastName}`, Type: r.leaveType.name, Start: r.startDate, End: r.endDate, Status: r.status, Days: r.requestedDays }));
+        .map((r) => ({ Employé: `${r.requester.firstName} ${r.requester.lastName}`, Type: r.leaveType.name, Début: r.startDate, Fin: r.endDate, Statut: this.statusLabel(r.status), Jours: r.requestedDays }));
     }
     if (this.reportType() === 'leave-balances') {
-      return this.leaveBalances().filter((b) => !f.year || b.year === Number(f.year)).filter((b) => !f.leaveType || b.leaveType.name === f.leaveType).map((b) => ({ Employee: `${b.user.firstName} ${b.user.lastName}`, Type: b.leaveType.name, Year: b.year, Total: b.totalDays, Used: b.usedDays, Remaining: b.remainingDays }));
+      return this.leaveBalances().filter((b) => !f.year || b.year === Number(f.year)).filter((b) => !f.leaveType || b.leaveType.name === f.leaveType).map((b) => ({ Employé: `${b.user.firstName} ${b.user.lastName}`, Type: b.leaveType.name, Année: b.year, Acquis: b.totalDays, Utilisés: b.usedDays, Restants: b.remainingDays }));
     }
     if (this.reportType() === 'employees') {
-      return this.users().filter((u) => !f.department || u.department?.name === f.department).map((u) => ({ Name: `${u.firstName} ${u.lastName}`, Email: u.email, Role: u.role, Department: u.department?.name ?? '', Position: u.position?.name ?? '' }));
+      return this.users().map((u) => ({ Nom: `${u.firstName} ${u.lastName}`, Identifiant: u.username, Email: u.email, Rôle: this.roleLabel(u.role), Poste: u.position?.name ?? 'Non renseigné', Contrat: u.typeContract?.name ?? 'Non renseigné', Statut: u.enabled ? 'Actif' : 'Inactif' }));
     }
     const rows = new Map<string, number>();
     for (const request of this.leaveRequests().filter((r) => overlapsRange(r.startDate, r.endDate, f.startDate || undefined, f.endDate || undefined))) {
@@ -63,4 +63,7 @@ export class ReportsComponent implements OnInit {
     }
     return [...rows.entries()].map(([Department, Requests]) => ({ Department, Requests }));
   }
+
+  private statusLabel(status: LeaveRequestResponse['status']): string { return { PENDING:'En attente', APPROVED:'Approuvée', REJECTED:'Refusée', CANCELLED:'Annulée' }[status]; }
+  private roleLabel(role: UserResponse['role']): string { return { EMPLOYEE:'Employé', MANAGER:'Manager', HR:'Ressources humaines', ADMIN:'Administrateur' }[role]; }
 }

@@ -177,6 +177,12 @@ export const routes: Routes = [
           .then((m) => m.LeaveRequestStatusesComponent)
       },
       {
+        path: 'contract-types',
+        canActivate: [roleGuard],
+        data: { title: 'Types de contrat', roles: ['ADMIN'] },
+        loadComponent: () => import('./features/type-contracts/type-contract-list.component').then((m) => m.TypeContractListComponent)
+      },
+      {
         path: 'reasons',
         canActivate: [roleGuard],
         data: { title: 'Raisons des demandes', roles: ['ADMIN'] },
@@ -196,7 +202,7 @@ export const routes: Routes = [
       }
       ,{
         path: 'leave-history', canActivate: [roleGuard],
-        data: { title: 'Historique des demandes', roles: ['MANAGER', 'ADMIN'] },
+        data: { title: 'Historique des demandes', roles: ['EMPLOYEE', 'MANAGER', 'ADMIN'] },
         loadComponent: () => import('./features/leave-history/leave-history.component').then((m) => m.LeaveHistoryComponent)
       }
     ]

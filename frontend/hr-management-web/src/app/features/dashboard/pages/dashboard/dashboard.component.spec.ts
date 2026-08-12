@@ -30,14 +30,14 @@ describe('DashboardComponent', () => {
   it('loads real API data and computes counts', () => {
     setup();
     const text = fixture.nativeElement.textContent;
-    expect(text).toContain('Total Users');
-    expect(text).toContain('Pending Requests');
-    expect(text).toContain('Unread Notifications');
+    expect(text).toContain('Employés');
+    expect(text).toContain('Demandes en attente');
+    expect(text).toContain('Notifications non lues');
   });
 
   it('handles API failure safely', () => {
     setup(true);
-    expect(fixture.nativeElement.textContent).toContain('Dashboard data could not be loaded.');
+    expect(fixture.nativeElement.textContent).toContain('Impossible de charger les données du tableau de bord.');
   });
 
   function request(status: string): any {

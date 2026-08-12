@@ -10,7 +10,7 @@
 
     <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
       <label>
-        <span>Username or email</span>
+        <span>Identifiant ou adresse e-mail</span>
         <input
           autocomplete="username"
           formControlName="usernameOrEmail"
@@ -19,11 +19,11 @@
         />
       </label>
       @if (hasFieldError('usernameOrEmail')) {
-        <p class="field-error">Username or email is required.</p>
+        <p class="field-error">L'identifiant ou l'adresse e-mail est obligatoire.</p>
       }
 
       <label>
-        <span>Password</span>
+        <span>Mot de passe</span>
         <input
           autocomplete="current-password"
           formControlName="password"
@@ -32,7 +32,7 @@
         />
       </label>
       @if (hasFieldError('password')) {
-        <p class="field-error">Password is required.</p>
+        <p class="field-error">Le mot de passe est obligatoire.</p>
       }
 
       @if (errorMessage()) {

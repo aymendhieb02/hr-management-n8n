@@ -18,6 +18,7 @@ export class MedicalDocumentService {
   }
 
   findById(id: number): Observable<MedicalDocumentMetadataResponse> { return this.http.get<CertificatMedicalApiResponse>(`${this.baseUrl}/${id}`).pipe(map(toMedicalDocumentMetadata)); }
+  findAll(): Observable<MedicalDocumentMetadataResponse[]> { return this.http.get<CertificatMedicalApiResponse[]>(this.baseUrl).pipe(map((items) => items.map(toMedicalDocumentMetadata))); }
   findByLeaveRequest(leaveRequestId: number): Observable<MedicalDocumentMetadataResponse | null> {
     return this.http.get<CertificatMedicalApiResponse | null>(`${this.baseUrl}/demande/${leaveRequestId}`).pipe(
       map((response) => response ? toMedicalDocumentMetadata(response) : null)

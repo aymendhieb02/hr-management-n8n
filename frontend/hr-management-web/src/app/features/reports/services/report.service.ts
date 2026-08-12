@@ -1,6 +1,5 @@
 import { inject, Injectable } from '@angular/core';
 import { forkJoin } from 'rxjs';
-import { DepartmentService } from '../../departments/services/department.service';
 import { LeaveBalanceService } from '../../leaves/services/leave-balance.service';
 import { LeaveRequestService } from '../../leaves/services/leave-request.service';
 import { UserService } from '../../users/services/user.service';
@@ -10,14 +9,12 @@ export class ReportService {
   private readonly leaveRequests = inject(LeaveRequestService);
   private readonly leaveBalances = inject(LeaveBalanceService);
   private readonly users = inject(UserService);
-  private readonly departments = inject(DepartmentService);
 
   loadData() {
     return forkJoin({
       leaveRequests: this.leaveRequests.findAll(),
       leaveBalances: this.leaveBalances.findAll(),
-      users: this.users.findAll(),
-      departments: this.departments.findAll()
+      users: this.users.findAll()
     });
   }
 }

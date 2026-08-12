@@ -1,10 +1,10 @@
 <section class="resource-page">
-  <header class="page-header"><div><h1>Reports</h1><p>Frontend reports generated from current API data.</p></div><button class="primary-button" type="button" (click)="exportCsv()" [disabled]="rows().length === 0">Export CSV</button></header>
+  <header class="page-header"><div><h1>Rapports</h1><p>Analyse des demandes, des soldes et des employés à partir des données actuelles.</p></div><button class="primary-button" type="button" (click)="exportCsv()" [disabled]="rows().length === 0">Exporter en CSV</button></header>
   <app-report-filter [reportType]="reportType()" (reportTypeChange)="reportType.set($event)" [filters]="filters()" (filtersChange)="filters.set($event)" [leaveTypes]="leaveTypes()" [departments]="departments()" [users]="userOptions()" />
   @if (error()) { <p class="state error">{{ error() }}</p> }
-  @if (loading()) { <p class="state">Loading reports...</p> }
+  @if (loading()) { <p class="state">Chargement des rapports...</p> }
   @else {
-    <p class="state">Total records: {{ rows().length }}</p>
-    @if (rows().length === 0) { <p class="state">No report records found.</p> } @else { <app-report-table [rows]="rows()" /> }
+    <p class="state">Nombre de résultats : {{ rows().length }}</p>
+    @if (rows().length === 0) { <p class="state">Aucun résultat pour les critères sélectionnés.</p> } @else { <app-report-table [rows]="rows()" /> }
   }
 </section>

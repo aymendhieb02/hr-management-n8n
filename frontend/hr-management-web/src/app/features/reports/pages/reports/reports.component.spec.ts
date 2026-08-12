@@ -30,7 +30,7 @@ describe('ReportsComponent', () => {
 
   it('loads report data and renders leave requests', () => {
     setup();
-    expect(fixture.nativeElement.textContent).toContain('Reports');
+    expect(fixture.nativeElement.textContent).toContain('Rapports');
     expect(fixture.nativeElement.textContent).toContain('Ava Manager');
     expect((fixture.componentInstance as any).rows().length).toBe(2);
   });
@@ -40,7 +40,7 @@ describe('ReportsComponent', () => {
     const component = fixture.componentInstance as any;
     component.filters.set({ ...component.filters(), status: 'APPROVED' });
     expect(component.rows().length).toBe(1);
-    expect(component.rows()[0].Status).toBe('APPROVED');
+    expect(component.rows()[0]['Statut']).toBe('Approuvée');
   });
 
   it('exports filtered rows as CSV', () => {
@@ -62,7 +62,7 @@ describe('ReportsComponent', () => {
 
   it('handles API failure safely', () => {
     setup(true);
-    expect(fixture.nativeElement.textContent).toContain('Reports data could not be loaded.');
+    expect(fixture.nativeElement.textContent).toContain('Impossible de charger les données des rapports.');
   });
 
   function leaveRequest(status: 'APPROVED' | 'PENDING'): any {

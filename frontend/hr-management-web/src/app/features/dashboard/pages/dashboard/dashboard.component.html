@@ -1,18 +1,9 @@
 <section class="resource-page">
-  <header class="page-header"><div><h1>Dashboard</h1><p>Operational HR summary from current system data.</p></div></header>
-  @if (error()) { <p class="state error" role="alert">{{ error() }}</p> }
-  @if (loading()) { <p class="state">Loading dashboard...</p> }
-  @else {
-    <div class="form-grid">
-      <app-stat-card label="Total Users" [value]="userList().length" />
-      <app-stat-card label="Pending Requests" [value]="pending()" />
-      <app-stat-card label="Approved Requests" [value]="approved()" />
-      <app-stat-card label="Rejected Requests" [value]="rejected()" />
-      <app-stat-card label="Absent Today" [value]="absentToday()" />
-      <app-stat-card label="Unread Notifications" [value]="unreadCount()" />
-    </div>
-    <app-status-chart [data]="statusData()" />
-    <section class="state"><h2>Users by Department</h2>@for (item of usersByDepartment(); track item.label) { <p>{{ item.label }}: {{ item.value }}</p> } @empty { <p>No users found.</p> }</section>
-    <app-recent-leave-table [requests]="recent()" />
+  <header class="page-header"><div><span class="eyebrow">PILOTAGE RH</span><h1>Tableau de bord</h1><p>Vue d'ensemble des employés, des absences et des actions prioritaires.</p></div></header>
+  @if(error()){<p class="state error" role="alert">{{error()}}</p>}
+  @if(loading()){<p class="state">Chargement du tableau de bord...</p>}@else{
+    <div class="dashboard-stats"><app-stat-card label="Employés" [value]="userList().length"/><app-stat-card label="Employés actifs" [value]="activeEmployees()"/><app-stat-card label="Demandes en attente" [value]="pending()"/><app-stat-card label="Absents aujourd'hui" [value]="absentToday()"/><app-stat-card label="Notifications non lues" [value]="unreadCount()"/><app-stat-card label="Absences à venir" [value]="upcomingApproved()"/></div>
+    <section class="dashboard-insights"><article><span>Taux d'approbation</span><strong>{{approvalRate()}}%</strong><small>sur les demandes ayant reçu une décision</small></article><article><span>Autorisations d'absence</span><strong>{{authorizations()}}</strong><small>demandes enregistrées dans le système</small></article><article><span>Demandes traitées</span><strong>{{approved()+rejected()}}</strong><small>{{approved()}} approuvées · {{rejected()}} refusées</small></article></section>
+    <div class="dashboard-grid"><app-status-chart [data]="statusData()"/><section class="dashboard-recent"><header><h2>Dernières demandes</h2><p>Les huit demandes les plus récemment déposées.</p></header><app-recent-leave-table [requests]="recent()"/></section></div>
   }
 </section>

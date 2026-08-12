@@ -4,20 +4,13 @@ import { Router } from '@angular/router';
 import { catchError, throwError } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { AuthService } from '../services/auth.service';
-import { TokenStorageService } from '../services/token-storage.service';
 
 export const jwtInterceptor: HttpInterceptorFn = (request, next) => {
-  const tokenStorage = inject(TokenStorageService);
   const authService = inject(AuthService);
   const router = inject(Router);
-  const token = tokenStorage.getAccessToken();
   const isLoginRequest = request.url === `${environment.apiUrl}/auth/login`;
-  const authenticatedRequest = token && !isLoginRequest
-    ? request.clone({
-        setHeaders: {
-          Authorization: `Bearer ${token}`
-        }
-      })
+  const authenticatedRequest = request.url.startsWith(environment.apiUrl)
+    ? request.clone({ withCredentials: true })
     : request;
 
   return next(authenticatedRequest).pipe(

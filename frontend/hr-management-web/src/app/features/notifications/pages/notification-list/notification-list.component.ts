@@ -19,12 +19,22 @@ export class NotificationListComponent implements OnInit {
   protected readonly error = signal<string | null>(null);
   protected readonly deleteError = signal<string | null>(null);
   protected readonly filter = signal<'all' | 'unread'>('all');
+  protected readonly page = signal(1);
+  protected readonly pageSize = signal(10);
   protected readonly deleting = signal<NotificationResponse | null>(null);
   protected readonly filteredNotifications = computed(() =>
     this.filter() === 'unread'
       ? this.notificationService.notifications().filter((item) => !item.read)
       : this.notificationService.notifications()
   );
+  protected readonly totalPages = computed(() => Math.max(1, Math.ceil(this.filteredNotifications().length / this.pageSize())));
+  protected readonly currentPage = computed(() => Math.min(this.page(), this.totalPages()));
+  protected readonly pagedNotifications = computed(() => {
+    const start = (this.currentPage() - 1) * this.pageSize();
+    return this.filteredNotifications().slice(start, start + this.pageSize());
+  });
+  protected readonly pageStart = computed(() => this.filteredNotifications().length ? (this.currentPage() - 1) * this.pageSize() + 1 : 0);
+  protected readonly pageEnd = computed(() => Math.min(this.currentPage() * this.pageSize(), this.filteredNotifications().length));
 
   ngOnInit(): void {
     this.loadNotifications();
@@ -38,6 +48,15 @@ export class NotificationListComponent implements OnInit {
         this.error.set('Impossible de charger vos notifications. Veuillez réessayer.');
       }
     });
+  }
+
+  protected changeFilter(value: 'all' | 'unread'): void { this.filter.set(value); this.page.set(1); }
+  protected changePageSize(value: number | string): void { this.pageSize.set(Number(value)); this.page.set(1); }
+  protected goToPage(value: number): void { this.page.set(Math.min(Math.max(value, 1), this.totalPages())); }
+  protected visiblePages(): number[] {
+    const total = this.totalPages(), current = this.currentPage();
+    const start = Math.max(1, Math.min(current - 2, total - 4));
+    return Array.from({ length: Math.min(5, total) }, (_, index) => start + index);
   }
 
   protected markAsRead(notification: NotificationResponse): void {

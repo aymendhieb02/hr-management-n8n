@@ -209,8 +209,8 @@ export class LeaveRequestListComponent implements OnInit {
   }
 
   protected isSickLeave(request: LeaveRequestResponse): boolean {
-    const reason = (request.reason ?? '').toLowerCase();
-    return request.nature === 'CONGE' && (reason.includes('maladie') || reason.includes('médical'));
+    const reason = (request.reason ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+    return request.nature === 'CONGE' && (reason.includes('maladie') || reason.includes('medical'));
   }
 
   protected hasCertificate(requestId: number): boolean {

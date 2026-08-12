@@ -55,8 +55,8 @@
               <td>
                 <div class="actions">
                   <button class="secondary-button" type="button" (click)="detailRequest.set(request)">Voir les details</button>
-                  @if (!isManagerMode() && isSickLeave(request) && !hasCertificate(request.id)) {
-                    <button class="certificate-button" type="button" (click)="detailRequest.set(request)" title="Consulter le certificat médical" aria-label="Consulter le certificat médical">✚ Certificat</button>
+                  @if (!isManagerMode() && isSickLeave(request) && request.status !== 'CANCELLED' && (hasCertificate(request.id) || request.status !== 'REJECTED')) {
+                    <button class="certificate-button" type="button" (click)="detailRequest.set(request)" title="Gérer le certificat médical" aria-label="Gérer le certificat médical">{{ hasCertificate(request.id) ? 'Voir le certificat' : '✚ Ajouter un certificat' }}</button>
                   }
                   @if (!isManagerMode() && request.status === 'PENDING') {
                     <button class="secondary-button" type="button" (click)="openEdit(request)">Modifier</button>

@@ -22,8 +22,8 @@ export class LeaveDetailsComponent {
   protected readonly certificateLoading = signal(false);
   protected readonly certificateError = signal<string | null>(null);
   protected readonly isSickLeave = computed(() => {
-    const reason = (this.request().reason ?? '').toLowerCase();
-    return this.request().nature === 'CONGE' && (reason.includes('maladie') || reason.includes('médical'));
+    const reason = this.normalize(this.request().reason ?? '');
+    return this.request().nature === 'CONGE' && (reason.includes('maladie') || reason.includes('medical'));
   });
 
   constructor() {
@@ -75,10 +75,18 @@ export class LeaveDetailsComponent {
   }
   protected readonly canUploadMedicalDocument = computed(() => {
     const currentUser = this.authService.getCurrentUser();
-    return Boolean(currentUser && currentUser.id === this.request().requester.id && this.isSickLeave());
+    return Boolean(currentUser
+      && currentUser.id === this.request().requester.id
+      && this.isSickLeave()
+      && this.request().status !== 'REJECTED'
+      && this.request().status !== 'CANCELLED');
   });
 
   protected statusLabel(): string {
     return { PENDING: 'En attente', APPROVED: 'Approuvee', REJECTED: 'Refusee', CANCELLED: 'Annulee' }[this.request().status];
+  }
+
+  private normalize(value: string): string {
+    return value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
   }
 }

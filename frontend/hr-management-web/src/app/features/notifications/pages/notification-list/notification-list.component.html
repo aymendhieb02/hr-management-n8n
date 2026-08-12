@@ -5,8 +5,8 @@
   </header>
   <div class="notification-toolbar">
     <div class="filter-tabs" role="group" aria-label="Filtrer les notifications">
-      <button type="button" [class.active]="filter() === 'all'" (click)="filter.set('all')">Toutes <span>{{ notificationService.notifications().length }}</span></button>
-      <button type="button" [class.active]="filter() === 'unread'" (click)="filter.set('unread')">Non lues <span>{{ notificationService.unreadCount() }}</span></button>
+      <button type="button" [class.active]="filter() === 'all'" (click)="changeFilter('all')">Toutes <span>{{ notificationService.notifications().length }}</span></button>
+      <button type="button" [class.active]="filter() === 'unread'" (click)="changeFilter('unread')">Non lues <span>{{ notificationService.unreadCount() }}</span></button>
     </div>
     <div class="toolbar-actions">
       <button class="secondary-button" type="button" (click)="loadNotifications(true)">Actualiser</button>
@@ -22,10 +22,14 @@
     <div class="notification-state"><span class="state-icon">✓</span><h2>{{ filter() === 'unread' ? 'Tout est à jour' : 'Aucune notification' }}</h2><p>{{ filter() === 'unread' ? 'Vous avez lu toutes vos notifications.' : 'Les nouvelles informations apparaîtront ici.' }}</p></div>
   } @else {
     <div class="notification-list" aria-live="polite">
-      @for (notification of filteredNotifications(); track notification.id) {
+      @for (notification of pagedNotifications(); track notification.id) {
         <app-notification-item [notification]="notification" [canManage]="notificationService.canManage(notification)" [canDelete]="notificationService.canDelete(notification)" (markRead)="markAsRead($event)" (delete)="deleteError.set(null); deleting.set($event)" />
       }
     </div>
+    <nav class="notification-pagination" aria-label="Pagination des notifications">
+      <div class="pagination-info"><span>Affichage</span><strong>{{pageStart()}}–{{pageEnd()}}</strong><span>sur {{filteredNotifications().length}} notifications</span></div>
+      <div class="pagination-controls"><label>Par page <select [ngModel]="pageSize()" (ngModelChange)="changePageSize($event)"><option [ngValue]="5">5</option><option [ngValue]="10">10</option><option [ngValue]="20">20</option><option [ngValue]="50">50</option></select></label><div class="page-buttons"><button type="button" (click)="goToPage(1)" [disabled]="currentPage()===1">«</button><button type="button" (click)="goToPage(currentPage()-1)" [disabled]="currentPage()===1">‹</button>@for(value of visiblePages();track value){<button type="button" (click)="goToPage(value)" [class.active]="value===currentPage()">{{value}}</button>}<button type="button" (click)="goToPage(currentPage()+1)" [disabled]="currentPage()===totalPages()">›</button><button type="button" (click)="goToPage(totalPages())" [disabled]="currentPage()===totalPages()">»</button></div></div>
+    </nav>
   }
 </section>
 @if (deleting()) {

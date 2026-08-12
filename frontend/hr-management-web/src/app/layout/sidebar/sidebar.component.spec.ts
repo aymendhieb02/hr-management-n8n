@@ -103,7 +103,8 @@ describe('SidebarComponent', () => {
     fixture.detectChanges();
 
     expect(text()).toContain('Utilisateurs');
-    expect(text()).toContain('Demandes de conge');
+    expect(text()).not.toContain('Demandes de conge');
+    expect(text()).not.toContain('Demander un congé');
     expect(text()).toContain('Soldes de congé');
     expect(text()).toContain('Documents medicaux');
     expect(text()).toContain('Rapports');

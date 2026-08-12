@@ -2,7 +2,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
-import { forkJoin, of } from 'rxjs';
+import { catchError, forkJoin, of } from 'rxjs';
 import { AuthService } from '../../../../core/services/auth.service';
 import { safeApiMessage, validationErrors } from '../../../shared/api-error.util';
 import { PaginatedTableDirective } from '../../../shared/paginated-table.directive';
@@ -208,9 +208,9 @@ export class UserListComponent implements OnInit {
     }
 
     forkJoin({
-      typeContracts: this.typeContractService.findAll(),
-      positions: this.positionService.findAll(),
-      managers: this.authService.hasAnyRole('HR', 'ADMIN') ? this.userService.findAll() : of([])
+      typeContracts: this.typeContractService.findAll().pipe(catchError(() => of([]))),
+      positions: this.positionService.findAll().pipe(catchError(() => of([]))),
+      managers: (this.authService.hasAnyRole('HR', 'ADMIN') ? this.userService.findAll() : of([])).pipe(catchError(() => of([])))
     }).subscribe({
       next: ({ typeContracts, positions, managers }) => {
         this.typeContracts.set(typeContracts);
