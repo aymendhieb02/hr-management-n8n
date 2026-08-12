@@ -6,4 +6,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface CongeSoldeHistoriqueRepository extends JpaRepository<CongeSoldeHistorique, Long> {
     List<CongeSoldeHistorique> findBySoldeIdOrderByDateExecutionDesc(Long soldeId);
+    List<CongeSoldeHistorique> findBySoldeEmployeIdOrderByDateExecutionDesc(Long employeId);
+    List<CongeSoldeHistorique> findAllByOrderByDateExecutionDesc();
+    boolean existsByReference(String reference);
 }

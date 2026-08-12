@@ -3,6 +3,7 @@ import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../../../core/services/auth.service';
 import { safeApiMessage, validationErrors } from '../../../shared/api-error.util';
+import { PaginatedTableDirective } from '../../../shared/paginated-table.directive';
 import { DeletePositionDialogComponent } from '../../components/delete-position-dialog/delete-position-dialog.component';
 import { PositionFormComponent } from '../../components/position-form/position-form.component';
 import { Position, PositionRequest } from '../../models/position.model';
@@ -10,7 +11,7 @@ import { PositionService } from '../../services/position.service';
 
 @Component({
   selector: 'app-position-list',
-  imports: [DeletePositionDialogComponent, FormsModule, PositionFormComponent],
+  imports: [DeletePositionDialogComponent, FormsModule, PositionFormComponent, PaginatedTableDirective],
   templateUrl: './position-list.component.html',
   styleUrl: '../../../shared/resource-page.scss'
 })
@@ -51,7 +52,7 @@ export class PositionListComponent implements OnInit {
         this.isLoading.set(false);
       },
       error: () => {
-        this.error.set('Positions could not be loaded.');
+        this.error.set('Impossible de charger les postes.');
         this.isLoading.set(false);
       }
     });
@@ -83,7 +84,7 @@ export class PositionListComponent implements OnInit {
       },
       error: (error: HttpErrorResponse) => {
         this.formErrors.set(validationErrors(error));
-        this.error.set(safeApiMessage(error, 'Position could not be saved.'));
+        this.error.set(safeApiMessage(error, "Impossible d'enregistrer le poste."));
         this.isSaving.set(false);
       }
     });
@@ -110,7 +111,7 @@ export class PositionListComponent implements OnInit {
         this.loadPositions();
       },
       error: (error) => {
-        this.deleteError.set(safeApiMessage(error, 'Position could not be deleted.'));
+        this.deleteError.set(safeApiMessage(error, 'Impossible de supprimer le poste.'));
         this.isDeleting.set(false);
       }
     });

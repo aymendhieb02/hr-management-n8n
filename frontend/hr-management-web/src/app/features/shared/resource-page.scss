@@ -266,6 +266,8 @@ td {
   font-size: 0.86rem;
   margin: 0;
 }
+.submission-error { display:grid; gap:4px; padding:12px 14px; border:1px solid #dfbfbc; border-radius:10px; background:var(--app-danger-soft); }
+.submission-error span { color:var(--app-danger-dark); font-weight:500; }
 
 .checkbox-field {
   align-items: center;
@@ -297,6 +299,77 @@ td {
 .detail-grid dd {
   color: #172033;
   margin: 0;
+}
+
+/* Le dialogue conserve son cadre pendant que seul son contenu défile. */
+.leave-details-dialog {
+  display: flex;
+  flex-direction: column;
+  max-height: min(88vh, 850px);
+  overflow: hidden;
+}
+
+.leave-details-dialog > .leave-details-header,
+.leave-details-dialog > .dialog-actions {
+  flex: 0 0 auto;
+}
+
+.leave-details-content {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+}
+
+.leave-details-content > .detail-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin: 0;
+  padding: 20px 24px;
+}
+
+.leave-details-content > .detail-grid > div {
+  display: block;
+  padding: 14px 15px;
+  border: 1px solid #eadfd4;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 5px 14px rgba(65, 49, 36, 0.04);
+}
+
+.leave-details-content > .detail-grid .detail-wide {
+  grid-column: 1 / -1;
+}
+
+.leave-details-content > .medical-certificate-card {
+  margin: 0 24px 20px;
+}
+
+.leave-details-dialog > .dialog-actions {
+  position: static;
+  z-index: 1;
+  margin: 0;
+  padding: 15px 24px;
+  border-top: 1px solid #eddfd2;
+  background: #fffaf5;
+  box-shadow: 0 -8px 20px rgba(65, 49, 36, 0.06);
+}
+
+@media (max-width: 620px) {
+  .leave-details-content > .detail-grid {
+    grid-template-columns: 1fr;
+    padding: 16px;
+  }
+
+  .leave-details-content > .detail-grid .detail-wide {
+    grid-column: auto;
+  }
+
+  .leave-details-content > .medical-certificate-card {
+    margin: 0 16px 16px;
+  }
 }
 
 @media (max-width: 760px) {

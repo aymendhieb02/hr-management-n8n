@@ -60,7 +60,7 @@ export const routes: Routes = [
       {
         path: 'my-balance',
         canActivate: [roleGuard],
-        data: { title: 'Mon solde de conges', roles: ['EMPLOYEE', 'MANAGER', 'HR', 'ADMIN'] },
+        data: { title: 'Mon solde de congé', roles: ['EMPLOYEE', 'MANAGER', 'HR', 'ADMIN'] },
         loadComponent: () => import('./features/leaves/pages/leave-balance-list/leave-balance-list.component')
           .then((m) => m.LeaveBalanceListComponent)
       },
@@ -92,9 +92,10 @@ export const routes: Routes = [
       },
       {
         path: 'team-availability',
-        component: PlaceholderPageComponent,
         canActivate: [roleGuard],
-        data: { title: 'Disponibilite de l equipe', roles: ['MANAGER'] }
+        data: { title: "Disponibilité de l'équipe", roles: ['MANAGER'] },
+        loadComponent: () => import('./features/team-availability/team-availability.component')
+          .then((m) => m.TeamAvailabilityComponent)
       },
       {
         path: 'dashboard',
@@ -132,7 +133,7 @@ export const routes: Routes = [
       {
         path: 'leave-balances',
         canActivate: [roleGuard],
-        data: { title: 'Soldes de conges', roles: ['HR', 'ADMIN'] },
+        data: { title: 'Soldes de congé', roles: ['HR', 'ADMIN'] },
         loadComponent: () => import('./features/leaves/pages/leave-balance-list/leave-balance-list.component')
           .then((m) => m.LeaveBalanceListComponent)
       },
@@ -163,11 +164,23 @@ export const routes: Routes = [
           .then((m) => m.UserListComponent)
       },
       {
+        path: 'balance-transactions',
+        canActivate: [roleGuard],
+        data: { title: 'Transactions de congé', roles: ['MANAGER', 'HR', 'ADMIN'] },
+        loadComponent: () => import('./features/leaves/pages/leave-balance-list/leave-balance-list.component').then((m) => m.LeaveBalanceListComponent)
+      },
+      {
         path: 'leave-request-statuses',
         canActivate: [roleGuard],
         data: { title: 'Statuts des demandes', roles: ['ADMIN'] },
         loadComponent: () => import('./features/leave-request-statuses/leave-request-statuses.component')
           .then((m) => m.LeaveRequestStatusesComponent)
+      },
+      {
+        path: 'contract-types',
+        canActivate: [roleGuard],
+        data: { title: 'Types de contrat', roles: ['ADMIN'] },
+        loadComponent: () => import('./features/type-contracts/type-contract-list.component').then((m) => m.TypeContractListComponent)
       },
       {
         path: 'reasons',
@@ -189,7 +202,7 @@ export const routes: Routes = [
       }
       ,{
         path: 'leave-history', canActivate: [roleGuard],
-        data: { title: 'Historique des demandes', roles: ['MANAGER', 'ADMIN'] },
+        data: { title: 'Historique des demandes', roles: ['EMPLOYEE', 'MANAGER', 'ADMIN'] },
         loadComponent: () => import('./features/leave-history/leave-history.component').then((m) => m.LeaveHistoryComponent)
       }
     ]

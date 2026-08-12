@@ -1,6 +1,7 @@
 import { Component, computed, EventEmitter, input, OnChanges, Output, SimpleChanges } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RoleType, UserCreateRequest, UserReferenceSummary, UserResponse, UserStatus, UserUpdateRequest } from '../../models/user.model';
+import { Position } from '../../../positions/models/position.model';
 
 @Component({
   selector: 'app-user-form',
@@ -12,6 +13,7 @@ export class UserFormComponent implements OnChanges {
   readonly user = input<UserResponse | null>(null);
   readonly users = input<UserResponse[]>([]);
   readonly typeContracts = input<UserReferenceSummary[]>([]);
+  readonly positions = input<Position[]>([]);
   readonly loading = input(false);
   readonly validationErrors = input<Record<string, string>>({});
   readonly managerMode = input(false);
@@ -20,6 +22,7 @@ export class UserFormComponent implements OnChanges {
 
   protected readonly roles: RoleType[] = ['EMPLOYEE', 'MANAGER', 'HR', 'ADMIN'];
   protected readonly statuses: UserStatus[] = ['ACTIVE', 'INACTIVE'];
+  protected readonly roleLabels: Record<RoleType, string> = { EMPLOYEE: 'Employé', MANAGER: 'Manager', HR: 'Ressources humaines', ADMIN: 'Administrateur' };
   protected readonly form = new FormBuilder().nonNullable.group({
     username: ['', [Validators.required, Validators.maxLength(100)]],
     email: ['', [Validators.required, Validators.email, Validators.maxLength(150)]],
@@ -35,6 +38,7 @@ export class UserFormComponent implements OnChanges {
     status: ['ACTIVE' as UserStatus, Validators.required],
     enabled: true,
     managerId: new FormBuilder().control<number | null>(null),
+    positionId: new FormBuilder().control<number | null>(null),
     typeContractId: new FormBuilder().control<number | null>(null)
   });
   protected readonly title = computed(() => this.user() ? "Modifier l'employé" : 'Ajouter un employé');
@@ -61,11 +65,12 @@ export class UserFormComponent implements OnChanges {
         address: user?.address ?? '',
         birthDate: user?.birthDate ?? '',
         sex: user?.sex ?? 'HOMME',
-        hireDate: user?.hireDate ?? '',
+        hireDate: user?.hireDate ?? this.today(),
         role: user?.role ?? 'EMPLOYEE',
         status: user?.status ?? 'ACTIVE',
         enabled: user?.enabled ?? true,
         managerId: user?.manager?.id ?? null,
+        positionId: user?.position?.id ?? null,
         typeContractId: user?.typeContract?.id ?? null
       });
     }
@@ -89,11 +94,11 @@ export class UserFormComponent implements OnChanges {
       sex: value.sex || null,
       hireDate: value.hireDate || null,
       role: this.managerMode() ? 'EMPLOYEE' : value.role,
-      status: value.status,
-      enabled: value.enabled,
+      status: this.user()?.status ?? 'ACTIVE',
+      enabled: this.user()?.enabled ?? true,
       managerId: this.managerMode() ? null : value.managerId || null,
       departmentId: null,
-      positionId: null,
+      positionId: value.positionId || null,
       typeContractId: value.typeContractId || null
     };
 
@@ -103,6 +108,12 @@ export class UserFormComponent implements OnChanges {
     }
 
     this.save.emit({ ...base, password: '' });
+  }
+
+  private today(): string {
+    const now = new Date();
+    const offset = now.getTimezoneOffset() * 60_000;
+    return new Date(now.getTime() - offset).toISOString().slice(0, 10);
   }
 
   protected fieldError(field: keyof typeof this.form.controls): string | null {
@@ -115,16 +126,16 @@ export class UserFormComponent implements OnChanges {
       return null;
     }
     if (control.hasError('required')) {
-      return 'This field is required.';
+      return 'Ce champ est obligatoire.';
     }
     if (control.hasError('email')) {
-      return 'Enter a valid email address.';
+      return 'Saisissez une adresse email valide.';
     }
     if (control.hasError('minlength')) {
-      return 'Use at least 8 characters.';
+      return 'Utilisez au moins 8 caractères.';
     }
     if (control.hasError('maxlength')) {
-      return 'This value is too long.';
+      return 'Cette valeur est trop longue.';
     }
     return null;
   }

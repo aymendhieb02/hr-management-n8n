@@ -13,7 +13,7 @@ import { LeaveRequestResponse, LeaveRequestUpdateRequest } from '../../models/le
 })
 export class LeaveRequestFormComponent implements OnChanges {
   protected readonly today = this.localDate(new Date());
-  protected readonly firstAllowedDate = this.localDate(new Date(Date.now() + 3 * 24 * 60 * 60 * 1000));
+  protected readonly firstAllowedDate = this.localDate(this.tomorrow());
   protected readonly systemDateLabel = new Intl.DateTimeFormat('fr-FR').format(new Date());
   protected readonly requestTypes = [{ id: 1, label: 'Congé', nature: 'CONGE' as const }, { id: 2, label: "Autorisation d'absence", nature: 'AUTORISATION_ABSENCE' as const }];
   protected readonly startTimeOptions = this.timeOptions(8 * 60 + 30, 17 * 60 + 45);
@@ -22,8 +22,10 @@ export class LeaveRequestFormComponent implements OnChanges {
   readonly leaveTypes = input<LeaveType[]>([]);
   readonly reasons = input<Reason[]>([]);
   readonly holidays = input<JourFerieResponse[]>([]);
+  readonly maximumLeaveDays = input<number | null>(null);
   readonly loading = input(false);
   readonly validationErrors = input<Record<string, string>>({});
+  readonly submissionError = input<string | null>(null);
   @Output() readonly save = new EventEmitter<LeaveRequestUpdateRequest>();
   @Output() readonly cancel = new EventEmitter<void>();
 
@@ -56,6 +58,14 @@ export class LeaveRequestFormComponent implements OnChanges {
 
   protected startDateChanged(): void {
     const start = this.form.controls.startDate.value;
+    const unavailableReason = this.unavailableStartDateReason(start);
+    if (unavailableReason) {
+      this.form.controls.startDate.setValue('');
+      this.form.controls.endDate.setValue('');
+      this.formLevelError = unavailableReason;
+      return;
+    }
+    this.formLevelError = null;
     if (this.form.controls.nature.value === 'AUTORISATION_ABSENCE') this.form.controls.endDate.setValue(start);
     else this.calculateEndDate();
   }
@@ -85,6 +95,17 @@ export class LeaveRequestFormComponent implements OnChanges {
     }
 
     this.form.controls.endDate.setValue(this.localDate(current));
+    this.updateBalanceError();
+  }
+
+  protected updateBalanceError(): void {
+    const maximum = this.maximumLeaveDays();
+    const requested = Number(this.form.controls.numberOfDays.value);
+    if (this.form.controls.nature.value === 'CONGE' && maximum !== null && requested > maximum) {
+      this.formLevelError = `Solde insuffisant : vous pouvez demander au maximum ${maximum} jour(s), demandes en attente comprises. Votre solde ne peut pas descendre sous -5 jours.`;
+    } else if (this.formLevelError?.startsWith('Solde insuffisant')) {
+      this.formLevelError = null;
+    }
   }
 
   protected startTimeChanged(): void {
@@ -166,8 +187,14 @@ export class LeaveRequestFormComponent implements OnChanges {
 
   private validateConditional(value: typeof this.form.value): string | null {
     if (value.reasonChoice === 'OTHER' && !value.otherReason?.trim()) return 'Veuillez saisir votre motif.';
-    if (value.startDate && value.startDate < this.firstAllowedDate) return `La demande doit etre deposee plus de 48 heures a l'avance (a partir du ${new Intl.DateTimeFormat('fr-FR').format(new Date(this.firstAllowedDate + 'T12:00:00'))}).`;
+    if (value.startDate && value.startDate < this.firstAllowedDate) return `La demande doit être déposée au moins 24 heures à l'avance (à partir du ${new Intl.DateTimeFormat('fr-FR').format(new Date(this.firstAllowedDate + 'T12:00:00'))}).`;
+    const unavailableReason = this.unavailableStartDateReason(value.startDate ?? '');
+    if (unavailableReason) return unavailableReason;
     if (value.nature === 'CONGE' && (!value.numberOfDays || value.numberOfDays < 1)) return 'Le nombre de jours doit etre au minimum de 1.';
+    const maximum = this.maximumLeaveDays();
+    if (value.nature === 'CONGE' && maximum !== null && Number(value.numberOfDays) > maximum) {
+      return `Solde insuffisant : vous pouvez demander au maximum ${maximum} jour(s), demandes en attente comprises. Votre solde ne peut pas descendre sous -5 jours.`;
+    }
     if (value.nature === 'AUTORISATION_ABSENCE') {
       if (!value.startTime || !value.endTime) return 'Les heures de debut et de fin sont obligatoires.';
       const start = this.minutes(value.startTime); const end = this.minutes(value.endTime);
@@ -191,6 +218,22 @@ export class LeaveRequestFormComponent implements OnChanges {
   private localDate(date: Date): string {
     const offset = date.getTimezoneOffset() * 60_000;
     return new Date(date.getTime() - offset).toISOString().slice(0, 10);
+  }
+
+  private tomorrow(): Date {
+    const date = new Date();
+    date.setDate(date.getDate() + 1);
+    return date;
+  }
+
+  private unavailableStartDateReason(value: string): string | null {
+    if (!value) return null;
+    const date = new Date(`${value}T12:00:00`);
+    if (date.getDay() === 0 || date.getDay() === 6) {
+      return 'La date de départ doit être un jour ouvrable. Le samedi et le dimanche ne peuvent pas être sélectionnés.';
+    }
+    const holiday = (this.holidays() || []).find((item) => item.actif && item.date === value);
+    return holiday ? `Le ${new Intl.DateTimeFormat('fr-FR').format(date)} est un jour férié${holiday.nom ? ` (${holiday.nom})` : ''}. Choisissez un jour ouvrable.` : null;
   }
 
   protected fieldError(field: keyof typeof this.form.controls): string | null {

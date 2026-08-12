@@ -8,13 +8,14 @@ import { LeaveTypeService } from '../../../leave-types/services/leave-type.servi
 import { UserResponse } from '../../../users/models/user.model';
 import { UserService } from '../../../users/services/user.service';
 import { safeApiMessage } from '../../../shared/api-error.util';
+import { PaginatedTableDirective } from '../../../shared/paginated-table.directive';
 import { LeaveBalanceFormComponent } from '../../components/leave-balance-form/leave-balance-form.component';
-import { LeaveBalanceRequest, LeaveBalanceResponse } from '../../models/leave-balance.model';
+import { LeaveBalanceRequest, LeaveBalanceResponse, LeaveBalanceTransaction } from '../../models/leave-balance.model';
 import { LeaveBalanceService } from '../../services/leave-balance.service';
 
 @Component({
   selector: 'app-leave-balance-list',
-  imports: [FormsModule, LeaveBalanceFormComponent],
+  imports: [FormsModule, LeaveBalanceFormComponent, PaginatedTableDirective],
   templateUrl: './leave-balance-list.component.html',
   styleUrl: '../../../shared/resource-page.scss'
 })
@@ -26,6 +27,7 @@ export class LeaveBalanceListComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
 
   protected readonly balances = signal<LeaveBalanceResponse[]>([]);
+  protected readonly transactions = signal<LeaveBalanceTransaction[]>([]);
   protected readonly leaveTypes = signal<LeaveType[]>([]);
   protected readonly users = signal<UserResponse[]>([]);
   protected readonly isLoading = signal(false);
@@ -36,8 +38,9 @@ export class LeaveBalanceListComponent implements OnInit {
   protected readonly leaveTypeFilter = signal<number | ''>('');
   protected readonly editingBalance = signal<LeaveBalanceResponse | null>(null);
   protected readonly formOpen = signal(false);
-  protected readonly isAdminMode = computed(() => this.route.snapshot.routeConfig?.path === 'leave-balances');
-  protected readonly title = computed(() => this.isAdminMode() ? 'Leave Balances' : 'My Leave Balance');
+  protected readonly isAdminMode = computed(() => this.route.snapshot.routeConfig?.path !== 'my-balance');
+  protected readonly canManageBalances = computed(() => this.authService.hasAnyRole('HR', 'ADMIN'));
+  protected readonly title = computed(() => this.isAdminMode() ? 'Soldes et transactions de congé' : 'Mon solde de congé');
   protected readonly filteredBalances = computed(() => {
     const search = this.searchTerm().trim().toLowerCase();
     const type = this.leaveTypeFilter();
@@ -52,13 +55,32 @@ export class LeaveBalanceListComponent implements OnInit {
   });
 
   ngOnInit(): void {
-    if (this.isAdminMode()) {
+    if (this.canManageBalances()) {
       forkJoin({ users: this.userService.findAll(), leaveTypes: this.leaveTypeService.findAll() }).subscribe({
         next: ({ users, leaveTypes }) => { this.users.set(users); this.leaveTypes.set(leaveTypes); },
-        error: () => this.error.set('Balance form options could not be loaded.')
+        error: () => this.error.set("Impossible de charger les options du formulaire de solde.")
       });
     }
     this.loadBalances();
+    this.loadTransactions();
+  }
+
+  protected loadTransactions(): void {
+    const source = this.isAdminMode() ? this.balanceService.findAllTransactions() : this.balanceService.findMyTransactions();
+    source.subscribe({ next: (items) => this.transactions.set(items), error: () => this.error.set("Impossible de charger l'historique des transactions.") });
+  }
+
+  protected transactionLabel(type: string): string {
+    return type === 'ACQUISITION_MENSUELLE'
+      ? 'Crédit mensuel'
+      : type === 'DEBIT_CONGE'
+        ? 'Débit de congé approuvé'
+        : 'Ajustement manuel';
+  }
+
+  protected transactionStatusLabel(status: string): string {
+    const labels: Record<string, string> = { SUCCES: 'Réussie', SUCCESS: 'Réussie', ECHEC: 'Échec', ERROR: 'Échec' };
+    return labels[status?.toUpperCase()] ?? status;
   }
 
   protected loadBalances(): void {
@@ -68,7 +90,7 @@ export class LeaveBalanceListComponent implements OnInit {
     const source = this.isAdminMode() ? this.balanceService.findAll() : this.balanceService.findByUser(currentUser.id);
     source.subscribe({
       next: (balances) => { this.balances.set(balances); this.isLoading.set(false); },
-      error: () => { this.error.set('Leave balances could not be loaded.'); this.isLoading.set(false); }
+      error: () => { this.error.set('Impossible de charger les soldes de congé.'); this.isLoading.set(false); }
     });
   }
 
@@ -77,20 +99,22 @@ export class LeaveBalanceListComponent implements OnInit {
   }
 
   protected saveBalance(request: LeaveBalanceRequest): void {
+    if (!this.canManageBalances()) return;
     const current = this.editingBalance();
     const operation = current ? this.balanceService.update(current.id, request) : this.balanceService.create(request);
     this.isSaving.set(true);
     operation.subscribe({
-      next: () => { this.isSaving.set(false); this.formOpen.set(false); this.success.set('Leave balance saved.'); this.loadBalances(); },
-      error: (error) => { this.error.set(safeApiMessage(error, 'Leave balance could not be saved.')); this.isSaving.set(false); }
+      next: () => { this.isSaving.set(false); this.formOpen.set(false); this.success.set('Le solde de congé a été enregistré.'); this.loadBalances(); },
+      error: (error) => { this.error.set(safeApiMessage(error, "Impossible d'enregistrer le solde de congé.")); this.isSaving.set(false); }
     });
   }
 
   protected deleteBalance(balance: LeaveBalanceResponse): void {
+    if (!this.canManageBalances()) return;
     this.isSaving.set(true);
     this.balanceService.delete(balance.id).subscribe({
-      next: () => { this.isSaving.set(false); this.success.set('Leave balance deleted.'); this.loadBalances(); },
-      error: (error) => { this.error.set(safeApiMessage(error, 'Leave balance could not be deleted.')); this.isSaving.set(false); }
+      next: () => { this.isSaving.set(false); this.success.set('Le solde de congé a été supprimé.'); this.loadBalances(); },
+      error: (error) => { this.error.set(safeApiMessage(error, 'Impossible de supprimer le solde de congé.')); this.isSaving.set(false); }
     });
   }
 }

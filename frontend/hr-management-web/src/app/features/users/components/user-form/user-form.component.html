@@ -57,19 +57,21 @@
         </label>
 
         @if (!managerMode()) { <label class="form-field">
-          <span>Role</span>
+          <span>Rôle</span>
           <select formControlName="role">
-            @for (role of roles; track role) { <option [value]="role">{{ role }}</option> }
+            @for (role of roles; track role) { <option [value]="role">{{ roleLabels[role] }}</option> }
           </select>
           @if (fieldError('role')) { <p class="field-error">{{ fieldError('role') }}</p> }
         </label> }
 
         <label class="form-field">
-          <span>Statut</span>
-          <select formControlName="status">
-            @for (status of statuses; track status) { <option [value]="status">{{ status }}</option> }
+          <span>Poste</span>
+          <select formControlName="positionId">
+            <option [ngValue]="null">Sélectionnez un poste</option>
+            @for (position of positions(); track position.id) {
+              <option [ngValue]="position.id">{{ position.title }}</option>
+            }
           </select>
-          @if (fieldError('status')) { <p class="field-error">{{ fieldError('status') }}</p> }
         </label>
 
         <label class="form-field">
@@ -85,18 +87,13 @@
         @if (!managerMode()) { <label class="form-field">
           <span>Manager</span>
           <select formControlName="managerId">
-            <option [ngValue]="null">None</option>
+            <option [ngValue]="null">Aucun manager</option>
             @for (manager of eligibleManagers(); track manager.id) {
               <option [ngValue]="manager.id">{{ manager.firstName }} {{ manager.lastName }}</option>
             }
           </select>
         </label> }
       </div>
-
-      <label class="checkbox-field">
-        <input formControlName="enabled" type="checkbox" />
-        Actif
-      </label>
 
       <div class="dialog-actions">
         <button class="secondary-button" type="button" (click)="cancel.emit()" [disabled]="loading()">Annuler</button>

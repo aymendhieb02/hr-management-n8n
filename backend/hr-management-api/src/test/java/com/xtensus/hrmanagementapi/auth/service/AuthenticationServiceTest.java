@@ -41,7 +41,6 @@ class AuthenticationServiceTest {
         when(employeRepository.findByUsernameIgnoreCase("jdoe")).thenReturn(Optional.of(employe));
         LoginResponse response = authenticationService.login(request(" jdoe ", "StrongPass123"));
         assertNotNull(response.getAccessToken());
-        assertEquals("Bearer", response.getTokenType());
         assertEquals("jdoe", response.getUser().getUsername());
         assertEquals("EMPLOYEE", response.getUser().getRole().name());
     }

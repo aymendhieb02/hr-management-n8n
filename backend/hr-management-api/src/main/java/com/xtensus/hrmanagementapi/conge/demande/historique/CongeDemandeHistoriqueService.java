@@ -7,6 +7,8 @@ import java.time.LocalDateTime;
 import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 
 @Service
 public class CongeDemandeHistoriqueService {
@@ -23,6 +25,30 @@ public class CongeDemandeHistoriqueService {
     @Transactional(readOnly = true)
     public List<CongeDemandeHistoriqueResponse> lister() {
         return repository.findAllByOrderByDateActionDesc().stream().map(this::response).toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<CongeDemandeHistoriqueResponse> listerParEmploye(Long employeId) {
+        return repository.rechercher(null, employeId, PageRequest.of(0, 1000, Sort.by(Sort.Direction.DESC, "dateAction")))
+                .getContent().stream().map(this::response).toList();
+    }
+
+    @Transactional(readOnly = true)
+    public CongeDemandeHistoriquePageResponse rechercher(String recherche, Long employeId, int page, int taille) {
+        String terme = recherche == null || recherche.isBlank() ? null : recherche.trim();
+        var resultat = repository.rechercher(terme, employeId,
+                PageRequest.of(page, taille, Sort.by(Sort.Direction.DESC, "dateAction")));
+        return CongeDemandeHistoriquePageResponse.builder()
+                .contenu(resultat.getContent().stream().map(this::response).toList())
+                .totalElements(resultat.getTotalElements()).totalPages(resultat.getTotalPages())
+                .page(resultat.getNumber()).taille(resultat.getSize()).build();
+    }
+
+    @Transactional(readOnly = true)
+    public List<CongeDemandeHistoriqueEmployeResponse> listerEmployes() {
+        return repository.listerEmployesAvecHistorique().stream()
+                .map(row -> new CongeDemandeHistoriqueEmployeResponse(((Number) row[0]).longValue(), (String) row[1]))
+                .toList();
     }
 
     @Transactional

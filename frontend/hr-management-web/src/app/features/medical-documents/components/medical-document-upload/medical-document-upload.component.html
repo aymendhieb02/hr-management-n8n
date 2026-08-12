@@ -1,13 +1,14 @@
-<section class="state">
-  <h2>Certificat medical</h2>
-  <label class="form-field">
-    <span>Fichier du certificat</span>
+<section class="certificate-upload">
+  <label class="certificate-dropzone">
     <input type="file" accept="application/pdf,image/jpeg,image/png" (change)="selectFile($event)" [disabled]="disabled() || loading()" />
+    <span class="upload-icon" aria-hidden="true">⇧</span>
+    <strong>{{ selectedFile() ? 'Changer de fichier' : 'Choisir un certificat' }}</strong>
+    <small>PDF, JPG ou PNG · 5 Mo maximum</small>
   </label>
   @if (selectedFile()) {
-    <p>{{ selectedFile()!.name }} - {{ selectedFile()!.size }} octets</p>
+    <div class="selected-certificate"><span>📄</span><div><strong>{{ selectedFile()!.name }}</strong><small>{{ (selectedFile()!.size / 1024).toFixed(1) }} Ko</small></div></div>
   }
-  @if (success()) { <p>{{ success() }}</p> }
+  @if (success()) { <p class="upload-success">{{ success() }}</p> }
   @if (error()) { <p class="form-error" role="alert">{{ error() }}</p> }
-  <button class="primary-button" type="button" (click)="upload()" [disabled]="!selectedFile() || disabled() || loading()">Televerser</button>
+  <button class="primary-button upload-button" type="button" (click)="upload()" [disabled]="!selectedFile() || disabled() || loading()">{{ loading() ? 'Envoi en cours...' : 'Ajouter le certificat' }}</button>
 </section>

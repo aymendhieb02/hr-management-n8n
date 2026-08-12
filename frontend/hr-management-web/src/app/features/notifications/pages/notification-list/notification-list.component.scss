@@ -1,0 +1,36 @@
+.eyebrow { color: var(--app-orange-dark); font-size: .7rem; font-weight: 850; letter-spacing: .11em; }
+.notification-summary { display:flex; align-items:center; gap:8px; padding:10px 14px; border:1px solid #f3cda8; border-radius:14px; background:#fff8ef; color:#8c633e; }
+.notification-summary strong { color:var(--app-orange-dark); font-family:"Cascadia Code",Consolas,monospace; font-size:1.3rem; }
+.notification-summary span { font-size:.82rem; font-weight:750; }
+.notification-toolbar { display:flex; align-items:center; justify-content:space-between; gap:16px; padding:10px; border:1px solid #eee0d3; border-radius:14px; background:#fff; }
+.filter-tabs,.toolbar-actions { display:flex; align-items:center; gap:8px; }
+.filter-tabs button { display:flex; align-items:center; gap:8px; min-height:39px; padding:0 14px; border:0; border-radius:10px; background:transparent; color:#786d64; font:inherit; font-weight:750; cursor:pointer; }
+.filter-tabs button span { min-width:23px; padding:3px 6px; border-radius:999px; background:#f1ece7; font-size:.72rem; }
+.filter-tabs button.active { background:var(--app-orange-soft); color:var(--app-orange-dark); }
+.filter-tabs button.active span { background:#fff; color:var(--app-orange-dark); }
+.notification-list { display:grid; gap:11px; }
+.notification-pagination{display:flex;align-items:center;justify-content:space-between;gap:18px;padding:14px 16px;border:1px solid #eadbcf;border-radius:14px;background:linear-gradient(135deg,#fff,#fff8ef)}
+.pagination-info,.pagination-controls,.pagination-controls label,.page-buttons{display:flex;align-items:center;gap:8px}.pagination-info{color:#776b62;font-size:.82rem}.pagination-info strong{color:var(--app-orange-dark);font-family:"Cascadia Code",Consolas,monospace}.pagination-controls label{color:#776b62;font-size:.78rem;font-weight:750}.pagination-controls select{padding:7px 9px;border:1px solid #ead3be;border-radius:8px;background:#fff;color:var(--app-orange-dark);font-weight:800}.page-buttons button{min-width:34px;height:34px;border:1px solid #ecd8c5;border-radius:9px;background:#fff;color:#9b5417;font-family:"Cascadia Code",Consolas,monospace;font-weight:800;cursor:pointer}.page-buttons button:hover:not(:disabled),.page-buttons button.active{border-color:var(--app-orange);background:var(--app-orange);color:#fff}.page-buttons button:disabled{cursor:not-allowed;opacity:.42}
+:host ::ng-deep .notification-card { position:relative; display:grid; grid-template-columns:42px minmax(0,1fr) auto; align-items:start; gap:14px; padding:18px; border:1px solid #e9dfd6; border-radius:15px; background:#fff; box-shadow:0 7px 20px rgba(65,49,36,.045); }
+:host ::ng-deep .notification-card.unread { border-color:#f0c99f; background:linear-gradient(105deg,#fff 0%,#fffaf4 72%,#fff0df 100%); box-shadow:inset 4px 0 0 var(--app-orange),0 9px 24px rgba(191,99,20,.08); }
+:host ::ng-deep .notification-icon { display:grid; place-items:center; width:42px; height:42px; border-radius:12px; background:#f1ece7; color:#81756b; font-weight:900; }
+:host ::ng-deep .unread .notification-icon { background:#ffe8d0; color:var(--app-orange-dark); }
+:host ::ng-deep .notification-content header { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; }
+:host ::ng-deep .notification-content h2 { margin:0; color:var(--app-ink); font-size:1rem; }
+:host ::ng-deep .notification-meta { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:6px; }
+:host ::ng-deep .notification-meta span { padding:3px 7px; border-radius:999px; background:#f6eee6; color:#98602e; font-size:.66rem; font-weight:800; }
+:host ::ng-deep .notification-content time { display:block; margin-top:4px; color:var(--app-muted); font-size:.76rem; }
+:host ::ng-deep .notification-content>p { margin:12px 0 0; color:#625a54; line-height:1.55; }
+:host ::ng-deep .read-state { padding:4px 8px; border-radius:999px; background:#eeeae6; color:#756b63; font-size:.68rem; font-weight:850; white-space:nowrap; }
+:host ::ng-deep .read-state.unread-state { background:#fff0df; color:#b75308; }
+:host ::ng-deep .notification-actions { display:flex; flex-direction:column; gap:7px; }
+:host ::ng-deep .notification-actions button { min-height:35px; padding:0 11px; border-radius:8px; font:inherit; font-size:.77rem; font-weight:800; cursor:pointer; }
+:host ::ng-deep .mark-read-button { border:1px solid #efbd8c; background:#fff5e9; color:#aa540d; }
+:host ::ng-deep .delete-notification-button { border:1px solid #e2cecb; background:#fff; color:var(--app-danger-dark); }
+.notification-state { display:grid; justify-items:center; padding:42px 20px; border:1px dashed #e5d6c8; border-radius:16px; background:#fff; text-align:center; }
+.notification-state h2 { margin:12px 0 3px; font-size:1.08rem; }.notification-state p{margin:0;color:var(--app-muted)}
+.state-icon { display:grid; place-items:center; width:48px; height:48px; border-radius:15px; background:#fff0df; color:var(--app-orange-dark); font-size:1.35rem; font-weight:900; }
+.loading-icon { animation:notification-spin 1s linear infinite; } @keyframes notification-spin{to{transform:rotate(360deg)}}
+:host ::ng-deep .notification-delete-dialog { text-align:center; }.dialog-warning-icon{display:grid;place-items:center;width:48px;height:48px;margin:0 auto 14px;border-radius:14px;background:var(--app-danger-soft);color:var(--app-danger-dark);font-size:1.4rem;font-weight:900}
+@media(max-width:720px){.notification-toolbar{align-items:stretch;flex-direction:column}.filter-tabs,.toolbar-actions{width:100%}.filter-tabs button,.toolbar-actions button{flex:1}:host ::ng-deep .notification-card{grid-template-columns:38px minmax(0,1fr)}:host ::ng-deep .notification-actions{grid-column:1/-1;flex-direction:row;justify-content:flex-end}}
+@media(max-width:480px){.filter-tabs,.toolbar-actions{flex-direction:column}.filter-tabs button,.toolbar-actions button{width:100%}:host ::ng-deep .notification-card{grid-template-columns:1fr}:host ::ng-deep .notification-icon{display:none}:host ::ng-deep .notification-content header{flex-direction:column}:host ::ng-deep .notification-actions{flex-direction:column}:host ::ng-deep .notification-actions button{width:100%}}

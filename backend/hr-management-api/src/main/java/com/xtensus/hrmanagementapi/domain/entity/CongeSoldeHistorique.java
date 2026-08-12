@@ -26,4 +26,12 @@ public class CongeSoldeHistorique {
     private String statutAcquisition;
     @Column(name = "conge_solde_historique_erreur", length = 500)
     private String erreur;
+    @Column(name = "conge_solde_historique_type_transaction", nullable = false, length = 50)
+    private String typeTransaction;
+    @Column(name = "conge_solde_historique_montant", nullable = false, precision = 5, scale = 2)
+    private BigDecimal montant;
+    @Column(name = "conge_solde_historique_reference", nullable = false, unique = true, length = 100)
+    private String reference;
+    @ManyToOne(fetch = FetchType.LAZY) @JoinColumn(name = "conge_demande_id")
+    private CongeDemande demande;
 }

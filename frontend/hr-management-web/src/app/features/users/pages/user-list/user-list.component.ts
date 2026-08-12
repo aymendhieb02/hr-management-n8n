@@ -2,9 +2,10 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
-import { forkJoin, of } from 'rxjs';
+import { catchError, forkJoin, of } from 'rxjs';
 import { AuthService } from '../../../../core/services/auth.service';
 import { safeApiMessage, validationErrors } from '../../../shared/api-error.util';
+import { PaginatedTableDirective } from '../../../shared/paginated-table.directive';
 import { DeleteUserDialogComponent } from '../../components/delete-user-dialog/delete-user-dialog.component';
 import { PasswordUpdateDialogComponent } from '../../components/password-update-dialog/password-update-dialog.component';
 import { UserDetailsComponent } from '../../components/user-details/user-details.component';
@@ -12,21 +13,25 @@ import { UserFormComponent } from '../../components/user-form/user-form.componen
 import { PasswordUpdateRequest, RoleType, UserCreateRequest, UserReferenceSummary, UserResponse, UserUpdateRequest } from '../../models/user.model';
 import { TypeContractService } from '../../services/type-contract.service';
 import { UserService } from '../../services/user.service';
+import { Position } from '../../../positions/models/position.model';
+import { PositionService } from '../../../positions/services/position.service';
 
 @Component({
   selector: 'app-user-list',
-  imports: [DeleteUserDialogComponent, FormsModule, PasswordUpdateDialogComponent, UserDetailsComponent, UserFormComponent],
+  imports: [DeleteUserDialogComponent, FormsModule, PasswordUpdateDialogComponent, UserDetailsComponent, UserFormComponent, PaginatedTableDirective],
   templateUrl: './user-list.component.html',
   styleUrl: '../../../shared/resource-page.scss'
 })
 export class UserListComponent implements OnInit {
   private readonly userService = inject(UserService);
   private readonly typeContractService = inject(TypeContractService);
+  private readonly positionService = inject(PositionService);
   private readonly authService = inject(AuthService);
   private readonly route = inject(ActivatedRoute);
 
   protected readonly users = signal<UserResponse[]>([]);
   protected readonly typeContracts = signal<UserReferenceSummary[]>([]);
+  protected readonly positions = signal<Position[]>([]);
   protected readonly allUsersForManagers = signal<UserResponse[]>([]);
   protected readonly isLoading = signal(false);
   protected readonly isSaving = signal(false);
@@ -47,7 +52,7 @@ export class UserListComponent implements OnInit {
   protected readonly roles: RoleType[] = ['EMPLOYEE', 'MANAGER', 'HR', 'ADMIN'];
   protected readonly canManage = computed(() => this.authService.hasAnyRole('HR', 'ADMIN') || (this.authService.hasAnyRole('MANAGER') && this.isTeamMode()));
   protected readonly isTeamMode = computed(() => this.route.snapshot.routeConfig?.path === 'team-members');
-  protected readonly title = computed(() => this.isTeamMode() ? 'Team Members' : 'Users');
+  protected readonly title = computed(() => this.isTeamMode() ? "Membres de l'équipe" : 'Employés');
   protected readonly filteredUsers = computed(() => {
     const search = this.searchTerm().trim().toLowerCase();
     const role = this.roleFilter();
@@ -87,7 +92,7 @@ export class UserListComponent implements OnInit {
         this.isLoading.set(false);
       },
       error: () => {
-        this.error.set(this.isTeamMode() ? 'Team members could not be loaded.' : 'Users could not be loaded.');
+        this.error.set(this.isTeamMode() ? "Impossible de charger les membres de l'équipe." : 'Impossible de charger les employés.');
         this.isLoading.set(false);
       }
     });
@@ -122,7 +127,7 @@ export class UserListComponent implements OnInit {
       },
       error: (error: HttpErrorResponse) => {
         this.formErrors.set(validationErrors(error));
-        this.error.set(safeApiMessage(error, 'User could not be saved.'));
+        this.error.set(safeApiMessage(error, "Impossible d'enregistrer l'employé."));
         this.isSaving.set(false);
       }
     });
@@ -146,7 +151,7 @@ export class UserListComponent implements OnInit {
         this.passwordUser.set(null);
       },
       error: (error) => {
-        this.passwordError.set(safeApiMessage(error, 'Password could not be updated.'));
+        this.passwordError.set(safeApiMessage(error, 'Impossible de modifier le mot de passe.'));
         this.isSaving.set(false);
       }
     });
@@ -191,7 +196,7 @@ export class UserListComponent implements OnInit {
         this.loadUsers();
       },
       error: (error) => {
-        this.deleteError.set(safeApiMessage(error, 'User could not be deleted.'));
+        this.deleteError.set(safeApiMessage(error, "Impossible de supprimer l'employé."));
         this.isDeleting.set(false);
       }
     });
@@ -203,16 +208,22 @@ export class UserListComponent implements OnInit {
     }
 
     forkJoin({
-      typeContracts: this.typeContractService.findAll(),
-      managers: this.authService.hasAnyRole('HR', 'ADMIN') ? this.userService.findAll() : of([])
+      typeContracts: this.typeContractService.findAll().pipe(catchError(() => of([]))),
+      positions: this.positionService.findAll().pipe(catchError(() => of([]))),
+      managers: (this.authService.hasAnyRole('HR', 'ADMIN') ? this.userService.findAll() : of([])).pipe(catchError(() => of([])))
     }).subscribe({
-      next: ({ typeContracts, managers }) => {
+      next: ({ typeContracts, positions, managers }) => {
         this.typeContracts.set(typeContracts);
+        this.positions.set(positions.filter((position) => position.active !== false));
         this.allUsersForManagers.set(managers);
       },
       error: () => {
-        this.error.set('User form options could not be loaded.');
+        this.error.set("Impossible de charger les options du formulaire employé.");
       }
     });
+  }
+
+  protected roleLabel(role: RoleType): string {
+    return { EMPLOYEE: 'Employé', MANAGER: 'Manager', HR: 'Ressources humaines', ADMIN: 'Administrateur' }[role];
   }
 }

@@ -1,8 +1,6 @@
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { forkJoin } from 'rxjs';
 import { AuthService } from '../../../../core/services/auth.service';
-import { DepartmentService } from '../../../departments/services/department.service';
-import { LeaveBalanceService } from '../../../leaves/services/leave-balance.service';
 import { LeaveRequestResponse } from '../../../leaves/models/leave-request.model';
 import { LeaveRequestService } from '../../../leaves/services/leave-request.service';
 import { NotificationService } from '../../../notifications/services/notification.service';
@@ -17,13 +15,11 @@ import { StatusChartComponent } from '../../components/status-chart/status-chart
   selector: 'app-dashboard',
   imports: [RecentLeaveTableComponent, StatCardComponent, StatusChartComponent],
   templateUrl: './dashboard.component.html',
-  styleUrl: '../../../shared/resource-page.scss'
+  styleUrls: ['../../../shared/resource-page.scss', './dashboard.component.scss']
 })
 export class DashboardComponent implements OnInit {
   private readonly users = inject(UserService);
   private readonly requests = inject(LeaveRequestService);
-  private readonly departments = inject(DepartmentService);
-  private readonly balances = inject(LeaveBalanceService);
   private readonly notifications = inject(NotificationService);
   private readonly auth = inject(AuthService);
 
@@ -36,13 +32,15 @@ export class DashboardComponent implements OnInit {
   protected readonly approved = computed(() => this.count('APPROVED'));
   protected readonly rejected = computed(() => this.count('REJECTED'));
   protected readonly absentToday = computed(() => this.requestList().filter((r) => r.status === 'APPROVED' && isTodayWithin(r.startDate, r.endDate)).length);
-  protected readonly recent = computed(() => [...this.requestList()].sort((a, b) => b.submittedAt.localeCompare(a.submittedAt)).slice(0, 8));
-  protected readonly statusData = computed(() => ['PENDING', 'APPROVED', 'REJECTED'].map((label) => ({ label, value: this.count(label) })));
-  protected readonly usersByDepartment = computed(() => {
-    const map = new Map<string, number>();
-    for (const user of this.userList()) map.set(user.department?.name ?? 'No department', (map.get(user.department?.name ?? 'No department') ?? 0) + 1);
-    return [...map.entries()].map(([label, value]) => ({ label, value }));
+  protected readonly activeEmployees = computed(() => this.userList().filter((user) => user.enabled).length);
+  protected readonly authorizations = computed(() => this.requestList().filter((request) => request.nature === 'AUTORISATION_ABSENCE').length);
+  protected readonly approvalRate = computed(() => {
+    const decided = this.approved() + this.rejected();
+    return decided ? Math.round((this.approved() / decided) * 100) : 0;
   });
+  protected readonly upcomingApproved = computed(() => this.requestList().filter((request) => request.status === 'APPROVED' && request.startDate >= new Date().toISOString().slice(0,10)).length);
+  protected readonly recent = computed(() => [...this.requestList()].sort((a, b) => b.submittedAt.localeCompare(a.submittedAt)).slice(0, 8));
+  protected readonly statusData = computed(() => [{label:'En attente',status:'PENDING'},{label:'Approuvées',status:'APPROVED'},{label:'Refusées',status:'REJECTED'}].map((item) => ({ label:item.label, value:this.count(item.status) })));
 
   ngOnInit(): void {
     const current = this.auth.getCurrentUser();
@@ -51,8 +49,6 @@ export class DashboardComponent implements OnInit {
     forkJoin({
       users: this.users.findAll(),
       requests: this.requests.findAll(),
-      departments: this.departments.findAll(),
-      balances: this.balances.findAll(),
       unread: this.notifications.findUnread(current.id)
     }).subscribe({
       next: ({ users, requests, unread }) => {
@@ -61,7 +57,7 @@ export class DashboardComponent implements OnInit {
         this.unreadCount.set(unread.length);
         this.loading.set(false);
       },
-      error: () => { this.error.set('Dashboard data could not be loaded.'); this.loading.set(false); }
+      error: () => { this.error.set('Impossible de charger les données du tableau de bord.'); this.loading.set(false); }
     });
   }
 

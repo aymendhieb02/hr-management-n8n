@@ -17,8 +17,6 @@ describe('LoginComponent', () => {
   const manager: AuthenticatedUser = { ...employee, role: 'MANAGER', username: 'manager' };
   const hr: AuthenticatedUser = { ...employee, role: 'HR', username: 'hr' };
   const response = (user: AuthenticatedUser): LoginResponse => ({
-    accessToken: 'jwt-token',
-    tokenType: 'Bearer',
     expiresIn: 3600000,
     user
   });

@@ -2,6 +2,8 @@ import { Component, computed, input, output, signal } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { CalendarEvent } from '../../models/calendar-event.model';
 
+interface WeekEventSegment { event: CalendarEvent; startColumn: number; span: number; lane: number; clippedStart: boolean; clippedEnd: boolean; }
+
 @Component({
   selector: 'app-week-planner',
   imports: [DatePipe],
@@ -38,6 +40,28 @@ export class WeekPlannerComponent {
       return date;
     });
   });
+
+  protected readonly weekEventSegments = computed<WeekEventSegment[]>(() => {
+    const days = this.weekDays();
+    const weekStart = this.dateKey(days[0]);
+    const weekEnd = this.dateKey(days[6]);
+    const laneEnds: number[] = [];
+    return this.events()
+      .filter((event) => event.startDate <= weekEnd && event.endDate >= weekStart)
+      .map((event) => {
+        const visibleStart = event.startDate < weekStart ? weekStart : event.startDate;
+        const visibleEnd = event.endDate > weekEnd ? weekEnd : event.endDate;
+        return { event, startColumn: days.findIndex((day) => this.dateKey(day) === visibleStart) + 1, endColumn: days.findIndex((day) => this.dateKey(day) === visibleEnd) + 1 };
+      })
+      .sort((a, b) => a.startColumn - b.startColumn || b.endColumn - a.endColumn)
+      .map(({ event, startColumn, endColumn }) => {
+        let lane = laneEnds.findIndex((lastColumn) => lastColumn < startColumn);
+        if (lane < 0) { lane = laneEnds.length; laneEnds.push(endColumn); } else { laneEnds[lane] = endColumn; }
+        return { event, startColumn, span: endColumn - startColumn + 1, lane: lane + 1, clippedStart: event.startDate < weekStart, clippedEnd: event.endDate > weekEnd };
+      });
+  });
+
+  protected readonly eventLaneCount = computed(() => Math.max(1, ...this.weekEventSegments().map((segment) => segment.lane)));
 
   protected eventsForDay(date: Date): CalendarEvent[] {
     const key = this.dateKey(date);

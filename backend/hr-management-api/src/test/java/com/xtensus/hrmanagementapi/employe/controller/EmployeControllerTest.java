@@ -87,6 +87,7 @@ class EmployeControllerTest {
 
     private EmployeRequest request(String nom, String prenom, String email) {
         EmployeRequest request = new EmployeRequest();
+        request.setUsername("amine.dupont");
         request.setNom(nom);
         request.setPrenom(prenom);
         request.setEmail(email);

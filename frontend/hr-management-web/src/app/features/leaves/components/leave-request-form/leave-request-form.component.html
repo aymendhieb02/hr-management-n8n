@@ -27,7 +27,7 @@
       @if (form.controls.nature.value === 'CONGE') {
         <div class="form-grid">
           <label class="form-field"><span>Date de début</span><input formControlName="startDate" type="date" [min]="firstAllowedDate" (change)="startDateChanged()" />@if (fieldError('startDate')) { <p class="field-error">{{ fieldError('startDate') }}</p> }</label>
-          <label class="form-field"><span>Nombre de jours</span><input formControlName="numberOfDays" type="number" min="1" max="365" step="1" (input)="calculateEndDate()" />@if (fieldError('numberOfDays')) { <p class="field-error">{{ fieldError('numberOfDays') }}</p> }</label>
+          <label class="form-field"><span>Nombre de jours</span><input formControlName="numberOfDays" type="number" min="1" [max]="maximumLeaveDays() ?? 365" step="1" (input)="calculateEndDate()" />@if (fieldError('numberOfDays')) { <p class="field-error">{{ fieldError('numberOfDays') }}</p> } @if (maximumLeaveDays() !== null) { <small>Maximum disponible : {{ maximumLeaveDays() }} jour(s), tolérance de -5 incluse.</small> }</label>
         </div>
       } @else {
         <label class="form-field"><span>Jour de l'autorisation</span><input formControlName="startDate" type="date" [min]="firstAllowedDate" (change)="startDateChanged()" /></label>
@@ -38,6 +38,7 @@
       }
 
       @if (formLevelError) { <p class="form-error" role="alert">{{ formLevelError }}</p> }
+      @if (submissionError()) { <p class="form-error submission-error" role="alert"><strong>Impossible d'enregistrer la demande.</strong><span>{{ submissionError() }}</span></p> }
       <div class="request-signature"><span>Fait à Tunis, le {{ systemDateLabel }}</span><span>L'intéressé(e)</span></div>
       <div class="dialog-actions">
         <button class="secondary-button" type="button" (click)="cancel.emit()" [disabled]="loading()">Annuler</button>

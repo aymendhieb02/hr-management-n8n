@@ -147,6 +147,6 @@ describe('LeaveTypeListComponent', () => {
     confirmDeleteButton().click();
     fixture.detectChanges();
 
-    expect(text()).toContain('This item cannot be deleted or saved because it is referenced elsewhere.');
+    expect(text()).toContain('Cette opération est impossible car cet élément est déjà utilisé.');
   });
 });

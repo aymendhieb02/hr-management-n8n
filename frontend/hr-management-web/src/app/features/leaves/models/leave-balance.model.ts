@@ -18,3 +18,8 @@ export interface LeaveBalanceResponse {
   createdAt: string;
   updatedAt: string | null;
 }
+
+export interface LeaveBalanceTransaction {
+  id: number; balanceId: number; employeeId: number; employeeName: string; requestId: number | null;
+  type: string; amount: number; balanceBefore: number; balanceAfter: number; executedAt: string; status: string; error: string | null;
+}

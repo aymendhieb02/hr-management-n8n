@@ -8,6 +8,7 @@ import { LeaveTypeService } from '../../../leave-types/services/leave-type.servi
 import { Reason } from '../../../reasons/reason.model';
 import { ReasonService } from '../../../reasons/reason.service';
 import { safeApiMessage, validationErrors } from '../../../shared/api-error.util';
+import { PaginatedTableDirective } from '../../../shared/paginated-table.directive';
 import { JourFerieResponse } from '../../../jours-feries/models/jour-ferie.model';
 import { JourFerieService } from '../../../jours-feries/services/jour-ferie.service';
 import { LeaveDecisionDialogComponent } from '../../components/leave-decision-dialog/leave-decision-dialog.component';
@@ -15,10 +16,12 @@ import { LeaveDetailsComponent } from '../../components/leave-details/leave-deta
 import { LeaveRequestFormComponent } from '../../components/leave-request-form/leave-request-form.component';
 import { LeaveRequestResponse, LeaveRequestStatus, LeaveRequestUpdateRequest } from '../../models/leave-request.model';
 import { LeaveRequestService } from '../../services/leave-request.service';
+import { LeaveBalanceService } from '../../services/leave-balance.service';
+import { MedicalDocumentService } from '../../../medical-documents/services/medical-document.service';
 
 @Component({
   selector: 'app-leave-request-list',
-  imports: [FormsModule, LeaveDecisionDialogComponent, LeaveDetailsComponent, LeaveRequestFormComponent],
+  imports: [FormsModule, LeaveDecisionDialogComponent, LeaveDetailsComponent, LeaveRequestFormComponent, PaginatedTableDirective],
   templateUrl: './leave-request-list.component.html',
   styleUrls: ['../../../shared/resource-page.scss', './leave-request-list.component.scss']
 })
@@ -30,16 +33,21 @@ export class LeaveRequestListComponent implements OnInit {
   private readonly authService = inject(AuthService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
+  private readonly medicalDocumentService = inject(MedicalDocumentService);
+  private readonly leaveBalanceService = inject(LeaveBalanceService);
 
   protected readonly requests = signal<LeaveRequestResponse[]>([]);
   protected readonly leaveTypes = signal<LeaveType[]>([]);
   protected readonly reasons = signal<Reason[]>([]);
   protected readonly holidays = signal<JourFerieResponse[]>([]);
+  protected readonly currentBalance = signal<number | null>(null);
   protected readonly isLoading = signal(false);
   protected readonly isSaving = signal(false);
   protected readonly error = signal<string | null>(null);
   protected readonly success = signal<string | null>(null);
   protected readonly formErrors = signal<Record<string, string>>({});
+  protected readonly formSubmissionError = signal<string | null>(null);
+  protected readonly certificateRequestIds = signal<Set<number>>(new Set());
   protected readonly searchTerm = signal('');
   protected readonly statusFilter = signal<LeaveRequestStatus | ''>('');
   protected readonly formOpen = signal(false);
@@ -50,6 +58,15 @@ export class LeaveRequestListComponent implements OnInit {
   protected readonly statuses: LeaveRequestStatus[] = ['PENDING', 'APPROVED', 'REJECTED', 'CANCELLED'];
   protected readonly isManagerMode = computed(() => this.route.snapshot.routeConfig?.path === 'team-requests');
   protected readonly isCreateMode = computed(() => this.route.snapshot.routeConfig?.path === 'request-leave');
+  protected readonly maximumLeaveDays = computed(() => {
+    const balance = this.currentBalance();
+    if (balance === null) return null;
+    const editedId = this.editingRequest()?.id;
+    const pendingDays = this.requests()
+      .filter((request) => request.id !== editedId && request.status === 'PENDING' && request.nature === 'CONGE')
+      .reduce((total, request) => total + request.requestedDays, 0);
+    return Math.max(0, balance + 5 - pendingDays);
+  });
   protected readonly title = computed(() => this.isManagerMode() ? "Demandes de l'equipe" : this.isCreateMode() ? 'Demander un conge' : 'Mes demandes de conge');
   protected readonly filteredRequests = computed(() => {
     const search = this.searchTerm().trim().toLowerCase();
@@ -69,6 +86,13 @@ export class LeaveRequestListComponent implements OnInit {
     this.reasonService.findAvailable().subscribe({ next: (reasons) => this.reasons.set(reasons), error: () => {} });
     this.jourFerieService.getActive().subscribe({ next: (holidays) => this.holidays.set(holidays), error: () => {} });
     this.loadRequests();
+    const currentUser = this.authService.getCurrentUser();
+    if (currentUser && !this.isManagerMode()) {
+      this.leaveBalanceService.findByUser(currentUser.id).subscribe({
+        next: (balances) => this.currentBalance.set(balances[0]?.remainingDays ?? 0),
+        error: () => this.currentBalance.set(null)
+      });
+    }
     if (this.isCreateMode()) this.openCreate();
   }
 
@@ -83,6 +107,7 @@ export class LeaveRequestListComponent implements OnInit {
     source.subscribe({
       next: (requests) => {
         this.requests.set(requests);
+        if (!this.isManagerMode()) this.loadEmployeeCertificates(currentUser.id);
         this.isLoading.set(false);
       },
       error: () => {
@@ -94,12 +119,14 @@ export class LeaveRequestListComponent implements OnInit {
 
   protected openCreate(): void {
     this.formErrors.set({});
+    this.formSubmissionError.set(null);
     this.editingRequest.set(null);
     this.formOpen.set(true);
   }
 
   protected openEdit(request: LeaveRequestResponse): void {
     this.formErrors.set({});
+    this.formSubmissionError.set(null);
     this.editingRequest.set(request);
     this.formOpen.set(true);
   }
@@ -113,6 +140,7 @@ export class LeaveRequestListComponent implements OnInit {
       : this.leaveRequestService.create({ ...request, requesterId: currentUser.id });
     this.isSaving.set(true);
     this.success.set(null);
+    this.formSubmissionError.set(null);
     operation.subscribe({
       next: () => {
         this.isSaving.set(false);
@@ -123,7 +151,7 @@ export class LeaveRequestListComponent implements OnInit {
       },
       error: (error: HttpErrorResponse) => {
         this.formErrors.set(validationErrors(error));
-        this.error.set(safeApiMessage(error, "Impossible d'enregistrer la demande de conge."));
+        this.formSubmissionError.set(safeApiMessage(error, "Une erreur inattendue empêche l'enregistrement de la demande."));
         this.isSaving.set(false);
       }
     });
@@ -178,6 +206,26 @@ export class LeaveRequestListComponent implements OnInit {
 
   protected countStatus(status: LeaveRequestStatus): number {
     return this.requests().filter((request) => request.status === status).length;
+  }
+
+  protected isSickLeave(request: LeaveRequestResponse): boolean {
+    const reason = (request.reason ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+    return request.nature === 'CONGE' && (reason.includes('maladie') || reason.includes('medical'));
+  }
+
+  protected hasCertificate(requestId: number): boolean {
+    return this.certificateRequestIds().has(requestId);
+  }
+
+  protected markCertificateAdded(requestId: number): void {
+    this.certificateRequestIds.update((ids) => new Set(ids).add(requestId));
+  }
+
+  private loadEmployeeCertificates(employeeId: number): void {
+    this.medicalDocumentService.findByEmployee(employeeId).subscribe({
+      next: (certificates) => this.certificateRequestIds.set(new Set(certificates.map((certificate) => certificate.leaveRequestId))),
+      error: () => this.certificateRequestIds.set(new Set())
+    });
   }
 
   protected closeForm(): void {

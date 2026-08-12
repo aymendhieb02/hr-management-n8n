@@ -5,13 +5,14 @@ export function safeApiMessage(error: unknown, fallback: string): string {
     return fallback;
   }
 
-  if (error.status === 409) {
-    return 'This item cannot be deleted or saved because it is referenced elsewhere.';
+  if (error.status === 400 && error.error?.validationErrors) {
+    const messages = Object.values(error.error.validationErrors).filter((value): value is string => typeof value === 'string');
+    return messages.length ? messages.join(' ') : 'Veuillez corriger les champs indiqués.';
   }
 
-  if (error.status === 400 && error.error?.validationErrors) {
-    return 'Please fix the highlighted fields and try again.';
-  }
+  const apiMessage = typeof error.error?.message === 'string' ? error.error.message.trim() : '';
+  if (apiMessage && apiMessage !== 'Validation failed') return apiMessage;
+  if (error.status === 409) return 'Cette opération est impossible car cet élément est déjà utilisé.';
 
   return fallback;
 }

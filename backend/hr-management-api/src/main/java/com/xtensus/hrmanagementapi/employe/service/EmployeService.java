@@ -57,12 +57,17 @@ public class EmployeService {
 
     private EmployeResponse createInternal(EmployeRequest request, Employe forcedManager) {
         String email = normalizeRequired(request.getEmail(), "L'email est obligatoire");
+        String username = normalizeRequired(request.getUsername(), "L'identifiant est obligatoire");
         if (employeRepository.existsByEmailIgnoreCase(email)) {
             throw new EmployeExisteDejaException(email);
+        }
+        if (employeRepository.existsByUsernameIgnoreCase(username)) {
+            throw new EmployeExisteDejaException(username);
         }
 
         Employe employe = employeMapper.toEntity(request);
         employe.setEmail(email);
+        employe.setUsername(username);
         applyTechnicalDefaults(employe);
         attachReferences(request, employe);
         if (forcedManager != null) {
@@ -77,12 +82,17 @@ public class EmployeService {
     public EmployeResponse update(Long id, EmployeRequest request) {
         Employe employe = findEntity(id);
         String email = normalizeRequired(request.getEmail(), "L'email est obligatoire");
+        String username = normalizeRequired(request.getUsername(), "L'identifiant est obligatoire");
         if (employeRepository.existsByEmailIgnoreCaseAndIdNot(email, id)) {
             throw new EmployeExisteDejaException(email);
+        }
+        if (employeRepository.existsByUsernameIgnoreCaseAndIdNot(username, id)) {
+            throw new EmployeExisteDejaException(username);
         }
 
         employeMapper.updateEntity(request, employe);
         employe.setEmail(email);
+        employe.setUsername(username);
         applyTechnicalDefaults(employe);
         attachReferences(request, employe);
         if (employe.getManager() != null && employe.getManager().getId().equals(employe.getId())) {
@@ -180,7 +190,6 @@ public class EmployeService {
     }
 
     private void applyTechnicalDefaults(Employe employe) {
-        employe.setUsername(employe.getEmail());
         if (employe.getRole() == null || employe.getRole().isBlank()) {
             employe.setRole(RoleType.EMPLOYEE.toDatabaseRole());
         }

@@ -46,13 +46,13 @@ export class PasswordUpdateDialogComponent {
       return null;
     }
     if (control.hasError('required')) {
-      return 'Password is required.';
+      return 'Le mot de passe est obligatoire.';
     }
     if (control.hasError('minlength')) {
-      return 'Use at least 8 characters.';
+      return 'Utilisez au moins 8 caractères.';
     }
     if (control.hasError('maxlength')) {
-      return 'Use 100 characters or fewer.';
+      return 'Utilisez au maximum 100 caractères.';
     }
     return null;
   }
@@ -63,10 +63,10 @@ export class PasswordUpdateDialogComponent {
       return null;
     }
     if (control.hasError('required')) {
-      return 'Confirm the password.';
+      return 'Confirmez le mot de passe.';
     }
     if (this.form.hasError('passwordMismatch')) {
-      return 'Passwords do not match.';
+      return 'Les mots de passe ne correspondent pas.';
     }
     return null;
   }

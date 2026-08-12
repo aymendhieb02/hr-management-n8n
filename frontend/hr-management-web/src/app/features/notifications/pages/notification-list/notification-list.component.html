@@ -1,22 +1,35 @@
 <section class="resource-page">
   <header class="page-header">
-    <div><h1>Notifications</h1><p>Review updates sent to your account.</p></div>
-    <span class="badge warning">{{ unreadCount() }} unread</span>
+    <div><span class="eyebrow">CENTRE DE NOTIFICATIONS</span><h1>Mes notifications</h1><p>Suivez les informations importantes liées à votre espace RH.</p></div>
+    <span class="notification-summary"><strong>{{ notificationService.unreadCount() }}</strong><span>non lue{{ notificationService.unreadCount() > 1 ? 's' : '' }}</span></span>
   </header>
-  <div class="toolbar">
-    <label class="form-field"><span>Filter</span><select [ngModel]="filter()" (ngModelChange)="filter.set($event)"><option value="all">All</option><option value="unread">Unread</option></select></label>
-    <button class="secondary-button" type="button" (click)="loadNotifications()">Refresh</button>
-    <button class="primary-button" type="button" (click)="markAllAsRead()" [disabled]="unreadCount() === 0">Mark all as read</button>
+  <div class="notification-toolbar">
+    <div class="filter-tabs" role="group" aria-label="Filtrer les notifications">
+      <button type="button" [class.active]="filter() === 'all'" (click)="changeFilter('all')">Toutes <span>{{ notificationService.notifications().length }}</span></button>
+      <button type="button" [class.active]="filter() === 'unread'" (click)="changeFilter('unread')">Non lues <span>{{ notificationService.unreadCount() }}</span></button>
+    </div>
+    <div class="toolbar-actions">
+      <button class="secondary-button" type="button" (click)="loadNotifications(true)">Actualiser</button>
+      @if (notificationService.canMarkAll()) {
+        <button class="primary-button" type="button" (click)="markAllAsRead()" [disabled]="notificationService.manageableUnreadCount() === 0">Tout marquer comme lu</button>
+      }
+    </div>
   </div>
   @if (error()) { <p class="state error" role="alert">{{ error() }}</p> }
-  @if (isLoading()) {
-    <p class="state">Loading notifications...</p>
+  @if (notificationService.loading()) {
+    <div class="notification-state" aria-live="polite"><span class="state-icon loading-icon">↻</span><h2>Chargement en cours</h2><p>Nous récupérons vos notifications…</p></div>
   } @else if (filteredNotifications().length === 0) {
-    <p class="state">No notifications found.</p>
+    <div class="notification-state"><span class="state-icon">✓</span><h2>{{ filter() === 'unread' ? 'Tout est à jour' : 'Aucune notification' }}</h2><p>{{ filter() === 'unread' ? 'Vous avez lu toutes vos notifications.' : 'Les nouvelles informations apparaîtront ici.' }}</p></div>
   } @else {
-    @for (notification of filteredNotifications(); track notification.id) {
-      <app-notification-item [notification]="notification" (markRead)="markAsRead($event)" (delete)="deleteError.set(null); deleting.set($event)" />
-    }
+    <div class="notification-list" aria-live="polite">
+      @for (notification of pagedNotifications(); track notification.id) {
+        <app-notification-item [notification]="notification" [canManage]="notificationService.canManage(notification)" [canDelete]="notificationService.canDelete(notification)" (markRead)="markAsRead($event)" (delete)="deleteError.set(null); deleting.set($event)" />
+      }
+    </div>
+    <nav class="notification-pagination" aria-label="Pagination des notifications">
+      <div class="pagination-info"><span>Affichage</span><strong>{{pageStart()}}–{{pageEnd()}}</strong><span>sur {{filteredNotifications().length}} notifications</span></div>
+      <div class="pagination-controls"><label>Par page <select [ngModel]="pageSize()" (ngModelChange)="changePageSize($event)"><option [ngValue]="5">5</option><option [ngValue]="10">10</option><option [ngValue]="20">20</option><option [ngValue]="50">50</option></select></label><div class="page-buttons"><button type="button" (click)="goToPage(1)" [disabled]="currentPage()===1">«</button><button type="button" (click)="goToPage(currentPage()-1)" [disabled]="currentPage()===1">‹</button>@for(value of visiblePages();track value){<button type="button" (click)="goToPage(value)" [class.active]="value===currentPage()">{{value}}</button>}<button type="button" (click)="goToPage(currentPage()+1)" [disabled]="currentPage()===totalPages()">›</button><button type="button" (click)="goToPage(totalPages())" [disabled]="currentPage()===totalPages()">»</button></div></div>
+    </nav>
   }
 </section>
 @if (deleting()) {

@@ -2,10 +2,11 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { safeApiMessage, validationErrors } from '../shared/api-error.util';
+import { PaginatedTableDirective } from '../shared/paginated-table.directive';
 import { Reason, ReasonRequest } from './reason.model';
 import { ReasonService } from './reason.service';
 
-@Component({ selector: 'app-reason-admin', imports: [ReactiveFormsModule], templateUrl: './reason-admin.component.html', styleUrl: '../shared/resource-page.scss' })
+@Component({ selector: 'app-reason-admin', imports: [ReactiveFormsModule, PaginatedTableDirective], templateUrl: './reason-admin.component.html', styleUrl: '../shared/resource-page.scss' })
 export class ReasonAdminComponent implements OnInit {
   private readonly service = inject(ReasonService);
   protected readonly reasons = signal<Reason[]>([]);

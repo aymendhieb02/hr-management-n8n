@@ -29,6 +29,6 @@ describe('PositionFormComponent', () => {
     textarea.dispatchEvent(new Event('input'));
     fixture.nativeElement.querySelector('form').dispatchEvent(new Event('submit'));
 
-    expect(saveSpy).toHaveBeenCalledWith({ title: 'Engineer', description: 'Builds systems' });
+    expect(saveSpy).toHaveBeenCalledWith({ title: 'Engineer', description: 'Builds systems', level: null, active: true });
   });
 });

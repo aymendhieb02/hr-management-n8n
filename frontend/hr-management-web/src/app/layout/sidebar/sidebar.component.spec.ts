@@ -45,9 +45,9 @@ describe('SidebarComponent', () => {
   });
 
   it('shows employee self-service menu items', () => {
-    expect(text()).toContain('Mes demandes de conge');
-    expect(text()).toContain('Demander un conge');
-    expect(text()).toContain('Mon solde de conges');
+    expect(text()).toContain('Mes demandes de congé');
+    expect(text()).toContain('Demander un congé');
+    expect(text()).toContain('Mon solde de congé');
   });
 
   it('does not show HR or Admin menu items to employees', () => {
@@ -57,15 +57,17 @@ describe('SidebarComponent', () => {
     expect(text()).not.toContain('Configuration systeme');
   });
 
-  it('shows manager team and self-service menu items', () => {
+  it('shows manager team items and hides employee self-service items', () => {
     currentUser.set({ ...user, role: 'MANAGER' });
     fixture.detectChanges();
 
     expect(text()).toContain('Demandes de l equipe');
     expect(text()).toContain('Membres de l equipe');
-    expect(text()).toContain('Disponibilite de l equipe');
-    expect(text()).toContain('Mes demandes de conge');
-    expect(text()).toContain('Demander un conge');
+    expect(text()).toContain("Disponibilité de l'équipe");
+    expect(text()).not.toContain('Mes demandes de congé');
+    expect(text()).not.toContain('Demander un congé');
+    expect(text()).not.toContain('Mon solde de congé');
+    expect(text()).not.toContain('Mon calendrier');
   });
 
   it('shows only applicable reference menu items to managers', () => {
@@ -90,8 +92,8 @@ describe('SidebarComponent', () => {
 
     expect(text()).toContain('Employes');
     expect(text()).toContain('Demandes de l equipe');
-    expect(text()).toContain('Mes demandes de conge');
-    expect(text()).toContain('Mon solde de conges');
+    expect(text()).toContain('Mes demandes de congé');
+    expect(text()).toContain('Mon solde de congé');
     expect(text()).not.toContain('Utilisateurs');
     expect(text()).toContain('Documents medicaux');
   });
@@ -101,8 +103,9 @@ describe('SidebarComponent', () => {
     fixture.detectChanges();
 
     expect(text()).toContain('Utilisateurs');
-    expect(text()).toContain('Demandes de conge');
-    expect(text()).toContain('Soldes de conges');
+    expect(text()).not.toContain('Demandes de conge');
+    expect(text()).not.toContain('Demander un congé');
+    expect(text()).toContain('Soldes de congé');
     expect(text()).toContain('Documents medicaux');
     expect(text()).toContain('Rapports');
     expect(text()).toContain('Calendrier');

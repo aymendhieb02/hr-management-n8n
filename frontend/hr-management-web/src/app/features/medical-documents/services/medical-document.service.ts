@@ -18,6 +18,17 @@ export class MedicalDocumentService {
   }
 
   findById(id: number): Observable<MedicalDocumentMetadataResponse> { return this.http.get<CertificatMedicalApiResponse>(`${this.baseUrl}/${id}`).pipe(map(toMedicalDocumentMetadata)); }
+  findAll(): Observable<MedicalDocumentMetadataResponse[]> { return this.http.get<CertificatMedicalApiResponse[]>(this.baseUrl).pipe(map((items) => items.map(toMedicalDocumentMetadata))); }
+  findByLeaveRequest(leaveRequestId: number): Observable<MedicalDocumentMetadataResponse | null> {
+    return this.http.get<CertificatMedicalApiResponse | null>(`${this.baseUrl}/demande/${leaveRequestId}`).pipe(
+      map((response) => response ? toMedicalDocumentMetadata(response) : null)
+    );
+  }
+  findByEmployee(employeeId: number): Observable<MedicalDocumentMetadataResponse[]> {
+    return this.http.get<CertificatMedicalApiResponse[]>(`${this.baseUrl}/employe/${employeeId}`).pipe(
+      map((responses) => responses.map(toMedicalDocumentMetadata))
+    );
+  }
   download(id: number): Observable<HttpResponse<Blob>> { return this.http.get(`${this.baseUrl}/telecharger/${id}`, { observe: 'response', responseType: 'blob' }); }
   delete(id: number): Observable<void> { return this.http.delete<void>(`${this.baseUrl}/${id}`); }
 
@@ -35,6 +46,13 @@ export class MedicalDocumentService {
     anchor.download = this.filenameFromResponse(response, fallback);
     anchor.click();
     URL.revokeObjectURL(url);
+  }
+
+  openDocument(response: HttpResponse<Blob>): void {
+    if (!response.body) return;
+    const url = URL.createObjectURL(response.body);
+    window.open(url, '_blank', 'noopener,noreferrer');
+    window.setTimeout(() => URL.revokeObjectURL(url), 60_000);
   }
 }
 

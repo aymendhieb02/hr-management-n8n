@@ -6,4 +6,5 @@ public interface EmployeCertificatMedicalRepository extends JpaRepository<Employ
  Optional<EmployeCertificatMedical> findByCongeDemandeId(Long congeDemandeId);
  boolean existsByCongeDemandeId(Long congeDemandeId);
  List<EmployeCertificatMedical> findByCongeDemandeEmployeId(Long employeId);
+ List<EmployeCertificatMedical> findAllByOrderByDateSoumissionDesc();
 }

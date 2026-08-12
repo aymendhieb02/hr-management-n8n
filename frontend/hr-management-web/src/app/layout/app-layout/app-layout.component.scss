@@ -15,7 +15,11 @@
 }
 
 .sidebar {
-  min-height: calc(100dvh - 64px);
+  height: calc(100dvh - 64px);
+  min-height: 0;
+  overflow: hidden;
+  position: sticky;
+  top: 64px;
 }
 
 .main-content {
@@ -39,6 +43,8 @@
     max-width: 310px;
     position: fixed;
     top: 64px;
+    height: auto;
+    overflow: hidden;
     transform: translateX(-105%);
     transition: transform 120ms ease-out;
     width: 82vw;

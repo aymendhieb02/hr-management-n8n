@@ -25,25 +25,22 @@
       }
     </div>
     <div class="all-day-label">Demandes affichées</div>
-    <div class="week-grid">
+    <div class="week-grid" [style.--event-lanes]="eventLaneCount()">
       @for (date of weekDays(); track dateKey(date)) {
-        <div class="day-column" [class.weekend]="date.getDay() === 0 || date.getDay() === 6">
-          @for (event of eventsForDay(date); track event.leaveRequestId) {
-            <button type="button" class="leave-event" [class]="'leave-event ' + eventColor(event)" (click)="selectedEvent.set(event)">
-              <strong>{{ event.employeeName }}</strong>
-              <span>{{ event.kind === 'HOLIDAY' ? 'Jour férié' : natureLabel(event.nature) }}</span>
-              @if (event.kind !== 'HOLIDAY') {
-              @if (event.nature === 'AUTORISATION_ABSENCE') {
-                <small>{{ event.startTime?.slice(0, 5) }} – {{ event.endTime?.slice(0, 5) }}</small>
-              } @else {
-                <small>{{ event.startDate | date:'dd/MM' }} – {{ event.endDate | date:'dd/MM' }}</small>
-              }
-              <em [class]="'status ' + event.status.toLowerCase()">{{ statusLabel(event.status) }}</em>
-              }
-            </button>
-          }
-        </div>
+        <div class="day-column" [class.weekend]="date.getDay() === 0 || date.getDay() === 6"></div>
       }
+      <div class="event-layer">
+      @for (segment of weekEventSegments(); track segment.event.leaveRequestId) {
+        <button type="button" [class]="'leave-event connected-event ' + eventColor(segment.event)" [class.clipped-start]="segment.clippedStart" [class.clipped-end]="segment.clippedEnd" [style.grid-column]="segment.startColumn + ' / span ' + segment.span" [style.grid-row]="segment.lane" (click)="selectedEvent.set(segment.event)">
+          <div class="event-main"><strong>{{ segment.event.employeeName }}</strong><span>{{ segment.event.kind === 'HOLIDAY' ? 'Jour férié' : natureLabel(segment.event.nature) }}</span></div>
+          @if (segment.event.kind !== 'HOLIDAY') {
+            @if (segment.event.nature === 'AUTORISATION_ABSENCE') { <small>{{ segment.event.startTime?.slice(0, 5) }} – {{ segment.event.endTime?.slice(0, 5) }}</small> }
+            @else { <small>{{ segment.event.startDate | date:'dd/MM' }} – {{ segment.event.endDate | date:'dd/MM' }}</small> }
+            <em [class]="'status ' + segment.event.status.toLowerCase()">{{ statusLabel(segment.event.status) }}</em>
+          }
+        </button>
+      }
+      </div>
     </div>
   </div>
 </div>

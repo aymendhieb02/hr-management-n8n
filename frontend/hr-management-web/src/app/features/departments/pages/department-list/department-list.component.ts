@@ -3,6 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
 import { AuthService } from '../../../../core/services/auth.service';
 import { safeApiMessage, validationErrors } from '../../../shared/api-error.util';
+import { PaginatedTableDirective } from '../../../shared/paginated-table.directive';
 import { DeleteDepartmentDialogComponent } from '../../components/delete-department-dialog/delete-department-dialog.component';
 import { DepartmentFormComponent } from '../../components/department-form/department-form.component';
 import { Department, DepartmentRequest } from '../../models/department.model';
@@ -10,7 +11,7 @@ import { DepartmentService } from '../../services/department.service';
 
 @Component({
   selector: 'app-department-list',
-  imports: [DeleteDepartmentDialogComponent, DepartmentFormComponent, FormsModule],
+  imports: [DeleteDepartmentDialogComponent, DepartmentFormComponent, FormsModule, PaginatedTableDirective],
   templateUrl: './department-list.component.html',
   styleUrl: '../../../shared/resource-page.scss'
 })

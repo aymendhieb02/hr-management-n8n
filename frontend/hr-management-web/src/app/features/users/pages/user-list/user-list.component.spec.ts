@@ -73,19 +73,19 @@ describe('UserListComponent', () => {
     expect(userService.findAll).toHaveBeenCalled();
     expect(text()).toContain('Alice Admin');
     expect(text()).toContain('Ajouter un employé');
-    expect(text()).toContain('Edit');
+    expect(text()).toContain('Modifier');
     expect(text()).toContain('Bloquer');
-    expect(text()).toContain('Delete');
+    expect(text()).toContain('Supprimer');
   });
 
   it('loads only team members and lets managers administer their team', () => {
     configure('MANAGER', 'team-members');
 
     expect(userService.findTeamMembers).toHaveBeenCalledWith(2);
-    expect(text()).toContain('Team Members');
+    expect(text()).toContain("Membres de l'équipe");
     expect(text()).toContain('Eli Employee');
     expect(text()).toContain('Ajouter un employé');
-    expect(text()).toContain('Edit');
+    expect(text()).toContain('Modifier');
     expect(text()).toContain('Débloquer');
   });
 
@@ -114,16 +114,16 @@ describe('UserListComponent', () => {
   it('renders loading, error, and empty states', () => {
     const pending = new Subject<UserResponse[]>();
     configure('HR', 'users', pending.asObservable());
-    expect(text()).toContain('Loading users...');
+    expect(text()).toContain('Chargement des employés...');
 
     pending.next([]);
     pending.complete();
     fixture.detectChanges();
-    expect(text()).toContain('No users found.');
+    expect(text()).toContain('Aucun employé trouvé.');
 
     TestBed.resetTestingModule();
     configure('HR', 'users', throwError(() => new Error('boom')));
-    expect(text()).toContain('Users could not be loaded.');
+    expect(text()).toContain('Impossible de charger les employés.');
   });
 
   it('creates, updates, blocks, deletes, and handles conflict safely', () => {
@@ -136,7 +136,7 @@ describe('UserListComponent', () => {
     expect(userService.create).toHaveBeenCalledWith(expect.objectContaining({ username: 'new.user', email: 'new@test.com', password: '' }));
 
     fixture.detectChanges();
-    buttonByText('Edit').click();
+    buttonByText('Modifier').click();
     fixture.detectChanges();
     fixture.nativeElement.querySelector('app-user-form form').dispatchEvent(new Event('submit'));
     expect(userService.update).toHaveBeenCalledWith(1, expect.not.objectContaining({ password: expect.anything() }));
@@ -146,23 +146,23 @@ describe('UserListComponent', () => {
     expect(userService.setActive).toHaveBeenCalledWith(1, false);
 
     fixture.detectChanges();
-    buttonByText('Delete').click();
+    buttonByText('Supprimer').click();
     fixture.detectChanges();
     confirmDeleteButton().click();
     expect(userService.delete).toHaveBeenCalledWith(1);
 
     userService.delete.mockReturnValue(throwError(() => new HttpErrorResponse({ status: 409 })));
-    buttonByText('Delete').click();
+    buttonByText('Supprimer').click();
     fixture.detectChanges();
     confirmDeleteButton().click();
     fixture.detectChanges();
-    expect(text()).toContain('This item cannot be deleted or saved because it is referenced elsewhere.');
+    expect(text()).toContain('Cette opération est impossible car cet élément est déjà utilisé.');
   });
 
   it('shows details without exposing passwordHash', () => {
     configure('HR', 'users', of([{ ...users[0], passwordHash: 'secret-hash' } as UserResponse]));
 
-    buttonByText('View Details').click();
+    buttonByText('Voir les détails').click();
     fixture.detectChanges();
 
     expect(text()).toContain('Alice Admin');
