@@ -76,6 +76,10 @@ public class CongeDemandeService {
         validerTypeNature(type, request.getNature());
         validerPeriode(request.getNature(), request.getDateDebut(), request.getDateFin(), request.getHeureDebut(), request.getHeureFin());
         validerAbsenceDeChevauchement(employe.getId(), null, request.getDateDebut(), request.getDateFin());
+        BigDecimal nombreJours = request.getNombreJours() != null
+                ? request.getNombreJours()
+                : nombreJours(request.getDateDebut(), request.getDateFin());
+        validerSoldeAvantSoumission(employe, null, request.getNature(), nombreJours);
         LocalDateTime now = LocalDateTime.now();
         CongeDemande demande = new CongeDemande();
         demande.setEmploye(employe);
@@ -89,7 +93,7 @@ public class CongeDemandeService {
         demande.setDateFin(request.getDateFin());
         demande.setHeureFin(request.getHeureFin());
         demande.setDateSoumission(now);
-        demande.setNombreJours(request.getNombreJours() != null ? request.getNombreJours() : nombreJours(request.getDateDebut(), request.getDateFin()));
+        demande.setNombreJours(nombreJours);
         demande.setCommentaireEmploye(trim(request.getCommentaireEmploye()));
         demande.setDateCreation(now);
         CongeDemande saved = demandeRepository.save(demande);
@@ -109,6 +113,10 @@ public class CongeDemandeService {
         validerAbsenceDeChevauchement(demande.getEmploye().getId(), demande.getId(), request.getDateDebut(), request.getDateFin());
         CongeType type = congeType(request.getCongeTypeId());
         validerTypeNature(type, request.getNature());
+        BigDecimal nombreJours = request.getNombreJours() != null
+                ? request.getNombreJours()
+                : nombreJours(request.getDateDebut(), request.getDateFin());
+        validerSoldeAvantSoumission(demande.getEmploye(), demande.getId(), request.getNature(), nombreJours);
         demande.setCongeType(type);
         demande.setNature(nature(request.getNature()));
         demande.setRaison(raison(request.getRaisonId(), request.getAutreMotif()));
@@ -116,7 +124,7 @@ public class CongeDemandeService {
         demande.setHeureDebut(request.getHeureDebut());
         demande.setDateFin(request.getDateFin());
         demande.setHeureFin(request.getHeureFin());
-        demande.setNombreJours(request.getNombreJours() != null ? request.getNombreJours() : nombreJours(request.getDateDebut(), request.getDateFin()));
+        demande.setNombreJours(nombreJours);
         demande.setCommentaireEmploye(trim(request.getCommentaireEmploye()));
         demande.setDateModification(LocalDateTime.now());
         CongeDemande saved = demandeRepository.save(demande);
@@ -256,6 +264,17 @@ public class CongeDemandeService {
                     "Une demande en attente ou approuvee existe deja sur tout ou partie de cette periode"
             );
         }
+    }
+
+    private void validerSoldeAvantSoumission(Employe employe, Long demandeModifieeId, String nature, BigDecimal joursDemandes) {
+        if ("AUTORISATION_ABSENCE".equals(nature)) return;
+        BigDecimal joursReserves = demandeRepository.findByEmployeIdOrderByDateSoumissionDesc(employe.getId()).stream()
+                .filter(d -> demandeModifieeId == null || !demandeModifieeId.equals(d.getId()))
+                .filter(d -> "EN_ATTENTE".equals(d.getStatut().getLibelle()))
+                .filter(d -> !"AUTORISATION_ABSENCE".equals(d.getNature()))
+                .map(CongeDemande::getNombreJours)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        soldeTransactionService.validerDisponibilite(employe, joursDemandes, joursReserves);
     }
     private void validerPeriode(String nature, LocalDate debut, LocalDate fin, java.time.LocalTime heureDebut, java.time.LocalTime heureFin) {
         validerDates(debut, fin);

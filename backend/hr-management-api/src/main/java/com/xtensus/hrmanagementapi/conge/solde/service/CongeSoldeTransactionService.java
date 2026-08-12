@@ -48,6 +48,20 @@ public class CongeSoldeTransactionService {
     }
 
     @Transactional
+    public void validerDisponibilite(Employe employe, BigDecimal joursDemandes, BigDecimal joursReserves) {
+        CongeSolde solde = assurerSolde(employe);
+        BigDecimal disponibleAvecTolerance = solde.getRestants().subtract(joursReserves).subtract(joursDemandes);
+        if (disponibleAvecTolerance.compareTo(SOLDE_MINIMUM) < 0) {
+            BigDecimal maximumDemandable = solde.getRestants().subtract(SOLDE_MINIMUM).subtract(joursReserves);
+            throw new CongeDemandeInvalideException(
+                    "Solde insuffisant : vous pouvez demander au maximum "
+                            + maximumDemandable.max(BigDecimal.ZERO).stripTrailingZeros().toPlainString()
+                            + " jour(s), demandes en attente comprises. Le solde ne peut pas descendre sous -5 jours."
+            );
+        }
+    }
+
+    @Transactional
     public void crediterMensuellement(Employe employe, BigDecimal montant, String reference) {
         if (historiques.existe(reference)) return;
         CongeSolde solde=assurerSolde(employe); BigDecimal avant=solde.getRestants(); BigDecimal apres=avant.add(montant);
