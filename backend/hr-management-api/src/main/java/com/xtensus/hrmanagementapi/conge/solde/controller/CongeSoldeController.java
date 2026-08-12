@@ -15,6 +15,8 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import com.xtensus.hrmanagementapi.security.user.CustomUserDetails;
 
 @RestController
 @RequestMapping("/api/conge-soldes-v2")
@@ -43,6 +45,11 @@ public class CongeSoldeController {
     @GetMapping("/employe/{employeId}")
     public ResponseEntity<List<CongeSoldeResponse>> parEmploye(@PathVariable Long employeId) {
         return ResponseEntity.ok(service.parEmploye(employeId));
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<List<CongeSoldeResponse>> monSolde(@AuthenticationPrincipal CustomUserDetails user) {
+        return ResponseEntity.ok(service.monSolde(user.getId()));
     }
 
     @GetMapping("/annee/{annee}")

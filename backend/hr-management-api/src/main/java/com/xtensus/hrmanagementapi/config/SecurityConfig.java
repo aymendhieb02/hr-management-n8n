@@ -91,7 +91,13 @@ public class SecurityConfig {
                                 .requestMatchers("/api/users/**", "/api/employes/**").hasAnyRole("MANAGER", "HR", "ADMIN")
 
                                 .requestMatchers(HttpMethod.GET, "/api/leave-balances/user/**", "/api/conge-soldes/user/**").hasAnyRole("EMPLOYEE", "MANAGER", "HR", "ADMIN")
+                                .requestMatchers(HttpMethod.GET, "/api/conge-soldes-v2/me").authenticated()
+                                .requestMatchers(HttpMethod.GET, "/api/conge-soldes-v2/employe/**").hasAnyRole("MANAGER", "HR", "ADMIN")
+                                .requestMatchers(HttpMethod.GET, "/api/conge-soldes-v2/**").hasAnyRole("MANAGER", "HR", "ADMIN")
+                                .requestMatchers("/api/conge-soldes-v2/**").hasAnyRole("HR", "ADMIN")
                                 .requestMatchers("/api/leave-balances/**", "/api/conge-soldes/**").hasAnyRole("HR", "ADMIN")
+                                .requestMatchers(HttpMethod.GET, "/api/conge-solde-historiques/me").authenticated()
+                                .requestMatchers(HttpMethod.GET, "/api/conge-solde-historiques/**").hasAnyRole("MANAGER", "HR", "ADMIN")
 
                                 .requestMatchers("/api/leave-accruals/**", "/api/acquisitions-conges/**").hasAnyRole("HR", "ADMIN")
 

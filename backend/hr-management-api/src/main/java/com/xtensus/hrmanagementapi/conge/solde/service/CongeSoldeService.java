@@ -34,7 +34,7 @@ public class CongeSoldeService {
 
     @Transactional
     public CongeSoldeResponse creer(CongeSoldeRequest req) {
-        if (repo.existsByEmployeIdAndCongeTypeIdAndAnnee(req.getEmployeId(), req.getCongeTypeId(), req.getAnnee())) {
+        if (repo.existsByEmployeId(req.getEmployeId())) {
             throw new CongeSoldeExisteDejaException();
         }
         CongeSolde solde = new CongeSolde();
@@ -77,6 +77,9 @@ public class CongeSoldeService {
     public List<CongeSoldeResponse> parEmploye(Long employeId) {
         return repo.findByEmployeId(employeId).stream().map(mapper::toResponse).toList();
     }
+
+    @Transactional(readOnly = true)
+    public List<CongeSoldeResponse> monSolde(Long employeId) { return parEmploye(employeId); }
 
     @Transactional(readOnly = true)
     public List<CongeSoldeResponse> parAnnee(Integer annee) {

@@ -22,6 +22,7 @@ import com.xtensus.hrmanagementapi.repository.RaisonRepository;
 import com.xtensus.hrmanagementapi.domain.entity.Raison;
 import com.xtensus.hrmanagementapi.conge.demande.historique.CongeDemandeHistoriqueService;
 import com.xtensus.hrmanagementapi.notificationfr.service.NotificationFrancaiseService;
+import com.xtensus.hrmanagementapi.conge.solde.service.CongeSoldeTransactionService;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -46,12 +47,14 @@ public class CongeDemandeService {
     private final CongeDemandeMapper mapper;
     private final CongeDemandeHistoriqueService historiqueService;
     private final NotificationFrancaiseService notificationService;
+    private final CongeSoldeTransactionService soldeTransactionService;
 
     public CongeDemandeService(CongeDemandeRepository demandeRepository, EmployeRepository employeRepository,
             CongeTypeRepository congeTypeRepository, CongeDemandeStatutRepository statutRepository,
             RaisonRepository raisonRepository, CongeDemandeMapper mapper,
             CongeDemandeHistoriqueService historiqueService,
-            NotificationFrancaiseService notificationService) {
+            NotificationFrancaiseService notificationService,
+            CongeSoldeTransactionService soldeTransactionService) {
         this.demandeRepository = demandeRepository;
         this.employeRepository = employeRepository;
         this.congeTypeRepository = congeTypeRepository;
@@ -60,6 +63,7 @@ public class CongeDemandeService {
         this.mapper = mapper;
         this.historiqueService = historiqueService;
         this.notificationService = notificationService;
+        this.soldeTransactionService = soldeTransactionService;
     }
 
     @Transactional
@@ -143,6 +147,7 @@ public class CongeDemandeService {
         CongeDemande demande = entite(id);
         String ancienStatut = demande.getStatut().getLibelle();
         appliquerDecision(demande, request, STATUT_APPROUVEE, false);
+        soldeTransactionService.debiter(demande);
         CongeDemande saved = demandeRepository.save(demande);
         historiqueService.enregistrer(saved, "APPROBATION", ancienStatut, STATUT_APPROUVEE, request.getCommentaire());
         notificationService.notifier(
