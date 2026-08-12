@@ -1,39 +1,73 @@
 <section class="resource-page">
   <header class="page-header">
-    <div><h1>{{ title() }}</h1><p>{{ isAdminMode() ? 'Manage employee leave balances.' : 'Track your available leave days.' }}</p></div>
-    @if (isAdminMode()) { <button class="primary-button" type="button" (click)="editingBalance.set(null); formOpen.set(true)">Add Balance</button> }
-  </header>
-  <div class="toolbar">
-    <input class="search-input" type="search" placeholder="Search balances" [ngModel]="searchTerm()" (ngModelChange)="searchTerm.set($event)" />
-    @if (isAdminMode()) {
-      <label class="form-field"><span>Leave Type</span><select [ngModel]="leaveTypeFilter()" (ngModelChange)="leaveTypeFilter.set($event)"><option value="">All types</option>@for (type of leaveTypes(); track type.id) { <option [ngValue]="type.id">{{ type.name }}</option> }</select></label>
+    <div>
+      <h1>{{ title() }}</h1>
+      <p>{{ isAdminMode() ? 'Consultez les soldes et tous les mouvements des collaborateurs.' : 'Consultez votre solde disponible et chacune de vos transactions.' }}</p>
+    </div>
+    @if (canManageBalances()) {
+      <button class="primary-button" type="button" (click)="editingBalance.set(null); formOpen.set(true)">Ajouter un solde</button>
     }
-    <button class="secondary-button" type="button" (click)="loadBalances()">Refresh</button>
+  </header>
+
+  <div class="toolbar">
+    <input class="search-input" type="search" placeholder="Rechercher un solde" [ngModel]="searchTerm()" (ngModelChange)="searchTerm.set($event)" />
+    @if (isAdminMode()) {
+      <label class="form-field">
+        <span>Type de congé</span>
+        <select [ngModel]="leaveTypeFilter()" (ngModelChange)="leaveTypeFilter.set($event)">
+          <option value="">Tous les types</option>
+          @for (type of leaveTypes(); track type.id) { <option [ngValue]="type.id">{{ type.name }}</option> }
+        </select>
+      </label>
+    }
+    <button class="secondary-button" type="button" (click)="loadBalances(); loadTransactions()">Actualiser</button>
   </div>
+
   @if (success()) { <p class="state">{{ success() }}</p> }
   @if (error()) { <p class="state error" role="alert">{{ error() }}</p> }
   @if (isLoading()) {
-    <p class="state">Loading leave balances...</p>
+    <p class="state">Chargement des soldes...</p>
   } @else if (filteredBalances().length === 0) {
-    <p class="state">No leave balances found.</p>
+    <p class="state">Aucun solde trouvé.</p>
   } @else {
     <div class="table-card">
       <table appPaginatedTable>
-        <thead><tr>@if (isAdminMode()) { <th>User</th> }<th>Leave Type</th><th>Year</th><th>Total</th><th>Used</th><th>Remaining</th><th>Progress</th>@if (isAdminMode()) { <th>Actions</th> }</tr></thead>
+        <thead><tr>@if (isAdminMode()) { <th>Employé</th> }<th>Type de congé</th><th>Année</th><th>Total</th><th>Jours utilisés</th><th>Solde disponible</th><th>Utilisation</th>@if (isAdminMode()) { <th>Actions</th> }</tr></thead>
         <tbody>
           @for (balance of filteredBalances(); track balance.id) {
             <tr>
               @if (isAdminMode()) { <td>{{ balance.user.firstName }} {{ balance.user.lastName }}</td> }
               <td>{{ balance.leaveType.name }}</td><td>{{ balance.year }}</td><td>{{ balance.totalDays }}</td><td>{{ balance.usedDays }}</td><td>{{ balance.remainingDays }}</td>
-              <td><progress max="100" [value]="progress(balance)"></progress> {{ progress(balance) }}%</td>
-              @if (isAdminMode()) { <td><div class="actions"><button class="secondary-button" type="button" (click)="editingBalance.set(balance); formOpen.set(true)">Edit</button><button class="danger-button" type="button" (click)="deleteBalance(balance)" [disabled]="isSaving()">Delete</button></div></td> }
+              <td><progress max="100" [value]="progress(balance)"></progress> {{ progress(balance) }} %</td>
+              @if (isAdminMode()) {
+                <td>
+                  @if (canManageBalances()) {
+                    <div class="actions"><button class="secondary-button" type="button" (click)="editingBalance.set(balance); formOpen.set(true)">Modifier</button><button class="danger-button" type="button" (click)="deleteBalance(balance)" [disabled]="isSaving()">Supprimer</button></div>
+                  } @else { Consultation }
+                </td>
+              }
             </tr>
           }
         </tbody>
       </table>
     </div>
   }
+
+  <section class="holiday-section">
+    <header class="page-header"><div><h2>Transactions de congé</h2><p>Chaque crédit mensuel et chaque débit de congé approuvé est enregistré.</p></div></header>
+    @if (transactions().length === 0) {
+      <p class="state">Aucune transaction enregistrée.</p>
+    } @else {
+      <div class="table-card"><table appPaginatedTable>
+        <thead><tr>@if (isAdminMode()) { <th>Employé</th> }<th>Date</th><th>Opération</th><th>Montant</th><th>Solde avant</th><th>Solde après</th><th>Demande associée</th><th>Statut</th></tr></thead>
+        <tbody>@for (transaction of transactions(); track transaction.id) {
+          <tr>@if (isAdminMode()) { <td>{{ transaction.employeeName }}</td> }<td>{{ transaction.executedAt }}</td><td>{{ transactionLabel(transaction.type) }}</td><td [class.field-error]="transaction.amount < 0">{{ transaction.amount > 0 ? '+' : '' }}{{ transaction.amount }}</td><td>{{ transaction.balanceBefore }}</td><td>{{ transaction.balanceAfter }}</td><td>{{ transaction.requestId ? 'Demande n° ' + transaction.requestId : '—' }}</td><td><span class="badge success">{{ transactionStatusLabel(transaction.status) }}</span></td></tr>
+        }</tbody>
+      </table></div>
+    }
+  </section>
 </section>
-@if (formOpen()) {
+
+@if (formOpen() && canManageBalances()) {
   <app-leave-balance-form [balance]="editingBalance()" [users]="users()" [leaveTypes]="leaveTypes()" [loading]="isSaving()" (save)="saveBalance($event)" (cancel)="formOpen.set(false)" />
 }

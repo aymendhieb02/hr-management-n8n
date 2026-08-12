@@ -60,7 +60,7 @@ export const routes: Routes = [
       {
         path: 'my-balance',
         canActivate: [roleGuard],
-        data: { title: 'Mon solde de conges', roles: ['EMPLOYEE', 'MANAGER', 'HR', 'ADMIN'] },
+        data: { title: 'Mon solde de congé', roles: ['EMPLOYEE', 'MANAGER', 'HR', 'ADMIN'] },
         loadComponent: () => import('./features/leaves/pages/leave-balance-list/leave-balance-list.component')
           .then((m) => m.LeaveBalanceListComponent)
       },
@@ -132,7 +132,7 @@ export const routes: Routes = [
       {
         path: 'leave-balances',
         canActivate: [roleGuard],
-        data: { title: 'Soldes de conges', roles: ['HR', 'ADMIN'] },
+        data: { title: 'Soldes de congé', roles: ['HR', 'ADMIN'] },
         loadComponent: () => import('./features/leaves/pages/leave-balance-list/leave-balance-list.component')
           .then((m) => m.LeaveBalanceListComponent)
       },
@@ -161,6 +161,12 @@ export const routes: Routes = [
         data: { title: 'Utilisateurs', roles: ['HR', 'ADMIN'] },
         loadComponent: () => import('./features/users/pages/user-list/user-list.component')
           .then((m) => m.UserListComponent)
+      },
+      {
+        path: 'balance-transactions',
+        canActivate: [roleGuard],
+        data: { title: 'Transactions de congé', roles: ['MANAGER', 'HR', 'ADMIN'] },
+        loadComponent: () => import('./features/leaves/pages/leave-balance-list/leave-balance-list.component').then((m) => m.LeaveBalanceListComponent)
       },
       {
         path: 'leave-request-statuses',

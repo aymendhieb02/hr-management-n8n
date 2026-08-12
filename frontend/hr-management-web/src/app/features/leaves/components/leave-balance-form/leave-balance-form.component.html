@@ -1,30 +1,30 @@
 <div class="dialog-backdrop">
   <section class="dialog" aria-labelledby="balance-form-title">
-    <h2 id="balance-form-title">{{ balance() ? 'Edit Leave Balance' : 'Add Leave Balance' }}</h2>
+    <h2 id="balance-form-title">{{ balance() ? 'Modifier le solde de congé' : 'Ajouter un solde de congé' }}</h2>
     <form class="form" [formGroup]="form" (ngSubmit)="submit()" novalidate>
       <label class="form-field">
-        <span>User</span>
+        <span>Employé</span>
         <select formControlName="userId">
-          <option [ngValue]="null">Select user</option>
+          <option [ngValue]="null">Sélectionnez un employé</option>
           @for (user of users(); track user.id) {
             <option [ngValue]="user.id">{{ user.firstName }} {{ user.lastName }}</option>
           }
         </select>
       </label>
       <label class="form-field">
-        <span>Leave Type</span>
+        <span>Type de congé</span>
         <select formControlName="leaveTypeId">
-          <option [ngValue]="null">Select leave type</option>
+          <option [ngValue]="null">Sélectionnez un type de congé</option>
           @for (type of leaveTypes(); track type.id) { <option [ngValue]="type.id">{{ type.name }}</option> }
         </select>
       </label>
       <div class="form-grid">
-        <label class="form-field"><span>Year</span><input formControlName="year" type="number" /></label>
-        <label class="form-field"><span>Total Days</span><input formControlName="totalDays" type="number" min="0" /></label>
+        <label class="form-field"><span>Année</span><input formControlName="year" type="number" /></label>
+        <label class="form-field"><span>Nombre total de jours</span><input formControlName="totalDays" type="number" min="0" /></label>
       </div>
       <div class="dialog-actions">
-        <button class="secondary-button" type="button" (click)="cancel.emit()" [disabled]="loading()">Cancel</button>
-        <button class="primary-button" type="submit" [disabled]="form.invalid || loading()">Save</button>
+        <button class="secondary-button" type="button" (click)="cancel.emit()" [disabled]="loading()">Annuler</button>
+        <button class="primary-button" type="submit" [disabled]="form.invalid || loading()">Enregistrer</button>
       </div>
     </form>
   </section>

@@ -47,7 +47,7 @@ describe('SidebarComponent', () => {
   it('shows employee self-service menu items', () => {
     expect(text()).toContain('Mes demandes de conge');
     expect(text()).toContain('Demander un conge');
-    expect(text()).toContain('Mon solde de conges');
+    expect(text()).toContain('Mon solde de congé');
   });
 
   it('does not show HR or Admin menu items to employees', () => {
@@ -91,7 +91,7 @@ describe('SidebarComponent', () => {
     expect(text()).toContain('Employes');
     expect(text()).toContain('Demandes de l equipe');
     expect(text()).toContain('Mes demandes de conge');
-    expect(text()).toContain('Mon solde de conges');
+    expect(text()).toContain('Mon solde de congé');
     expect(text()).not.toContain('Utilisateurs');
     expect(text()).toContain('Documents medicaux');
   });
@@ -102,7 +102,7 @@ describe('SidebarComponent', () => {
 
     expect(text()).toContain('Utilisateurs');
     expect(text()).toContain('Demandes de conge');
-    expect(text()).toContain('Soldes de conges');
+    expect(text()).toContain('Soldes de congé');
     expect(text()).toContain('Documents medicaux');
     expect(text()).toContain('Rapports');
     expect(text()).toContain('Calendrier');

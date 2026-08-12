@@ -13,19 +13,20 @@ export const NAVIGATION_ITEMS: NavigationItem[] = [
 
   { label: 'Mes demandes de conge', path: '/my-leave-requests', roles: ['EMPLOYEE', 'MANAGER', 'HR', 'ADMIN'] },
   { label: 'Demander un conge', path: '/request-leave', roles: ['EMPLOYEE', 'MANAGER', 'HR', 'ADMIN'] },
-  { label: 'Mon solde de conges', path: '/my-balance', roles: ['EMPLOYEE', 'MANAGER', 'HR', 'ADMIN'] },
+  { label: 'Mon solde de congé', path: '/my-balance', roles: ['EMPLOYEE', 'MANAGER', 'HR', 'ADMIN'] },
   { label: 'Mon calendrier', path: '/my-calendar', roles: ['EMPLOYEE', 'MANAGER', 'HR', 'ADMIN'] },
 
   { label: 'Demandes de l equipe', path: '/team-requests', roles: ['MANAGER', 'HR', 'ADMIN'] },
   { label: 'Membres de l equipe', path: '/team-members', roles: ['MANAGER'] },
   { label: 'Calendrier de l equipe', path: '/team-calendar', roles: ['MANAGER', 'HR', 'ADMIN'] },
   { label: 'Disponibilite de l equipe', path: '/team-availability', roles: ['MANAGER'] },
+  { label: 'Transactions de congé', path: '/balance-transactions', roles: ['MANAGER', 'HR', 'ADMIN'] },
 
   { label: 'Tableau de bord', path: '/dashboard', roles: ['HR', 'ADMIN'] },
   { label: 'Employes', path: '/users', roles: ['HR'] },
   { label: 'Postes', path: '/positions', roles: ['MANAGER', 'HR', 'ADMIN'] },
   { label: 'Demandes de conge', path: '/leave-requests', roles: ['HR', 'ADMIN'] },
-  { label: 'Soldes de conges', path: '/leave-balances', roles: ['HR', 'ADMIN'] },
+  { label: 'Soldes de congé', path: '/leave-balances', roles: ['HR', 'ADMIN'] },
   { label: 'Documents medicaux', path: '/medical-documents', roles: ['HR', 'ADMIN'] },
   { label: 'Rapports', path: '/reports', roles: ['HR', 'ADMIN'] },
   { label: 'Calendrier', path: '/calendar', roles: ['HR', 'ADMIN'] },

@@ -20,7 +20,9 @@ describe('LeaveBalanceService', () => {
 
   it('uses expected endpoints', () => {
     service.findAll().subscribe(); expectReq(base, 'GET', []);
-    service.findByUser(1).subscribe(); expectReq(`${base}/employe/1`, 'GET', []);
+    service.findByUser(1).subscribe(); expectReq(`${base}/me`, 'GET', []);
+    service.findMyTransactions().subscribe(); expectReq(`${environment.apiUrl}/conge-solde-historiques/me`, 'GET', []);
+    service.findAllTransactions().subscribe(); expectReq(`${environment.apiUrl}/conge-solde-historiques`, 'GET', []);
     service.create({ userId: 1, leaveTypeId: 2, year: 2026, totalDays: 20 }).subscribe(); expectReq(base, 'POST', apiBalance, { employeId: 1, congeTypeId: 2, annee: 2026, droitAcquis: 20, joursUtilises: 0, restants: 20 });
     service.update(3, { userId: 1, leaveTypeId: 2, year: 2026, totalDays: 20 }).subscribe(); expectReq(`${base}/3`, 'PUT', apiBalance, { employeId: 1, congeTypeId: 2, annee: 2026, droitAcquis: 20, joursUtilises: 0, restants: 20 });
     service.delete(3).subscribe(); expectReq(`${base}/3`, 'DELETE', null);
