@@ -1,4 +1,5 @@
-import { HttpErrorResponse } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { environment } from '../../../../../environments/environment';
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -35,12 +36,14 @@ export class LeaveRequestListComponent implements OnInit {
   private readonly router = inject(Router);
   private readonly medicalDocumentService = inject(MedicalDocumentService);
   private readonly leaveBalanceService = inject(LeaveBalanceService);
+  private readonly http = inject(HttpClient);
 
   protected readonly requests = signal<LeaveRequestResponse[]>([]);
   protected readonly leaveTypes = signal<LeaveType[]>([]);
   protected readonly reasons = signal<Reason[]>([]);
   protected readonly holidays = signal<JourFerieResponse[]>([]);
   protected readonly currentBalance = signal<number | null>(null);
+  protected readonly minimumBalance = signal(-5);
   protected readonly isLoading = signal(false);
   protected readonly isSaving = signal(false);
   protected readonly error = signal<string | null>(null);
@@ -65,7 +68,7 @@ export class LeaveRequestListComponent implements OnInit {
     const pendingDays = this.requests()
       .filter((request) => request.id !== editedId && request.status === 'PENDING' && request.nature === 'CONGE')
       .reduce((total, request) => total + request.requestedDays, 0);
-    return Math.max(0, balance + 5 - pendingDays);
+    return Math.max(0, balance - this.minimumBalance() - pendingDays);
   });
   protected readonly title = computed(() => this.isManagerMode() ? "Demandes de l'equipe" : this.isCreateMode() ? 'Demander un conge' : 'Mes demandes de conge');
   protected readonly filteredRequests = computed(() => {
@@ -82,6 +85,7 @@ export class LeaveRequestListComponent implements OnInit {
   });
 
   ngOnInit(): void {
+    this.http.get<{soldeMinimum:number}>(`${environment.apiUrl}/variables-systeme/politique-conges`).subscribe({next:p=>this.minimumBalance.set(Number(p.soldeMinimum)),error:()=>{}});
     this.leaveTypeService.findActive().subscribe({ next: (types) => this.leaveTypes.set(types), error: () => {} });
     this.reasonService.findAvailable().subscribe({ next: (reasons) => this.reasons.set(reasons), error: () => {} });
     this.jourFerieService.getActive().subscribe({ next: (holidays) => this.holidays.set(holidays), error: () => {} });
@@ -177,11 +181,14 @@ export class LeaveRequestListComponent implements OnInit {
     this.decisionMode.set(mode);
   }
 
-  protected saveDecision(comment: string | null): void {
+  protected saveDecision(value: {comment:string|null;saturdayCounts:boolean}|string|null): void {
     const currentUser = this.authService.getCurrentUser();
     const request = this.decisionRequest();
     if (!currentUser || !request) return;
-    const payload = { approverId: currentUser.id, comment };
+    const decision=typeof value==='object'&&value!==null?value:{comment:value,saturdayCounts:false};
+    const payload = decision.saturdayCounts
+      ? { approverId: currentUser.id, comment:decision.comment, saturdayCounts:true }
+      : { approverId: currentUser.id, comment:decision.comment };
     const operation = this.decisionMode() === 'approve'
       ? this.leaveRequestService.approve(request.id, payload)
       : this.leaveRequestService.reject(request.id, payload);
@@ -209,8 +216,10 @@ export class LeaveRequestListComponent implements OnInit {
   }
 
   protected isSickLeave(request: LeaveRequestResponse): boolean {
-    const reason = (request.reason ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
-    return request.nature === 'CONGE' && (reason.includes('maladie') || reason.includes('medical'));
+    if (request.medicalCertificateRequired) return true;
+    const configuredReason = request.reasonId == null ? '' : this.reasons().find(reason => reason.id === request.reasonId)?.commentaire ?? '';
+    const reason = `${request.reason ?? ''} ${configuredReason}`.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+    return request.nature === 'CONGE' && (reason.includes('malad') || reason.includes('medical') || reason.includes('sante'));
   }
 
   protected hasCertificate(requestId: number): boolean {

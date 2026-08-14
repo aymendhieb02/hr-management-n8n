@@ -1,0 +1,218 @@
+:host {
+  display: block;
+  min-width: 0;
+}
+
+.users-table-card {
+  max-width: 100%;
+  overflow-x: auto;
+  border: 1px solid #eadfd5;
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: 0 12px 32px rgb(80 55 35 / 7%);
+  scrollbar-color: #ef9a4b #fff6ed;
+  scrollbar-width: thin;
+}
+
+.users-table-card::-webkit-scrollbar {
+  height: 9px;
+}
+
+.users-table-card::-webkit-scrollbar-track {
+  background: #fff6ed;
+}
+
+.users-table-card::-webkit-scrollbar-thumb {
+  border: 2px solid #fff6ed;
+  border-radius: 999px;
+  background: #ef9a4b;
+}
+
+.users-table {
+  width: 100%;
+  min-width: 1260px;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.users-table th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  padding: 15px 14px;
+  background: #fff7ef;
+  color: #7c5639;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.045em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.users-table td {
+  padding: 14px;
+  border-bottom: 1px solid #f1e8df;
+  color: #403832;
+  vertical-align: middle;
+}
+
+.users-table tbody tr {
+  transition: background-color 160ms ease, transform 160ms ease;
+}
+
+.users-table tbody tr:hover {
+  background: #fffbf7;
+}
+
+.users-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.identity-column,
+.identity-cell {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  min-width: 230px;
+  background: inherit;
+}
+
+.identity-column {
+  z-index: 3 !important;
+  background: #fff7ef !important;
+}
+
+.identity-cell {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+}
+
+.user-avatar {
+  display: grid;
+  width: 40px;
+  height: 40px;
+  flex: 0 0 40px;
+  place-items: center;
+  border-radius: 13px;
+  background: linear-gradient(145deg, #ff9b35, #f47b13);
+  box-shadow: 0 6px 14px rgb(244 123 19 / 22%);
+  color: #fff;
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.user-identity {
+  display: grid;
+  min-width: 0;
+  gap: 3px;
+}
+
+.user-identity strong {
+  color: #332b26;
+  font-size: 0.94rem;
+  white-space: nowrap;
+}
+
+.user-identity small {
+  max-width: 165px;
+  overflow: hidden;
+  color: #8b817a;
+  font-size: 0.75rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.username-chip {
+  display: inline-flex;
+  padding: 6px 9px;
+  border: 1px solid #f0ded0;
+  border-radius: 8px;
+  background: #fffaf5;
+  color: #9a551b;
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.email-cell {
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.actions-column,
+.actions-cell {
+  position: sticky;
+  right: 0;
+  z-index: 1;
+  min-width: 205px;
+  background: #fff;
+  box-shadow: -8px 0 16px rgb(77 55 38 / 4%);
+}
+
+.actions-column {
+  z-index: 3;
+  background: #fff7ef;
+}
+
+.user-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.table-action {
+  min-height: 32px;
+  padding: 6px 9px;
+  border: 1px solid #ead8c8;
+  border-radius: 9px;
+  background: #fffaf5;
+  color: #8d501e;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.72rem;
+  font-weight: 750;
+  transition: border-color 150ms ease, background 150ms ease, transform 150ms ease;
+}
+:host-context(*) .user-actions .table-action[aria-label]{display:grid;place-items:center;width:38px;min-width:38px;height:36px;padding:0;font-size:1.08rem}.user-actions:has(.table-action[aria-label]){display:flex;flex-wrap:nowrap;justify-content:flex-end}.actions-cell:has(.table-action[aria-label]),.actions-column{min-width:190px}
+
+.table-action:hover {
+  border-color: #f28a2c;
+  background: #fff0df;
+  transform: translateY(-1px);
+}
+
+.view-action {
+  color: #40645b;
+}
+
+.password-action {
+  color: #795b91;
+}
+
+.toggle-action {
+  color: #8b621f;
+}
+
+.delete-action {
+  border-color: #efd7d3;
+  background: #fff8f7;
+  color: #a1534a;
+}
+
+@media (max-width: 760px) {
+  .users-table {
+    min-width: 1120px;
+  }
+
+  .identity-column,
+  .identity-cell {
+    position: static;
+  }
+
+  .email-cell {
+    display: none;
+  }
+}

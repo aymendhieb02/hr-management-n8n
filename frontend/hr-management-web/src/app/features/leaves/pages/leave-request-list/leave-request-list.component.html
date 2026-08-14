@@ -55,7 +55,7 @@
               <td>
                 <div class="actions">
                   <button class="secondary-button" type="button" (click)="detailRequest.set(request)">Voir les details</button>
-                  @if (!isManagerMode() && isSickLeave(request) && request.status !== 'CANCELLED' && (hasCertificate(request.id) || request.status !== 'REJECTED')) {
+                  @if (!isManagerMode() && isSickLeave(request) && (request.status === 'PENDING' || request.status === 'APPROVED')) {
                     <button class="certificate-button" type="button" (click)="detailRequest.set(request)" title="Gérer le certificat médical" aria-label="Gérer le certificat médical">{{ hasCertificate(request.id) ? 'Voir le certificat' : '✚ Ajouter un certificat' }}</button>
                   }
                   @if (!isManagerMode() && request.status === 'PENDING') {
@@ -82,5 +82,5 @@
   <app-leave-details [request]="detailRequest()!" (certificateAdded)="markCertificateAdded($event)" (close)="detailRequest.set(null)" />
 }
 @if (decisionRequest()) {
-  <app-leave-decision-dialog [mode]="decisionMode()" [loading]="isSaving()" [error]="null" (save)="saveDecision($event)" (cancel)="decisionRequest.set(null)" />
+  <app-leave-decision-dialog [mode]="decisionMode()" [loading]="isSaving()" [error]="null" (decision)="saveDecision($event)" (cancel)="decisionRequest.set(null)" />
 }

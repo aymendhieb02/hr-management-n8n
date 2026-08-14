@@ -1,5 +1,5 @@
 import { Component, computed, EventEmitter, input, OnChanges, Output, SimpleChanges } from '@angular/core';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { AbstractControl, FormBuilder, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
 import { RoleType, UserCreateRequest, UserReferenceSummary, UserResponse, UserStatus, UserUpdateRequest } from '../../models/user.model';
 import { Position } from '../../../positions/models/position.model';
 
@@ -7,15 +7,17 @@ import { Position } from '../../../positions/models/position.model';
   selector: 'app-user-form',
   imports: [ReactiveFormsModule],
   templateUrl: './user-form.component.html',
-  styleUrl: '../../../shared/resource-page.scss'
+  styleUrls: ['../../../shared/resource-page.scss', './user-form.component.scss']
 })
 export class UserFormComponent implements OnChanges {
+  private photoFile: File | null = null;
   readonly user = input<UserResponse | null>(null);
   readonly users = input<UserResponse[]>([]);
   readonly typeContracts = input<UserReferenceSummary[]>([]);
   readonly positions = input<Position[]>([]);
   readonly loading = input(false);
   readonly validationErrors = input<Record<string, string>>({});
+  readonly generalError = input<string | null>(null);
   readonly managerMode = input(false);
   @Output() readonly save = new EventEmitter<UserCreateRequest | UserUpdateRequest>();
   @Output() readonly cancel = new EventEmitter<void>();
@@ -29,17 +31,17 @@ export class UserFormComponent implements OnChanges {
     password: ['', [Validators.minLength(8), Validators.maxLength(100)]],
     firstName: ['', [Validators.required, Validators.maxLength(100)]],
     lastName: ['', [Validators.required, Validators.maxLength(100)]],
-    phone: ['', Validators.maxLength(30)],
+    phone: ['', [Validators.required, Validators.pattern(/^\d{8}$/)]],
     address: ['', Validators.maxLength(255)],
-    birthDate: [''],
+    birthDate: ['', [Validators.required, ageMinimum20]],
     sex: ['HOMME', Validators.required],
     hireDate: [''],
     role: ['EMPLOYEE' as RoleType, Validators.required],
     status: ['ACTIVE' as UserStatus, Validators.required],
     enabled: true,
     managerId: new FormBuilder().control<number | null>(null),
-    positionId: new FormBuilder().control<number | null>(null),
-    typeContractId: new FormBuilder().control<number | null>(null)
+    positionId: new FormBuilder().control<number | null>(null, Validators.required),
+    typeContractId: new FormBuilder().control<number | null>(null, Validators.required)
   });
   protected readonly title = computed(() => this.user() ? "Modifier l'employé" : 'Ajouter un employé');
   protected readonly eligibleManagers = computed(() => {
@@ -107,8 +109,19 @@ export class UserFormComponent implements OnChanges {
       return;
     }
 
-    this.save.emit({ ...base, password: '' });
+    this.save.emit({ ...base, password: '', photoFile: this.photoFile });
   }
+
+  protected photoName = '';
+  protected photoError: string | null = null;
+  protected selectPhoto(event: Event): void {
+    const input=event.target as HTMLInputElement; const file=input.files?.[0]??null;
+    this.photoError=null;
+    if(file && file.size>10*1024*1024){this.photoFile=null;this.photoName='';this.photoError='La photo ne doit pas dépasser 10 Mo.';input.value='';return;}
+    this.photoFile=file;this.photoName=file?.name??'';
+  }
+  protected maxBirthDate():string{const d=new Date();d.setFullYear(d.getFullYear()-20);return this.localDate(d);}
+  private localDate(d:Date):string{return new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,10);}
 
   private today(): string {
     const now = new Date();
@@ -134,9 +147,16 @@ export class UserFormComponent implements OnChanges {
     if (control.hasError('minlength')) {
       return 'Utilisez au moins 8 caractères.';
     }
+    if (control.hasError('pattern') && field === 'phone') return 'Le téléphone doit contenir exactement 8 chiffres.';
+    if (control.hasError('ageMinimum')) return "L'employé doit avoir au moins 20 ans.";
     if (control.hasError('maxlength')) {
       return 'Cette valeur est trop longue.';
     }
     return null;
   }
+}
+
+function ageMinimum20(control:AbstractControl):ValidationErrors|null{
+  if(!control.value)return null; const naissance=new Date(`${control.value}T12:00:00`); const limite=new Date();limite.setFullYear(limite.getFullYear()-20);
+  return naissance>limite?{ageMinimum:true}:null;
 }

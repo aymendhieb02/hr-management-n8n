@@ -6,6 +6,7 @@ export interface PersonSummary {
   firstName: string;
   lastName: string;
   email: string;
+  photoUrl?: string | null;
 }
 
 export interface LeaveTypeSummary {
@@ -25,6 +26,7 @@ export interface LeaveRequestCreateRequest {
   endTime: string | null;
   numberOfDays: number;
   reason: string | null;
+  medicalCertificateRequired?: boolean;
 }
 
 export interface LeaveRequestUpdateRequest {
@@ -43,6 +45,7 @@ export interface LeaveRequestUpdateRequest {
 export interface LeaveDecisionRequest {
   approverId: number;
   comment: string | null;
+  saturdayCounts?: boolean;
 }
 
 export interface LeaveRequestResponse {
@@ -57,8 +60,12 @@ export interface LeaveRequestResponse {
   endTime: string | null;
   requestedDays: number;
   reason: string | null;
+  reasonId?: number|null;
+  medicalCertificateRequired?: boolean;
   status: LeaveRequestStatus;
   submittedAt: string;
   decisionAt: string | null;
   decisionComment: string | null;
+  saturdayCounts?: boolean;
+  consumedDays?: number | null;
 }

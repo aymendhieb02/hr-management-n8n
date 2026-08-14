@@ -1,4 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
 import { of, throwError } from 'rxjs';
 import { AuthService } from '../../../../core/services/auth.service';
 import { DepartmentService } from '../../../departments/services/department.service';
@@ -15,6 +16,7 @@ describe('DashboardComponent', () => {
     TestBed.configureTestingModule({
       imports: [DashboardComponent],
       providers: [
+        provideRouter([]),
         { provide: AuthService, useValue: { getCurrentUser: vi.fn(() => ({ id: 1, role: 'HR' })) } },
         { provide: UserService, useValue: { findAll: vi.fn(() => fail ? throwError(() => new Error()) : of([{ id: 1, department: { name: 'HR' } }, { id: 2, department: { name: 'IT' } }])) } },
         { provide: LeaveRequestService, useValue: { findAll: vi.fn(() => of([request('PENDING'), request('APPROVED'), request('REJECTED')])) } },

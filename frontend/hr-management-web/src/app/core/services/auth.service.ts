@@ -23,6 +23,20 @@ export class AuthService {
     );
   }
 
+  requestPasswordReset(identifier: string): Observable<{expireLe:string;message:string}> {
+    return this.http.post<{expireLe:string;message:string}>(`${environment.apiUrl}/auth/mot-de-passe-oublie`, { identifiant: identifier });
+  }
+
+  resetPassword(identifier: string, code: string, newPassword: string): Observable<void> {
+    return this.http.post<void>(`${environment.apiUrl}/auth/reinitialiser-mot-de-passe`, {
+      identifiant: identifier, code, nouveauMotDePasse: newPassword
+    });
+  }
+
+  verifyResetCode(identifier: string, code: string): Observable<{statut:'VALIDE'|'INVALIDE'|'EXPIRE'|'BLOQUE';message:string;tentatives:number}> {
+    return this.http.post<{statut:'VALIDE'|'INVALIDE'|'EXPIRE'|'BLOQUE';message:string;tentatives:number}>(`${environment.apiUrl}/auth/verifier-code`, { identifiant: identifier, code });
+  }
+
   loadCurrentUser(): Observable<AuthenticatedUser> {
     return this.http.get<AuthenticatedUser>(`${environment.apiUrl}/auth/me`).pipe(
       tap((user) => {

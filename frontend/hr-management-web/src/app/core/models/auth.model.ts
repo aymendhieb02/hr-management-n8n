@@ -12,6 +12,8 @@ export interface AuthenticatedUser {
   firstName: string;
   lastName: string;
   role: UserRole;
+  photoUrl?: string | null;
+  passwordChangeRequired?: boolean;
 }
 
 export interface LoginResponse {

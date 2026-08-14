@@ -1,5 +1,6 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { By } from '@angular/platform-browser';
 import { ActivatedRoute } from '@angular/router';
 import { of, Subject, throwError } from 'rxjs';
 import { AuthService } from '../../../../core/services/auth.service';
@@ -9,6 +10,7 @@ import { UserResponse } from '../../models/user.model';
 import { UserService } from '../../services/user.service';
 import { TypeContractService } from '../../services/type-contract.service';
 import { UserListComponent } from './user-list.component';
+import { UserFormComponent } from '../../components/user-form/user-form.component';
 
 describe('UserListComponent', () => {
   const users: UserResponse[] = [
@@ -85,8 +87,9 @@ describe('UserListComponent', () => {
     expect(text()).toContain("Membres de l'équipe");
     expect(text()).toContain('Eli Employee');
     expect(text()).toContain('Ajouter un employé');
-    expect(text()).toContain('Modifier');
-    expect(text()).toContain('Débloquer');
+    expect(fixture.nativeElement.querySelector('[aria-label="Modifier l’employé"]')).toBeTruthy();
+    expect(fixture.nativeElement.querySelector('[aria-label="Débloquer le compte"]')).toBeTruthy();
+    expect(text()).not.toContain('Mot de passe');
   });
 
   it('searches, filters by role, and filters by contract type', () => {
@@ -180,6 +183,7 @@ describe('UserListComponent', () => {
     inputs[2].dispatchEvent(new Event('input'));
     inputs[3].value = 'User';
     inputs[3].dispatchEvent(new Event('input'));
+    (fixture.debugElement.query(By.directive(UserFormComponent)).componentInstance as any).form.patchValue({phone:'12345678',birthDate:'1990-01-01',positionId:1,typeContractId:1});
   }
 
   function user(id: number, firstName: string, lastName: string, role: UserResponse['role'], departmentId: number): UserResponse {
@@ -189,7 +193,8 @@ describe('UserListComponent', () => {
       email: `${firstName.toLowerCase()}@test.com`,
       firstName,
       lastName,
-      phone: null,
+      phone: '12345678',
+      birthDate: '1990-01-01',
       hireDate: null,
       role,
       status: role === 'EMPLOYEE' ? 'INACTIVE' : 'ACTIVE',

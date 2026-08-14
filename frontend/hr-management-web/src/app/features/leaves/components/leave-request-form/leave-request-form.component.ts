@@ -102,7 +102,7 @@ export class LeaveRequestFormComponent implements OnChanges {
     const maximum = this.maximumLeaveDays();
     const requested = Number(this.form.controls.numberOfDays.value);
     if (this.form.controls.nature.value === 'CONGE' && maximum !== null && requested > maximum) {
-      this.formLevelError = `Solde insuffisant : vous pouvez demander au maximum ${maximum} jour(s), demandes en attente comprises. Votre solde ne peut pas descendre sous -5 jours.`;
+      this.formLevelError = `Solde insuffisant : vous pouvez demander au maximum ${maximum} jour(s), demandes en attente comprises.`;
     } else if (this.formLevelError?.startsWith('Solde insuffisant')) {
       this.formLevelError = null;
     }
@@ -193,7 +193,7 @@ export class LeaveRequestFormComponent implements OnChanges {
     if (value.nature === 'CONGE' && (!value.numberOfDays || value.numberOfDays < 1)) return 'Le nombre de jours doit etre au minimum de 1.';
     const maximum = this.maximumLeaveDays();
     if (value.nature === 'CONGE' && maximum !== null && Number(value.numberOfDays) > maximum) {
-      return `Solde insuffisant : vous pouvez demander au maximum ${maximum} jour(s), demandes en attente comprises. Votre solde ne peut pas descendre sous -5 jours.`;
+      return `Solde insuffisant : vous pouvez demander au maximum ${maximum} jour(s), demandes en attente comprises.`;
     }
     if (value.nature === 'AUTORISATION_ABSENCE') {
       if (!value.startTime || !value.endTime) return 'Les heures de debut et de fin sont obligatoires.';

@@ -1,25 +1,11 @@
 <section class="resource-page">
-  <header class="page-header"><div><h1>Mon profil</h1><p>Vos informations personnelles sont en lecture seule.</p></div><button class="primary-button" type="button" (click)="passwordOpen.set(true)" [disabled]="!user()">Modifier mon mot de passe</button></header>
-  @if (error()) { <p class="state error" role="alert">{{ error() }}</p> }
-  @if (success()) { <p class="state">{{ success() }}</p> }
-  @if (loading()) { <p class="state">Chargement...</p> }
-  @if (user(); as profile) {
-    <section class="profile-card">
-      <div class="profile-identity"><span class="avatar">{{ profile.firstName.charAt(0) }}{{ profile.lastName.charAt(0) }}</span><div><span class="eyebrow">Compte employé</span><h2>{{ profile.firstName }} {{ profile.lastName }}</h2><p>{{ profile.email }}</p></div><span class="profile-status" [class.inactive]="!profile.enabled">{{ profile.enabled ? 'Actif' : 'Bloqué' }}</span></div>
-      <dl class="profile-grid">
-        <div><dt>Nom complet</dt><dd>{{ profile.firstName }} {{ profile.lastName }}</dd></div>
-        <div><dt>Nom d'utilisateur</dt><dd>{{ profile.username }}</dd></div>
-        <div><dt>Email</dt><dd>{{ profile.email }}</dd></div>
-        <div><dt>Téléphone</dt><dd>{{ profile.phone || 'Non renseigné' }}</dd></div>
-        <div><dt>Adresse</dt><dd>{{ profile.address || 'Non renseignée' }}</dd></div>
-        <div><dt>Date de naissance</dt><dd>{{ profile.birthDate || 'Non renseignée' }}</dd></div>
-        <div><dt>Date d'embauche</dt><dd>{{ profile.hireDate || 'Non renseignée' }}</dd></div>
-        <div><dt>Sexe</dt><dd>{{ profile.sex || 'Non renseigné' }}</dd></div>
-        <div><dt>Type de contrat</dt><dd>{{ profile.typeContract?.name || 'Non renseigné' }}</dd></div>
-        <div><dt>Manager</dt><dd>{{ profile.manager ? profile.manager.firstName + ' ' + profile.manager.lastName : 'Non affecté' }}</dd></div>
-        <div><dt>Rôle</dt><dd>{{ profile.role }}</dd></div>
-      </dl>
-    </section>
-  }
+  <header class="page-header"><div><span class="eyebrow">Espace personnel</span><h1>Mon profil</h1><p>Consultez vos informations et sécurisez votre compte.</p></div><button class="primary-button" type="button" (click)="passwordOpen.set(true)" [disabled]="!user()">Modifier mon mot de passe</button></header>
+  @if(error()){<p class="state error" role="alert">{{error()}}</p>} @if(success()){<p class="state success">{{success()}}</p>} @if(loading()){<p class="state">Chargement...</p>}
+  @if(user();as profile){<section class="profile-card">
+    <div class="profile-identity"><label class="photo-control" title="Modifier ma photo">@if(profile.photoUrl){<img class="profile-photo" [src]="photoUrl(profile)" alt="Photo de {{profile.firstName}}"/>}@else{<span class="avatar">{{profile.firstName.charAt(0)}}{{profile.lastName.charAt(0)}}</span>}<span class="photo-action">{{photoSaving()?'Envoi...':'Changer'}}</span><input type="file" accept="image/jpeg,image/png,image/webp" (change)="choosePhoto($event)" [disabled]="photoSaving()"/></label><div><span class="eyebrow">Compte employé</span><h2>{{profile.firstName}} {{profile.lastName}}</h2><p>{{profile.email}}</p></div><span class="profile-status" [class.inactive]="!profile.enabled">{{profile.enabled?'Actif':'Bloqué'}}</span></div>
+    @if(profile.passwordChangeRequired){<div class="security-alert"><strong>Action requise</strong><span>Changez le mot de passe temporaire avant de continuer.</span></div>}
+    <dl class="profile-grid"><div><dt>Nom complet</dt><dd>{{profile.firstName}} {{profile.lastName}}</dd></div><div><dt>Identifiant</dt><dd>{{profile.username}}</dd></div><div><dt>Email</dt><dd>{{profile.email}}</dd></div><div><dt>Téléphone</dt><dd>{{profile.phone||'Non renseigné'}}</dd></div><div><dt>Adresse</dt><dd>{{profile.address||'Non renseignée'}}</dd></div><div><dt>Date de naissance</dt><dd>{{profile.birthDate||'Non renseignée'}}</dd></div><div><dt>Date d'embauche</dt><dd>{{profile.hireDate||'Non renseignée'}}</dd></div><div><dt>Sexe</dt><dd>{{profile.sex||'Non renseigné'}}</dd></div><div><dt>Poste</dt><dd>{{profile.position?.name||'Non renseigné'}}</dd></div><div><dt>Type de contrat</dt><dd>{{profile.typeContract?.name||'Non renseigné'}}</dd></div><div><dt>Manager</dt><dd>{{profile.manager?profile.manager.firstName+' '+profile.manager.lastName:'Non affecté'}}</dd></div><div><dt>Rôle</dt><dd>{{profile.role}}</dd></div></dl>
+  </section>}
 </section>
-@if (passwordOpen()) { <app-password-update-dialog [loading]="saving()" [error]="error()" (save)="updatePassword($event)" (cancel)="passwordOpen.set(false)" /> }
+@if(passwordOpen()){<app-password-update-dialog [loading]="saving()" [error]="error()" (save)="updatePassword($event)" (cancel)="passwordOpen.set(false)"/>}
+@if(pendingPhoto();as photo){<div class="photo-confirm-backdrop"><section class="photo-confirm-dialog" role="alertdialog" aria-modal="true"><span class="photo-confirm-icon">📷</span><h2>Modifier la photo de profil ?</h2><p>Êtes-vous sûr de vouloir utiliser <strong>{{photo.name}}</strong> comme nouvelle photo ?</p><small>{{(photo.size/1024/1024).toFixed(2)}} Mo · maximum 10 Mo</small><div><button class="secondary-button" type="button" (click)="pendingPhoto.set(null)">Non, annuler</button><button class="primary-button" type="button" (click)="confirmPhoto()">Oui, enregistrer</button></div></section></div>}

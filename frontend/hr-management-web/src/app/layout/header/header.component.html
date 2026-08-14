@@ -1,5 +1,5 @@
 <header class="app-header">
-  <button class="menu-button" type="button" aria-label="Open navigation" (click)="toggleSidebar()">
+  <button class="menu-button" type="button" aria-label="Ouvrir la navigation" (click)="toggleSidebar()">
     <span></span>
     <span></span>
     <span></span>
@@ -11,10 +11,14 @@
   </a>
 
   <div class="user-menu">
-    <div class="identity" aria-label="Current user">
+    <a class="avatar-link" routerLink="/profile" aria-label="Ouvrir mon profil">
+      @if (user()?.photoUrl) { <img class="avatar" [src]="photoUrl()" alt="Photo de profil" /> }
+      @else { <span class="avatar avatar-fallback">{{ initials() }}</span> }
+    </a>
+    <div class="identity" aria-label="Utilisateur connecte">
       <span class="name">{{ fullName() }}</span>
       <span class="role">{{ user()?.role }}</span>
     </div>
-    <button type="button" class="logout-button" (click)="logout()">Logout</button>
+    <button type="button" class="logout-button" (click)="logout()">Se déconnecter</button>
   </div>
 </header>

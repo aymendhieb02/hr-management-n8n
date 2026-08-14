@@ -3,7 +3,7 @@ import { routes } from './app.routes';
 describe('app route role data', () => {
   const childRoutes = routes.find((route) => route.children)?.children ?? [];
 
-  it('allows managers to access team and reference routes', () => {
+  it('allows managers to access team routes while keeping admin references protected', () => {
     expect(rolesFor('team-requests')).toContain('MANAGER');
     expect(rolesFor('team-requests')).toContain('HR');
     expect(rolesFor('team-requests')).toContain('ADMIN');
@@ -11,7 +11,8 @@ describe('app route role data', () => {
     expect(rolesFor('team-members')).toContain('HR');
     expect(rolesFor('team-members')).toContain('ADMIN');
     expect(rolesFor('team-availability')).toContain('MANAGER');
-    expect(rolesFor('positions')).toContain('MANAGER');
+    expect(rolesFor('positions')).toEqual(['ADMIN']);
+    expect(rolesFor('jours-feries')).toEqual(['ADMIN']);
     expect(rolesFor('leave-types')).toContain('MANAGER');
   });
 
@@ -22,8 +23,8 @@ describe('app route role data', () => {
     expect(rolesFor('my-calendar')).toEqual(['EMPLOYEE', 'MANAGER', 'HR', 'ADMIN']);
   });
 
-  it('keeps dashboards and global reports restricted to HR and Admin', () => {
-    expect(rolesFor('dashboard')).toEqual(['HR', 'ADMIN']);
+  it('opens the dashboard to managers while keeping global reports restricted', () => {
+    expect(rolesFor('dashboard')).toEqual(['MANAGER', 'HR', 'ADMIN']);
     expect(rolesFor('reports')).toEqual(['HR', 'ADMIN']);
     expect(rolesFor('calendar')).toEqual(['HR', 'ADMIN']);
     expect(rolesFor('dashboard')).not.toContain('EMPLOYEE');

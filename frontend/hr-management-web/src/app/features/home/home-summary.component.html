@@ -8,9 +8,9 @@
       <section class="summary-card"><span>Demandes refusées</span><strong>{{ rejected() }}</strong><i class="red-mark"></i></section>
       <section class="summary-card"><span>Notifications non lues</span><strong>{{ unread() }}</strong><i class="orange-mark"></i></section>
       @if (role() === 'MANAGER') { <section class="summary-card"><span>Absents aujourd'hui</span><strong>{{ absentToday() }}</strong><i class="blue-mark"></i></section> }
-      @if (role() !== 'MANAGER') { <section class="summary-card"><span>Soldes disponibles</span><strong>{{ balanceList().length }}</strong><i class="blue-mark"></i></section> }
+      @if (role() !== 'MANAGER') { <section class="summary-card"><span>Solde disponible</span><strong>{{ availableBalance() }}</strong><i class="blue-mark"></i></section> }
     </div>
-    @if (nextAbsence()) { <p class="state">Next approved absence: {{ nextAbsence()!.startDate }} to {{ nextAbsence()!.endDate }}</p> }
+    @if (nextAbsence()) { <p class="state">Prochaine absence approuvée : du {{ nextAbsence()!.startDate }} au {{ nextAbsence()!.endDate }}</p> }
     <section class="holiday-section">
       <h2>Prochains jours fériés</h2>
       <div class="holiday-grid">

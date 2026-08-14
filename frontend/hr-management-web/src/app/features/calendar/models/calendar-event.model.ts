@@ -3,6 +3,7 @@ export interface CalendarEvent {
   leaveRequestId: number;
   userId: number;
   employeeName: string;
+  employeePhotoUrl?: string | null;
   leaveTypeName: string;
   departmentName: string | null;
   startDate: string;

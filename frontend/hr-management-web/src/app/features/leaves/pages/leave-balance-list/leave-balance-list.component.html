@@ -38,7 +38,7 @@
             <tr>
               @if (isAdminMode()) { <td>{{ balance.user.firstName }} {{ balance.user.lastName }}</td> }
               <td>{{ balance.leaveType.name }}</td><td>{{ balance.year }}</td><td>{{ balance.totalDays }}</td><td>{{ balance.usedDays }}</td><td>{{ balance.remainingDays }}</td>
-              <td><progress max="100" [value]="progress(balance)"></progress> {{ progress(balance) }} %</td>
+              <td><div class="usage-meter"><div class="usage-track"><span [style.width.%]="progress(balance)"></span></div><strong>{{ progress(balance) }} %</strong></div></td>
               @if (isAdminMode()) {
                 <td>
                   @if (canManageBalances()) {

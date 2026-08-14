@@ -19,6 +19,14 @@ export class HeaderComponent {
 
     return currentUser ? `${currentUser.firstName} ${currentUser.lastName}` : '';
   });
+  protected readonly initials = computed(() => {
+    const current = this.user();
+    return current ? `${current.firstName?.[0] ?? ''}${current.lastName?.[0] ?? ''}`.toUpperCase() : '?';
+  });
+  protected readonly photoUrl = computed(() => {
+    const path = this.user()?.photoUrl;
+    return path ? (path.startsWith('http') ? path : `http://localhost:8081${path}`) : '';
+  });
 
   toggleSidebar(): void {
     this.layoutState.toggleSidebar();

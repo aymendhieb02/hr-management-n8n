@@ -31,8 +31,14 @@
       }
       <div class="event-layer">
       @for (segment of weekEventSegments(); track segment.event.leaveRequestId) {
-        <button type="button" [class]="'leave-event connected-event ' + eventColor(segment.event)" [class.clipped-start]="segment.clippedStart" [class.clipped-end]="segment.clippedEnd" [style.grid-column]="segment.startColumn + ' / span ' + segment.span" [style.grid-row]="segment.lane" (click)="selectedEvent.set(segment.event)">
-          <div class="event-main"><strong>{{ segment.event.employeeName }}</strong><span>{{ segment.event.kind === 'HOLIDAY' ? 'Jour férié' : natureLabel(segment.event.nature) }}</span></div>
+        <button type="button" [class]="'leave-event connected-event ' + eventColor(segment.event)" [class.single-day]="segment.span===1" [class.clipped-start]="segment.clippedStart" [class.clipped-end]="segment.clippedEnd" [style.grid-column]="segment.startColumn + ' / span ' + segment.span" [style.grid-row]="segment.lane" (click)="selectedEvent.set(segment.event)">
+          <div class="event-main">
+            @if(segment.event.kind !== 'HOLIDAY'){
+              @if(segment.event.employeePhotoUrl){<img class="event-avatar" [src]="segment.event.employeePhotoUrl" [alt]="segment.event.employeeName" [title]="segment.event.employeeName"/>}
+              @else{<span class="event-avatar fallback" [title]="segment.event.employeeName">{{segment.event.employeeName.charAt(0)}}</span>}
+            }@else{<strong>{{segment.event.employeeName}}</strong>}
+            <span>{{ segment.event.kind === 'HOLIDAY' ? 'Jour férié' : natureLabel(segment.event.nature) }}</span>
+          </div>
           @if (segment.event.kind !== 'HOLIDAY') {
             @if (segment.event.nature === 'AUTORISATION_ABSENCE') { <small>{{ segment.event.startTime?.slice(0, 5) }} – {{ segment.event.endTime?.slice(0, 5) }}</small> }
             @else { <small>{{ segment.event.startDate | date:'dd/MM' }} – {{ segment.event.endDate | date:'dd/MM' }}</small> }
@@ -51,6 +57,7 @@
       <button class="close" type="button" (click)="selectedEvent.set(null)">×</button>
       <span class="dialog-kicker">{{ event.kind === 'HOLIDAY' ? 'Jour férié' : natureLabel(event.nature) }}</span>
       <h2>{{ event.employeeName }}</h2>
+      @if(event.employeePhotoUrl){<img class="dialog-avatar" [src]="event.employeePhotoUrl" [alt]="event.employeeName"/>}
       <dl>
         @if (event.kind !== 'HOLIDAY') { <div><dt>Statut</dt><dd>{{ statusLabel(event.status) }}</dd></div> }
         <div><dt>Type</dt><dd>{{ event.leaveTypeName }}</dd></div>

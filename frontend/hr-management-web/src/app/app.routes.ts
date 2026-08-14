@@ -100,7 +100,7 @@ export const routes: Routes = [
       {
         path: 'dashboard',
         canActivate: [roleGuard],
-        data: { title: 'Tableau de bord', roles: ['HR', 'ADMIN'] },
+        data: { title: 'Tableau de bord', roles: ['MANAGER', 'HR', 'ADMIN'] },
         loadComponent: () => import('./features/dashboard/pages/dashboard/dashboard.component').then((m) => m.DashboardComponent)
       },
       {
@@ -112,7 +112,7 @@ export const routes: Routes = [
       {
         path: 'positions',
         canActivate: [roleGuard],
-        data: { title: 'Postes', roles: ['MANAGER', 'HR', 'ADMIN'] },
+        data: { title: 'Postes', roles: ['ADMIN'] },
         loadComponent: () => import('./features/positions/pages/position-list/position-list.component')
           .then((m) => m.PositionListComponent)
       },
@@ -191,14 +191,14 @@ export const routes: Routes = [
       {
         path: 'jours-feries',
         canActivate: [roleGuard],
-        data: { title: 'Jours fériés', roles: ['MANAGER', 'HR', 'ADMIN'] },
+        data: { title: 'Jours fériés', roles: ['ADMIN'] },
         loadComponent: () => import('./features/jours-feries/pages/jour-ferie-list/jour-ferie-list.component').then((m) => m.JourFerieListComponent)
       },
       {
         path: 'system-configuration',
-        component: PlaceholderPageComponent,
         canActivate: [roleGuard],
-        data: { title: 'Configuration systeme', roles: ['ADMIN'] }
+        data: { title: 'Configuration système', roles: ['ADMIN'] },
+        loadComponent: () => import('./features/system-configuration/system-configuration.component').then((m) => m.SystemConfigurationComponent)
       }
       ,{
         path: 'leave-history', canActivate: [roleGuard],

@@ -47,11 +47,11 @@
   } @else if (filteredUsers().length === 0) {
     <p class="state">{{ isTeamMode() ? "Aucun membre de l'équipe trouvé." : 'Aucun employé trouvé.' }}</p>
   } @else {
-    <div class="table-card">
-      <table appPaginatedTable>
+    <div class="table-card users-table-card">
+      <table appPaginatedTable class="users-table">
         <thead>
           <tr>
-            <th>Nom complet</th>
+            <th class="identity-column">Employé</th>
             <th>Identifiant</th>
             <th>Email</th>
             <th>Rôle</th>
@@ -59,15 +59,21 @@
             <th>Manager</th>
             <th>Statut</th>
             <th>État du compte</th>
-            <th>Actions</th>
+            <th class="actions-column">Actions</th>
           </tr>
         </thead>
         <tbody>
           @for (user of filteredUsers(); track user.id) {
             <tr>
-              <td>{{ user.firstName }} {{ user.lastName }}</td>
-              <td>{{ user.username }}</td>
-              <td>{{ user.email }}</td>
+              <td class="identity-cell">
+                <span class="user-avatar" aria-hidden="true">{{ initials(user) }}</span>
+                <span class="user-identity">
+                  <strong>{{ user.firstName }} {{ user.lastName }}</strong>
+                  <small>{{ user.email }}</small>
+                </span>
+              </td>
+              <td><span class="username-chip">{{ user.username }}</span></td>
+              <td class="email-cell">{{ user.email }}</td>
               <td>{{ roleLabel(user.role) }}</td>
               <td>{{ user.typeContract?.name || 'Aucun' }}</td>
               <td>{{ user.manager ? user.manager.firstName + ' ' + user.manager.lastName : 'Aucun' }}</td>
@@ -81,14 +87,14 @@
                   {{ user.enabled ? 'Activé' : 'Désactivé' }}
                 </span>
               </td>
-              <td>
-                <div class="actions">
-                  <button class="secondary-button" type="button" (click)="detailUser.set(user)">Voir les détails</button>
+              <td class="actions-cell">
+                <div class="actions user-actions">
+                  <button class="table-action view-action" type="button" (click)="detailUser.set(user)" title="Voir les détails" [attr.aria-label]="isTeamMode()?'Voir les détails':null">{{isTeamMode()?'◉':'Voir les détails'}}</button>
                   @if (canManage()) {
-                    <button class="secondary-button" type="button" (click)="openEdit(user)">Modifier</button>
-                    <button class="secondary-button" type="button" (click)="askResetPassword(user)">Mot de passe par défaut</button>
-                    <button class="secondary-button" type="button" (click)="toggleActive(user)">{{ user.enabled ? 'Bloquer' : 'Débloquer' }}</button>
-                    <button class="danger-button" type="button" (click)="requestDelete(user)">Supprimer</button>
+                    <button class="table-action edit-action" type="button" (click)="openEdit(user)" title="Modifier l’employé" [attr.aria-label]="isTeamMode()?'Modifier l’employé':null">{{isTeamMode()?'✎':'Modifier'}}</button>
+                    @if(!isTeamMode()){<button class="table-action password-action" type="button" (click)="askResetPassword(user)" title="Réinitialiser le mot de passe">Mot de passe</button>}
+                    <button class="table-action toggle-action" type="button" (click)="toggleActive(user)" [title]="user.enabled ? 'Bloquer le compte' : 'Débloquer le compte'" [attr.aria-label]="isTeamMode()?(user.enabled?'Bloquer le compte':'Débloquer le compte'):null">{{isTeamMode()?(user.enabled?'⊘':'✓'):(user.enabled?'Bloquer':'Débloquer')}}</button>
+                    <button class="table-action delete-action" type="button" (click)="requestDelete(user)" title="Supprimer l’employé" [attr.aria-label]="isTeamMode()?'Supprimer l’employé':null">{{isTeamMode()?'⌫':'Supprimer'}}</button>
                   }
                 </div>
               </td>
@@ -108,6 +114,7 @@
     [positions]="positions()"
     [loading]="isSaving()"
     [validationErrors]="formErrors()"
+    [generalError]="formGeneralError()"
     [managerMode]="isTeamMode()"
     (save)="saveUser($event)"
     (cancel)="formOpen.set(false)"

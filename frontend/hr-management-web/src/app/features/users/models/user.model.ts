@@ -31,6 +31,7 @@ export interface UserCreateRequest {
   departmentId: number | null;
   positionId: number | null;
   typeContractId?: number | null;
+  photoFile?: File | null;
 }
 
 export interface UserUpdateRequest {
@@ -77,4 +78,6 @@ export interface UserResponse {
   typeContract?: UserReferenceSummary | null;
   createdAt: string;
   updatedAt: string | null;
+  photoUrl?: string | null;
+  passwordChangeRequired?: boolean;
 }

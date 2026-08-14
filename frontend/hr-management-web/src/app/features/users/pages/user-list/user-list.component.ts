@@ -2,7 +2,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
-import { catchError, forkJoin, of } from 'rxjs';
+import { catchError, forkJoin, of, switchMap } from 'rxjs';
 import { AuthService } from '../../../../core/services/auth.service';
 import { safeApiMessage, validationErrors } from '../../../shared/api-error.util';
 import { PaginatedTableDirective } from '../../../shared/paginated-table.directive';
@@ -20,7 +20,7 @@ import { PositionService } from '../../../positions/services/position.service';
   selector: 'app-user-list',
   imports: [DeleteUserDialogComponent, FormsModule, PasswordUpdateDialogComponent, UserDetailsComponent, UserFormComponent, PaginatedTableDirective],
   templateUrl: './user-list.component.html',
-  styleUrl: '../../../shared/resource-page.scss'
+  styleUrls: ['../../../shared/resource-page.scss', './user-list.component.scss']
 })
 export class UserListComponent implements OnInit {
   private readonly userService = inject(UserService);
@@ -38,6 +38,7 @@ export class UserListComponent implements OnInit {
   protected readonly isDeleting = signal(false);
   protected readonly error = signal<string | null>(null);
   protected readonly formErrors = signal<Record<string, string>>({});
+  protected readonly formGeneralError = signal<string | null>(null);
   protected readonly passwordError = signal<string | null>(null);
   protected readonly deleteError = signal<string | null>(null);
   protected readonly searchTerm = signal('');
@@ -100,12 +101,14 @@ export class UserListComponent implements OnInit {
 
   protected openCreate(): void {
     this.formErrors.set({});
+    this.formGeneralError.set(null);
     this.editingUser.set(null);
     this.formOpen.set(true);
   }
 
   protected openEdit(user: UserResponse): void {
     this.formErrors.set({});
+    this.formGeneralError.set(null);
     this.editingUser.set(user);
     this.formOpen.set(true);
   }
@@ -114,10 +117,14 @@ export class UserListComponent implements OnInit {
     const current = this.editingUser();
     const operation = current
       ? this.userService.update(current.id, request as UserUpdateRequest)
-      : this.userService.create(request as UserCreateRequest);
+      : this.userService.create(request as UserCreateRequest).pipe(switchMap(created => {
+          const photo=(request as UserCreateRequest).photoFile;
+          return photo ? this.userService.uploadPhoto(created.id,photo).pipe(switchMap(()=>of(created))) : of(created);
+        }));
 
     this.isSaving.set(true);
     this.formErrors.set({});
+    this.formGeneralError.set(null);
     operation.subscribe({
       next: () => {
         this.isSaving.set(false);
@@ -127,7 +134,7 @@ export class UserListComponent implements OnInit {
       },
       error: (error: HttpErrorResponse) => {
         this.formErrors.set(validationErrors(error));
-        this.error.set(safeApiMessage(error, "Impossible d'enregistrer l'employé."));
+        this.formGeneralError.set(safeApiMessage(error, "Impossible d'enregistrer l'employé."));
         this.isSaving.set(false);
       }
     });
@@ -225,5 +232,9 @@ export class UserListComponent implements OnInit {
 
   protected roleLabel(role: RoleType): string {
     return { EMPLOYEE: 'Employé', MANAGER: 'Manager', HR: 'Ressources humaines', ADMIN: 'Administrateur' }[role];
+  }
+
+  protected initials(user: UserResponse): string {
+    return `${user.firstName?.charAt(0) ?? ''}${user.lastName?.charAt(0) ?? ''}`.toUpperCase();
   }
 }

@@ -6,7 +6,7 @@ import { LeaveDecisionRequest, LeaveRequestCreateRequest, LeaveRequestResponse, 
 
 interface CongeDemandeApiResponse {
   id: number;
-  employe: { id: number; nom: string; prenom: string; email: string };
+  employe: { id: number; nom: string; prenom: string; email: string; photoUrl?: string | null };
   decideur: { id: number; nom: string; prenom: string; email: string } | null;
   congeType: { id: number; nom: string };
   nature: LeaveRequestResponse['nature'];
@@ -17,10 +17,14 @@ interface CongeDemandeApiResponse {
   nombreJours: number;
   commentaireEmploye: string | null;
   raison: string | null;
+  raisonId?: number|null;
+  certificatMedicalRequis?: boolean;
   statut: { id: number; libelle: string };
   dateSoumission: string;
   dateDecision: string | null;
   commentaireDecision: string | null;
+  samediCompte?: boolean;
+  nombreJoursConsomme?: number|null;
 }
 
 interface CongeDemandeCreateApiRequest {
@@ -53,6 +57,7 @@ interface CongeDemandeUpdateApiRequest {
 interface CongeDecisionApiRequest {
   decideurId: number;
   commentaire: string | null;
+  samediCompte?: boolean;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -96,7 +101,7 @@ export class LeaveRequestService {
 function toLeaveRequest(response: CongeDemandeApiResponse): LeaveRequestResponse {
   return {
     id: response.id,
-    requester: { id: response.employe.id, firstName: response.employe.prenom, lastName: response.employe.nom, email: response.employe.email },
+    requester: { id: response.employe.id, firstName: response.employe.prenom, lastName: response.employe.nom, email: response.employe.email, photoUrl: response.employe.photoUrl },
     approver: response.decideur ? { id: response.decideur.id, firstName: response.decideur.prenom, lastName: response.decideur.nom, email: response.decideur.email } : null,
     leaveType: { id: response.congeType.id, name: response.congeType.nom },
     nature: response.nature,
@@ -106,10 +111,14 @@ function toLeaveRequest(response: CongeDemandeApiResponse): LeaveRequestResponse
     endTime: response.heureFin,
     requestedDays: response.nombreJours,
     reason: response.raison,
+    reasonId: response.raisonId ?? null,
+    medicalCertificateRequired: Boolean(response.certificatMedicalRequis),
     status: toLeaveRequestStatus(response.statut.libelle),
     submittedAt: response.dateSoumission,
     decisionAt: response.dateDecision,
-    decisionComment: response.commentaireDecision
+    decisionComment: response.commentaireDecision,
+    saturdayCounts: response.samediCompte,
+    consumedDays: response.nombreJoursConsomme
   };
 }
 
@@ -136,5 +145,5 @@ function toUpdateRequest(request: LeaveRequestUpdateRequest): CongeDemandeUpdate
 }
 
 function toDecisionRequest(request: LeaveDecisionRequest): CongeDecisionApiRequest {
-  return { decideurId: request.approverId, commentaire: request.comment?.trim() || null };
+  return { decideurId: request.approverId, commentaire: request.comment?.trim() || null, samediCompte: request.saturdayCounts };
 }

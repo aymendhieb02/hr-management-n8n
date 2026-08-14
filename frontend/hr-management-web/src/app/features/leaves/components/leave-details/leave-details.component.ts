@@ -22,8 +22,9 @@ export class LeaveDetailsComponent {
   protected readonly certificateLoading = signal(false);
   protected readonly certificateError = signal<string | null>(null);
   protected readonly isSickLeave = computed(() => {
+    if (this.request().medicalCertificateRequired) return true;
     const reason = this.normalize(this.request().reason ?? '');
-    return this.request().nature === 'CONGE' && (reason.includes('maladie') || reason.includes('medical'));
+    return this.request().nature === 'CONGE' && (reason.includes('malad') || reason.includes('medical') || reason.includes('sante'));
   });
 
   constructor() {

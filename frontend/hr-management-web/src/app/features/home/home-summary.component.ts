@@ -28,6 +28,7 @@ export class HomeSummaryComponent implements OnInit {
   protected readonly balanceList = signal<LeaveBalanceResponse[]>([]);
   protected readonly team = signal<UserResponse[]>([]);
   protected readonly unread = signal(0);
+  protected readonly availableBalance = computed(() => Math.max(0, this.balanceList().reduce((total,balance)=>total+Number(balance.remainingDays||0),0)));
   protected readonly holidays = signal<JourFerieResponse[]>([]);
   protected readonly loading = signal(false);
   protected readonly role = computed(() => this.auth.getCurrentUser()?.role ?? 'EMPLOYEE');

@@ -4,10 +4,11 @@ import { AuthService } from '../../core/services/auth.service';
 import { LayoutStateService } from '../layout-state.service';
 import { NAVIGATION_ITEMS } from '../navigation.model';
 import { NotificationService } from '../../features/notifications/services/notification.service';
+import { AppIconComponent } from '../../shared/components/app-icon/app-icon.component';
 
 @Component({
   selector: 'app-sidebar',
-  imports: [RouterLink, RouterLinkActive],
+  imports: [AppIconComponent, RouterLink, RouterLinkActive],
   templateUrl: './sidebar.component.html',
   styleUrl: './sidebar.component.scss'
 })
