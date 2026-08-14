@@ -24,7 +24,9 @@ public class CongeDemandeHistoriqueService {
 
     @Transactional(readOnly = true)
     public List<CongeDemandeHistoriqueResponse> lister() {
-        return repository.findAllByOrderByDateActionDesc().stream().map(this::response).toList();
+        return repository.findAllByOrderByDateActionDesc().stream()
+                .filter(h -> !"BROUILLON".equals(h.getDemande().getStatut().getLibelle()))
+                .map(this::response).toList();
     }
 
     @Transactional(readOnly = true)

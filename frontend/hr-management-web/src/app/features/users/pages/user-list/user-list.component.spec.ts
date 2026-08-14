@@ -1,5 +1,6 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { By } from '@angular/platform-browser';
 import { ActivatedRoute } from '@angular/router';
 import { of, Subject, throwError } from 'rxjs';
 import { AuthService } from '../../../../core/services/auth.service';
@@ -9,6 +10,7 @@ import { UserResponse } from '../../models/user.model';
 import { UserService } from '../../services/user.service';
 import { TypeContractService } from '../../services/type-contract.service';
 import { UserListComponent } from './user-list.component';
+import { UserFormComponent } from '../../components/user-form/user-form.component';
 
 describe('UserListComponent', () => {
   const users: UserResponse[] = [
@@ -25,6 +27,7 @@ describe('UserListComponent', () => {
     updatePassword: ReturnType<typeof vi.fn>;
     setActive: ReturnType<typeof vi.fn>;
     resetPasswordToDefault: ReturnType<typeof vi.fn>;
+    assignRole: ReturnType<typeof vi.fn>;
     delete: ReturnType<typeof vi.fn>;
   };
   let authService: {
@@ -46,6 +49,7 @@ describe('UserListComponent', () => {
       updatePassword: vi.fn(() => of(void 0)),
       setActive: vi.fn(() => of(users[0])),
       resetPasswordToDefault: vi.fn(() => of(void 0)),
+      assignRole: vi.fn(() => of(users[0])),
       delete: vi.fn(() => of(void 0))
     };
     authService = {
@@ -73,20 +77,21 @@ describe('UserListComponent', () => {
     expect(userService.findAll).toHaveBeenCalled();
     expect(text()).toContain('Alice Admin');
     expect(text()).toContain('Ajouter un employé');
-    expect(text()).toContain('Modifier');
-    expect(text()).toContain('Bloquer');
-    expect(text()).toContain('Supprimer');
+    expect(fixture.nativeElement.querySelector('[aria-label="Modifier l’employé"]')).toBeTruthy();
+    expect(fixture.nativeElement.querySelector('[aria-label="Bloquer le compte"]')).toBeTruthy();
+    expect(fixture.nativeElement.querySelector('[aria-label="Supprimer l’employé"]')).toBeTruthy();
   });
 
   it('loads only team members and lets managers administer their team', () => {
-    configure('MANAGER', 'team-members');
+    configure('DG', 'team-members');
 
     expect(userService.findTeamMembers).toHaveBeenCalledWith(2);
     expect(text()).toContain("Membres de l'équipe");
     expect(text()).toContain('Eli Employee');
     expect(text()).toContain('Ajouter un employé');
-    expect(text()).toContain('Modifier');
-    expect(text()).toContain('Débloquer');
+    expect(fixture.nativeElement.querySelector('[aria-label="Modifier l’employé"]')).toBeTruthy();
+    expect(fixture.nativeElement.querySelector('[aria-label="Débloquer le compte"]')).toBeTruthy();
+    expect(text()).not.toContain('Mot de passe');
   });
 
   it('searches, filters by role, and filters by contract type', () => {
@@ -136,23 +141,23 @@ describe('UserListComponent', () => {
     expect(userService.create).toHaveBeenCalledWith(expect.objectContaining({ username: 'new.user', email: 'new@test.com', password: '' }));
 
     fixture.detectChanges();
-    buttonByText('Modifier').click();
+    (fixture.nativeElement.querySelector('[aria-label="Modifier l’employé"]') as HTMLButtonElement).click();
     fixture.detectChanges();
     fixture.nativeElement.querySelector('app-user-form form').dispatchEvent(new Event('submit'));
     expect(userService.update).toHaveBeenCalledWith(1, expect.not.objectContaining({ password: expect.anything() }));
 
     fixture.detectChanges();
-    buttonByText('Bloquer').click();
+    (fixture.nativeElement.querySelector('[aria-label="Bloquer le compte"]') as HTMLButtonElement).click();
     expect(userService.setActive).toHaveBeenCalledWith(1, false);
 
     fixture.detectChanges();
-    buttonByText('Supprimer').click();
+    (fixture.nativeElement.querySelector('[aria-label="Supprimer l’employé"]') as HTMLButtonElement).click();
     fixture.detectChanges();
     confirmDeleteButton().click();
     expect(userService.delete).toHaveBeenCalledWith(1);
 
     userService.delete.mockReturnValue(throwError(() => new HttpErrorResponse({ status: 409 })));
-    buttonByText('Supprimer').click();
+    (fixture.nativeElement.querySelector('[aria-label="Supprimer l’employé"]') as HTMLButtonElement).click();
     fixture.detectChanges();
     confirmDeleteButton().click();
     fixture.detectChanges();
@@ -162,7 +167,7 @@ describe('UserListComponent', () => {
   it('shows details without exposing passwordHash', () => {
     configure('HR', 'users', of([{ ...users[0], passwordHash: 'secret-hash' } as UserResponse]));
 
-    buttonByText('Voir les détails').click();
+    (fixture.nativeElement.querySelector('[aria-label="Voir les détails"]') as HTMLButtonElement).click();
     fixture.detectChanges();
 
     expect(text()).toContain('Alice Admin');
@@ -180,6 +185,7 @@ describe('UserListComponent', () => {
     inputs[2].dispatchEvent(new Event('input'));
     inputs[3].value = 'User';
     inputs[3].dispatchEvent(new Event('input'));
+    (fixture.debugElement.query(By.directive(UserFormComponent)).componentInstance as any).form.patchValue({phone:'12345678',birthDate:'1990-01-01',positionId:1,typeContractId:1});
   }
 
   function user(id: number, firstName: string, lastName: string, role: UserResponse['role'], departmentId: number): UserResponse {
@@ -189,7 +195,8 @@ describe('UserListComponent', () => {
       email: `${firstName.toLowerCase()}@test.com`,
       firstName,
       lastName,
-      phone: null,
+      phone: '12345678',
+      birthDate: '1990-01-01',
       hireDate: null,
       role,
       status: role === 'EMPLOYEE' ? 'INACTIVE' : 'ACTIVE',

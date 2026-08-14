@@ -5,10 +5,11 @@ import { LeaveRequestResponse } from '../../models/leave-request.model';
 import { MedicalDocumentMetadataResponse, MedicalDocumentResponse } from '../../../medical-documents/models/medical-document.model';
 import { MedicalDocumentService } from '../../../medical-documents/services/medical-document.service';
 import { safeApiMessage } from '../../../shared/api-error.util';
+import { AppIconComponent } from '../../../../shared/components/app-icon/app-icon.component';
 
 @Component({
   selector: 'app-leave-details',
-  imports: [MedicalDocumentUploadComponent],
+  imports: [AppIconComponent, MedicalDocumentUploadComponent],
   templateUrl: './leave-details.component.html',
   styleUrl: '../../../shared/resource-page.scss'
 })
@@ -22,8 +23,9 @@ export class LeaveDetailsComponent {
   protected readonly certificateLoading = signal(false);
   protected readonly certificateError = signal<string | null>(null);
   protected readonly isSickLeave = computed(() => {
+    if (this.request().medicalCertificateRequired) return true;
     const reason = this.normalize(this.request().reason ?? '');
-    return this.request().nature === 'CONGE' && (reason.includes('maladie') || reason.includes('medical'));
+    return this.request().nature === 'CONGE' && (reason.includes('malad') || reason.includes('medical') || reason.includes('sante'));
   });
 
   constructor() {
@@ -83,7 +85,7 @@ export class LeaveDetailsComponent {
   });
 
   protected statusLabel(): string {
-    return { PENDING: 'En attente', APPROVED: 'Approuvee', REJECTED: 'Refusee', CANCELLED: 'Annulee' }[this.request().status];
+    return { DRAFT: 'Brouillon', PENDING: 'En attente', APPROVED: 'Approuvee', REJECTED: 'Refusee', CANCELLED: 'Annulee' }[this.request().status];
   }
 
   private normalize(value: string): string {

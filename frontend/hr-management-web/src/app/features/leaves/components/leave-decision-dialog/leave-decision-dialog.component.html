@@ -9,6 +9,7 @@
           <p class="field-error">Le commentaire est obligatoire.</p>
         }
       </label>
+      @if(mode()==='approve'){<label class="form-field checkbox-field"><input type="checkbox" formControlName="saturdayCounts"/><span>Compter le samedi comme jour travaillé pour cette demande</span></label><p class="field-hint">Le nombre de jours débité sera recalculé en tenant compte de ce choix et des jours fériés.</p>}
       @if (error()) { <p class="form-error" role="alert">{{ error() }}</p> }
       <div class="dialog-actions">
         <button class="secondary-button" type="button" (click)="cancel.emit()" [disabled]="loading()">Annuler</button>

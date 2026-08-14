@@ -1,9 +1,87 @@
-<section class="resource-page">
-  <header class="page-header"><div><span class="eyebrow">PILOTAGE RH</span><h1>Tableau de bord</h1><p>Vue d'ensemble des employés, des absences et des actions prioritaires.</p></div></header>
-  @if(error()){<p class="state error" role="alert">{{error()}}</p>}
-  @if(loading()){<p class="state">Chargement du tableau de bord...</p>}@else{
-    <div class="dashboard-stats"><app-stat-card label="Employés" [value]="userList().length"/><app-stat-card label="Employés actifs" [value]="activeEmployees()"/><app-stat-card label="Demandes en attente" [value]="pending()"/><app-stat-card label="Absents aujourd'hui" [value]="absentToday()"/><app-stat-card label="Notifications non lues" [value]="unreadCount()"/><app-stat-card label="Absences à venir" [value]="upcomingApproved()"/></div>
-    <section class="dashboard-insights"><article><span>Taux d'approbation</span><strong>{{approvalRate()}}%</strong><small>sur les demandes ayant reçu une décision</small></article><article><span>Autorisations d'absence</span><strong>{{authorizations()}}</strong><small>demandes enregistrées dans le système</small></article><article><span>Demandes traitées</span><strong>{{approved()+rejected()}}</strong><small>{{approved()}} approuvées · {{rejected()}} refusées</small></article></section>
-    <div class="dashboard-grid"><app-status-chart [data]="statusData()"/><section class="dashboard-recent"><header><h2>Dernières demandes</h2><p>Les huit demandes les plus récemment déposées.</p></header><app-recent-leave-table [requests]="recent()"/></section></div>
+<section class="resource-page admin-dashboard">
+  <header class="page-header dashboard-hero">
+    <div class="hero-copy">
+      <span class="eyebrow">{{ isManager() ? "PILOTAGE DE L'ÉQUIPE" : 'CENTRE DE PILOTAGE RH' }}</span>
+      <h1>Bonjour, {{ fullName() }}</h1>
+      <p>{{ isManager() ? "Suivez la disponibilité, les demandes et la capacité de votre équipe." : "Une vision consolidée des effectifs, des congés et des actions qui nécessitent votre attention." }}</p>
+    </div>
+    <div class="hero-actions">
+      @if (lastUpdated()) { <small>Actualisé à {{ lastUpdated()!.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) }}</small> }
+      <button type="button" class="secondary-button refresh-button" (click)="loadDashboard()" [disabled]="loading()"><app-icon name="history" />Actualiser</button>
+    </div>
+  </header>
+
+  @if (error()) { <p class="dashboard-message error" role="alert">{{ error() }}</p> }
+  @if (loading()) {
+    <div class="dashboard-loading"><span></span><p>Préparation de vos indicateurs...</p></div>
+  } @else {
+    <section class="priority-strip" aria-label="Actions prioritaires">
+      <div class="priority-heading"><span class="pulse-dot"></span><div><strong>À traiter maintenant</strong><small>Actions nécessitant une attention</small></div></div>
+      <a [routerLink]="isManager() ? '/team-requests' : '/leave-requests'"><strong>{{ pending() }}</strong><span>Demandes en attente</span><b>→</b></a>
+      <a routerLink="/notifications"><strong>{{ unreadCount() }}</strong><span>Notifications non lues</span><b>→</b></a>
+      <a [routerLink]="isManager() ? '/team-members' : '/users'"><strong>{{ isManager() ? activeEmployees() : blockedEmployees() }}</strong><span>{{ isManager() ? "membres dans l'équipe" : 'comptes bloqués' }}</span><b>→</b></a>
+    </section>
+
+    <section class="kpi-grid" aria-label="Indicateurs clés">
+      <article class="kpi-card kpi-workforce"><div class="kpi-icon">♟</div><div><span>Effectif actif</span><strong>{{ activeEmployees() }}</strong><small>sur {{ userList().length }} comptes enregistrés</small></div><em>{{ userList().length ? ((activeEmployees()/userList().length)*100).toFixed(0) : 0 }}%</em></article>
+      <article class="kpi-card kpi-coverage"><div class="kpi-icon"><app-icon name="check" /></div><div><span>Disponibilité aujourd'hui</span><strong>{{ coverageRate() }}%</strong><small>{{ absentToday() }} absent{{ absentToday() > 1 ? 's' : '' }} aujourd'hui</small></div><em>{{ activeEmployees() - absentToday() }}/{{ activeEmployees() }}</em></article>
+      <article class="kpi-card kpi-approval"><div class="kpi-icon"><app-icon name="chart" /></div><div><span>Taux d'approbation</span><strong>{{ approvalRate() }}%</strong><small>{{ approved() + rejected() }} décisions rendues</small></div><em>{{ approved() }} validées</em></article>
+      <article class="kpi-card kpi-time"><div class="kpi-icon"><app-icon name="history" /></div><div><span>Délai moyen de décision</span><strong>{{ averageDecisionHours() }} h</strong><small>entre soumission et décision</small></div><em>Objectif 48 h</em></article>
+    </section>
+
+    <div class="dashboard-main-grid">
+      <section class="dashboard-panel trend-panel">
+        <header><div><span class="panel-kicker">ÉVOLUTION</span><h2>Activité des six derniers mois</h2><p>Demandes déposées et congés approuvés par mois.</p></div><div class="legend"><span class="submitted"></span>Déposées <span class="approved"></span>Approuvées</div></header>
+        <div class="monthly-chart" role="img" aria-label="Activité mensuelle des demandes">
+          @for (month of monthlyActivity(); track month.label) {
+            <div class="month-column">
+              <div class="bars"><div class="bar submitted-bar" [style.height.%]="barHeight(month.submitted)"><span>{{ month.submitted }}</span></div><div class="bar approved-bar" [style.height.%]="barHeight(month.approved)"><span>{{ month.approved }}</span></div></div>
+              <strong>{{ month.label }}</strong>
+            </div>
+          }
+        </div>
+      </section>
+
+      <section class="dashboard-panel status-panel">
+        <header><div><span class="panel-kicker">FLUX DES DEMANDES</span><h2>Répartition par statut</h2></div><strong class="panel-total">{{ requestList().length }}</strong></header>
+        <div class="status-stack" aria-hidden="true">@for (item of statusBreakdown(); track item.label) { <span [class]="item.tone" [style.width.%]="item.percent"></span> }</div>
+        <div class="metric-list">@for (item of statusBreakdown(); track item.label) { <div><i [class]="item.tone"></i><span>{{ item.label }}</span><strong>{{ item.value }}</strong><small>{{ item.percent }}%</small></div> }</div>
+      </section>
+    </div>
+
+    <div class="dashboard-secondary-grid">
+      <section class="dashboard-panel workforce-panel">
+        <header><div><span class="panel-kicker">EFFECTIFS</span><h2>Structure par rôle</h2><p>Répartition des responsabilités dans l'application.</p></div></header>
+        <div class="horizontal-chart">@for (item of roleBreakdown(); track item.label) { <div class="horizontal-row"><div><span>{{ item.label }}</span><strong>{{ item.value }}</strong></div><div class="track"><span [style.width.%]="item.percent"></span></div><small>{{ item.percent }}%</small></div> }</div>
+      </section>
+
+      <section class="dashboard-panel reasons-panel">
+        <header><div><span class="panel-kicker">ANALYSE DES ABSENCES</span><h2>Principaux motifs de congé</h2><p>Motifs les plus fréquemment déclarés.</p></div></header>
+        @if (leaveTypeBreakdown().length) {
+          <div class="rank-list">@for (item of leaveTypeBreakdown(); track item.label; let index = $index) { <div><b>{{ index + 1 }}</b><span>{{ item.label }}</span><div class="mini-track"><i [style.width.%]="item.percent"></i></div><strong>{{ item.value }}</strong></div> }</div>
+        } @else { <p class="empty-state">Aucun congé enregistré pour le moment.</p> }
+      </section>
+
+      <section class="dashboard-panel forecast-panel">
+        <header><div><span class="panel-kicker">CAPACITÉ À VENIR</span><h2>Prévision à 30 jours</h2></div></header>
+        <div class="forecast-number"><strong>{{ upcomingApproved() }}</strong><span>absences approuvées à venir</span></div>
+        <dl><div><dt>Jours approuvés cette année</dt><dd>{{ daysApprovedThisYear() }}</dd></div><div><dt>Autorisations d'absence</dt><dd>{{ authorizationCount() }}</dd></div><div><dt>Présents aujourd'hui</dt><dd>{{ activeEmployees() - absentToday() }}</dd></div></dl>
+        <a [routerLink]="isManager() ? '/team-calendar' : '/calendar'" class="panel-link">Consulter le calendrier <span>→</span></a>
+      </section>
+    </div>
+
+    <section class="dashboard-panel recent-panel">
+      <header><div><span class="panel-kicker">ACTIVITÉ RÉCENTE</span><h2>Dernières demandes déposées</h2><p>Suivez les mouvements récents et ouvrez la gestion complète si nécessaire.</p></div><a [routerLink]="isManager() ? '/team-requests' : '/leave-requests'" class="panel-link">Voir toutes les demandes <span>→</span></a></header>
+      <app-recent-leave-table [requests]="recent()" />
+    </section>
+
+    <section class="quick-actions">
+      <header><span class="panel-kicker">ACCÈS RAPIDES</span><h2>Administrer l'application</h2></header>
+      @if (isManager()) {
+        <div><a routerLink="/team-requests"><b><app-icon name="check" /></b><span><strong>Demandes de l'équipe</strong><small>Traiter les demandes en attente</small></span></a><a routerLink="/team-members"><b><app-icon name="team" /></b><span><strong>Membres de l'équipe</strong><small>Consulter et gérer les collaborateurs</small></span></a><a routerLink="/team-availability"><b><app-icon name="availability" /></b><span><strong>Disponibilité</strong><small>Organiser la charge de travail</small></span></a><a routerLink="/team-calendar"><b><app-icon name="calendar" /></b><span><strong>Calendrier de l'équipe</strong><small>Visualiser les absences planifiées</small></span></a></div>
+      } @else {
+        <div><a routerLink="/users"><b><app-icon name="plus" /></b><span><strong>Nouvel utilisateur</strong><small>Créer et affecter un employé</small></span></a><a routerLink="/jours-feries"><b><app-icon name="holiday" /></b><span><strong>Jours fériés</strong><small>Planifier les jours non ouvrés</small></span></a><a routerLink="/reports"><b><app-icon name="reports" /></b><span><strong>Rapports</strong><small>Analyser et exporter les données</small></span></a><a routerLink="/contract-types"><b><app-icon name="contract" /></b><span><strong>Types de contrat</strong><small>Configurer les contrats disponibles</small></span></a></div>
+      }
+    </section>
   }
 </section>

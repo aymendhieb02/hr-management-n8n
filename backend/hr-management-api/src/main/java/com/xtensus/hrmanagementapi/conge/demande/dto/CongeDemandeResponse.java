@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.List;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -18,6 +19,8 @@ public class CongeDemandeResponse {
     private TypeCongeResume congeType;
     private StatutResume statut;
     private String raison;
+    private Long raisonId;
+    private Boolean certificatMedicalRequis;
     private String nature;
     private LocalDate dateDebut;
     private LocalTime heureDebut;
@@ -25,9 +28,29 @@ public class CongeDemandeResponse {
     private LocalTime heureFin;
     private LocalDateTime dateSoumission;
     private BigDecimal nombreJours;
+    private Boolean samediCompte;
+    private BigDecimal nombreJoursConsomme;
+    private LocalDate dateFinReelle;
+    private LocalDateTime dateRegularisation;
+    private EmployeResume regularisePar;
+    private String commentaireRegularisation;
     private String commentaireEmploye;
     private String commentaireDecision;
     private LocalDateTime dateDecision;
+    private WorkflowResume workflow;
+
+    @Getter @Setter @NoArgsConstructor
+    public static class WorkflowResume {
+        private String statut;
+        private Integer etapeCourante;
+        private List<EtapeWorkflowResume> etapes;
+    }
+
+    @Getter @Setter @NoArgsConstructor
+    public static class EtapeWorkflowResume {
+        private Long id; private Integer priorite; private String statut; private EmployeResume decideur;
+        private String commentaire; private LocalDateTime dateAction;
+    }
 
     @Getter @Setter @NoArgsConstructor
     public static class EmployeResume {
@@ -35,6 +58,7 @@ public class CongeDemandeResponse {
         private String nom;
         private String prenom;
         private String email;
+        private String photoUrl;
     }
 
     @Getter @Setter @NoArgsConstructor

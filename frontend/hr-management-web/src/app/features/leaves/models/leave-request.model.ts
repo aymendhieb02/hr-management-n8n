@@ -1,4 +1,4 @@
-export type LeaveRequestStatus = 'PENDING' | 'APPROVED' | 'REJECTED' | 'CANCELLED';
+export type LeaveRequestStatus = 'DRAFT' | 'PENDING' | 'APPROVED' | 'REJECTED' | 'CANCELLED';
 export type LeaveRequestNature = 'CONGE' | 'AUTORISATION_ABSENCE';
 
 export interface PersonSummary {
@@ -6,6 +6,7 @@ export interface PersonSummary {
   firstName: string;
   lastName: string;
   email: string;
+  photoUrl?: string | null;
 }
 
 export interface LeaveTypeSummary {
@@ -25,6 +26,7 @@ export interface LeaveRequestCreateRequest {
   endTime: string | null;
   numberOfDays: number;
   reason: string | null;
+  medicalCertificateRequired?: boolean;
 }
 
 export interface LeaveRequestUpdateRequest {
@@ -43,6 +45,7 @@ export interface LeaveRequestUpdateRequest {
 export interface LeaveDecisionRequest {
   approverId: number;
   comment: string | null;
+  saturdayCounts?: boolean;
 }
 
 export interface LeaveRequestResponse {
@@ -57,8 +60,17 @@ export interface LeaveRequestResponse {
   endTime: string | null;
   requestedDays: number;
   reason: string | null;
+  reasonId?: number|null;
+  medicalCertificateRequired?: boolean;
   status: LeaveRequestStatus;
   submittedAt: string;
   decisionAt: string | null;
   decisionComment: string | null;
+  saturdayCounts?: boolean;
+  consumedDays?: number | null;
+  actualEndDate?: string | null;
+  regularizedAt?: string | null;
+  regularizedBy?: PersonSummary | null;
+  regularizationComment?: string | null;
+  workflow?: { status:string; currentStep:number|null; steps:{id:number;priority:number;status:string;approver:PersonSummary;comment:string|null;actedAt:string|null}[] } | null;
 }

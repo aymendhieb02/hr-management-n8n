@@ -21,5 +21,5 @@ import { PaginatedTableDirective } from '../../../shared/paginated-table.directi
 })
 export class RecentLeaveTableComponent {
   readonly requests = input.required<LeaveRequestResponse[]>();
-  protected statusLabel(status:LeaveRequestResponse['status']):string{return{PENDING:'En attente',APPROVED:'Approuvée',REJECTED:'Refusée',CANCELLED:'Annulée'}[status];}
+  protected statusLabel(status:LeaveRequestResponse['status']):string{return{DRAFT:'Brouillon',PENDING:'En attente',APPROVED:'Approuvée',REJECTED:'Refusée',CANCELLED:'Annulée'}[status];}
 }

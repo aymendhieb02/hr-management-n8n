@@ -15,6 +15,8 @@ public class NotificationFrancaiseMapper {
         response.setDateCreation(notification.getDateCreation());
         response.setDateLecture(notification.getDateLecture());
         response.setPriorite(notification.getPriorite());
+        response.setCongeDemandeId(notification.getCongeDemandeId());
+        response.setWorkflowEtapeId(notification.getWorkflowEtapeId());
         if (notification.getEmploye() != null) {
             response.setEmployeId(notification.getEmploye().getId());
             response.setEmployeNom(notification.getEmploye().getPrenom() + " " + notification.getEmploye().getNom());

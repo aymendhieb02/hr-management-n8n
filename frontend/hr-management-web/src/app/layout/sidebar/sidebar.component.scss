@@ -30,9 +30,26 @@ a {
   min-height: 40px;
   display: flex;
   align-items: center;
-  padding: 10px 14px;
+  gap: 11px;
+  padding: 10px 12px;
   text-decoration: none;
 }
+
+.nav-icon {
+  display: grid;
+  width: 31px;
+  height: 31px;
+  flex: 0 0 31px;
+  place-items: center;
+  border-radius: 9px;
+  background: rgba(218, 128, 49, .09);
+  color: #b66017;
+  transition: background .16s ease, color .16s ease, transform .16s ease;
+}
+
+.nav-icon app-icon { width: 17px; height: 17px; }
+a:hover .nav-icon { background: rgba(218, 128, 49, .16); transform: translateX(1px); }
+a.active .nav-icon { background: #f28a2b; color: #fff; box-shadow: 0 4px 10px rgba(221, 113, 22, .22); }
 
 a:hover,
 a:focus-visible {
@@ -47,7 +64,7 @@ a.active {
   box-shadow: inset 3px 0 0 #ed8a2b, 0 6px 16px rgba(55, 58, 62, .1);
 }
 
-.nav-label { min-width: 0; }
+.nav-label { min-width: 0; line-height: 1.25; }
 .notification-count {
   display: grid;
   place-items: center;

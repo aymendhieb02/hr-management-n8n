@@ -1,40 +1,69 @@
-# XTENSUS HR Management API
+# HR Management API
 
-API Spring Boot 4 / Java 17 connectée à MySQL pour l'application XTENSUS HR Management.
+Spring Boot backend for the HR Management System.
 
-## Configuration locale
+## PostgreSQL
+
+The application expects a local PostgreSQL database named `RH_XTENSUS`.
+
+Local defaults are configured in `application.yml`, so the application can start locally without manually setting `DB_PASSWORD` when PostgreSQL uses the default password `admin`.
+
+Spring Boot does not automatically load `.env.example`. That file is documentation only; copy values from it into your shell, IDE run configuration, or deployment environment when needed.
+
+PowerShell example:
 
 ```powershell
-$env:DB_URL="jdbc:mysql://127.0.0.1:3306/rh_xtensus?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Africa/Tunis&zeroDateTimeBehavior=CONVERT_TO_NULL"
-$env:DB_USERNAME="root"
-$env:DB_PASSWORD="votre_mot_de_passe"
-$env:JWT_SECRET="une_cle_secrete_robuste_de_32_caracteres_minimum"
+$env:DB_PASSWORD="admin"
 ```
 
-Le fichier `.env.example` sert de documentation. Spring Boot ne le charge pas automatiquement.
+Optional PowerShell examples:
 
-## Démarrage
+```powershell
+$env:DB_URL="jdbc:postgresql://localhost:5432/RH_XTENSUS"
+$env:DB_USERNAME="postgres"
+$env:MEDICAL_CERTIFICATES_PATH="./storage/medical-certificates"
+$env:JWT_SECRET="replace_with_a_secure_secret_of_at_least_32_characters"
+$env:JWT_EXPIRATION_MS="3600000"
+```
+
+In IntelliJ IDEA, open the Spring Boot run configuration and add environment variables in the `Environment variables` field, for example:
+
+```text
+DB_URL=jdbc:postgresql://localhost:5432/RH_XTENSUS;DB_USERNAME=postgres;DB_PASSWORD=admin
+```
+
+For JWT authentication, add the JWT variables to the same IntelliJ `Environment variables` field:
+
+```text
+JWT_SECRET=replace_with_a_secure_secret_of_at_least_32_characters;JWT_EXPIRATION_MS=3600000
+```
+
+`JWT_EXPIRATION_MS` controls access-token lifetime in milliseconds. The default local value is `3600000` (one hour). Do not commit or reuse a production JWT secret; production must provide a secure secret through environment variables or a secrets manager.
+
+Production must provide real environment variables for database URL, username, and password. Do not rely on local development defaults in production.
+
+## Start The Application
+
+From this directory:
 
 ```powershell
 .\mvnw.cmd spring-boot:run
 ```
 
-L'API écoute par défaut sur `http://localhost:8081`.
+## Database Migrations
 
-## Tests
+Flyway is enabled and runs migrations from:
 
-```powershell
-.\mvnw.cmd test
+```text
+src/main/resources/db/migration
 ```
 
-## Migrations
+The initial schema is created by:
 
-Les migrations se trouvent dans `src/main/resources/db/migration`. Hibernate utilise `ddl-auto=validate` et ne modifie pas automatiquement la structure de la base.
-
-Flyway est désactivé par défaut pour permettre l'utilisation d'un schéma MySQL déjà importé. Pour l'activer :
-
-```powershell
-$env:FLYWAY_ENABLED="true"
+```text
+src/main/resources/db/migration/V1__create_initial_schema.sql
 ```
 
-En production, fournissez les identifiants MySQL et le secret JWT via un gestionnaire de secrets et activez les cookies sécurisés avec `AUTH_COOKIE_SECURE=true` derrière HTTPS.
+Hibernate is configured with `spring.jpa.hibernate.ddl-auto=validate`, so it validates the schema after Flyway creates it.
+
+Do not use `ddl-auto=create` or `ddl-auto=update` for this project. Schema changes should be made through Flyway migrations.

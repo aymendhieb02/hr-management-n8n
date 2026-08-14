@@ -50,22 +50,24 @@
               <td>{{ request.leaveType.name }}</td>
               <td>{{ request.startDate }} au {{ request.endDate }}</td>
               <td>{{ request.requestedDays }}</td>
-              <td><span class="badge" [class.success]="request.status === 'APPROVED'" [class.warning]="request.status === 'PENDING'" [class.muted]="request.status !== 'APPROVED' && request.status !== 'PENDING'">{{ statusLabel(request.status) }}</span></td>
+              <td><span class="badge" [class.success]="request.status === 'APPROVED'" [class.warning]="request.status === 'PENDING'" [class.draft]="request.status === 'DRAFT'" [class.muted]="request.status !== 'APPROVED' && request.status !== 'PENDING' && request.status !== 'DRAFT'">{{ statusLabel(request.status) }}</span></td>
               <td>{{ request.approver ? request.approver.firstName + ' ' + request.approver.lastName : 'Non assigne' }}</td>
               <td>
                 <div class="actions">
-                  <button class="secondary-button" type="button" (click)="detailRequest.set(request)">Voir les details</button>
-                  @if (!isManagerMode() && isSickLeave(request) && request.status !== 'CANCELLED' && (hasCertificate(request.id) || request.status !== 'REJECTED')) {
+                  <button class="table-action view-action" type="button" (click)="detailRequest.set(request)" title="Voir les détails" aria-label="Voir les détails"><app-icon name="info" /></button>
+                  @if (!isManagerMode() && isSickLeave(request) && (request.status === 'PENDING' || request.status === 'APPROVED')) {
                     <button class="certificate-button" type="button" (click)="detailRequest.set(request)" title="Gérer le certificat médical" aria-label="Gérer le certificat médical">{{ hasCertificate(request.id) ? 'Voir le certificat' : '✚ Ajouter un certificat' }}</button>
                   }
-                  @if (!isManagerMode() && request.status === 'PENDING') {
-                    <button class="secondary-button" type="button" (click)="openEdit(request)">Modifier</button>
-                    <button class="danger-button" type="button" (click)="deleteRequest(request)" [disabled]="isSaving()">Supprimer</button>
+                  @if (!isManagerMode() && request.status === 'DRAFT') {
+                    <button class="table-action edit-action" type="button" (click)="openEdit(request)" title="Modifier" aria-label="Modifier"><app-icon name="edit" /></button>
+                    <button class="table-action delete-action" type="button" (click)="deleteRequest(request)" [disabled]="isSaving()" title="Supprimer" aria-label="Supprimer"><app-icon name="delete" /></button>
+                    <button class="table-action send-action" type="button" (click)="askSubmit(request)" title="Confirmer et envoyer" aria-label="Confirmer et envoyer"><app-icon name="send" /></button>
                   }
                   @if (isManagerMode() && request.status === 'PENDING') {
-                    <button class="primary-button" type="button" (click)="openDecision(request, 'approve')">Approuver</button>
-                    <button class="danger-button" type="button" (click)="openDecision(request, 'reject')">Refuser</button>
+                    <button class="table-action approve-action" type="button" (click)="openDecision(request, 'approve')" title="Approuver" aria-label="Approuver"><app-icon name="check" /></button>
+                    <button class="table-action reject-action" type="button" (click)="openDecision(request, 'reject')" title="Refuser" aria-label="Refuser"><app-icon name="ban" /></button>
                   }
+                  @if(canRegularize(request)){<button class="table-action regularize-action" type="button" (click)="openRegularization(request)" title="Régulariser la consommation" aria-label="Régulariser la consommation"><app-icon name="transactions" /></button>}
                 </div>
               </td>
             </tr>
@@ -78,9 +80,34 @@
 @if (formOpen()) {
   <app-leave-request-form [request]="editingRequest()" [leaveTypes]="leaveTypes()" [reasons]="reasons()" [holidays]="holidays()" [maximumLeaveDays]="maximumLeaveDays()" [loading]="isSaving()" [validationErrors]="formErrors()" [submissionError]="formSubmissionError()" (save)="saveRequest($event)" (cancel)="closeForm()" />
 }
+@if (submitRequest()) {
+  <div class="dialog-backdrop" (click)="submitRequest.set(null)">
+    <section class="dialog submit-dialog" role="alertdialog" aria-modal="true" (click)="$event.stopPropagation()">
+      <span class="eyebrow">ENVOI DE LA DEMANDE</span>
+      <h2>Confirmer et envoyer ?</h2>
+      <p>Les dates, le solde et le circuit de validation seront contrôlés avant l’envoi au premier décideur.</p>
+      @if (submitError()) { <p class="dialog-error" role="alert">{{ submitError() }}</p> }
+      <div class="dialog-actions">
+        <button class="secondary-button" type="button" (click)="submitRequest.set(null)" [disabled]="isSaving()">Annuler</button>
+        <button class="primary-button" type="button" (click)="confirmSubmit()" [disabled]="isSaving()">{{ isSaving() ? 'Envoi...' : 'Confirmer et envoyer' }}</button>
+      </div>
+    </section>
+  </div>
+}
 @if (detailRequest()) {
   <app-leave-details [request]="detailRequest()!" (certificateAdded)="markCertificateAdded($event)" (close)="detailRequest.set(null)" />
 }
 @if (decisionRequest()) {
-  <app-leave-decision-dialog [mode]="decisionMode()" [loading]="isSaving()" [error]="null" (save)="saveDecision($event)" (cancel)="decisionRequest.set(null)" />
+  <app-leave-decision-dialog [mode]="decisionMode()" [loading]="isSaving()" [error]="null" (decision)="saveDecision($event)" (cancel)="decisionRequest.set(null)" />
+}
+@if(regularizationRequest();as request){
+  <div class="dialog-backdrop" (click)="regularizationRequest.set(null)"><section class="dialog regularization-dialog" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
+    <header><span class="dialog-symbol"><app-icon name="transactions" /></span><div><span class="eyebrow">RÉGULARISATION DU CONGÉ</span><h2>Consommation réelle</h2><p>{{request.requester.firstName}} {{request.requester.lastName}}</p></div><button class="table-action" type="button" (click)="regularizationRequest.set(null)" aria-label="Fermer"><app-icon name="close" /></button></header>
+    <div class="regularization-summary"><article><span>Période approuvée</span><strong>{{request.startDate}} au {{request.endDate}}</strong></article><article><span>Jours initialement débités</span><strong>{{request.requestedDays}}</strong></article><article><span>Consommation enregistrée</span><strong>{{request.consumedDays??request.requestedDays}}</strong></article></div>
+    <label class="form-field"><span>Nombre de jours réellement consommés</span><input type="number" min="0" step="1" [max]="request.requestedDays" [ngModel]="regularizationDays()" (ngModelChange)="regularizationDays.set(+$event)"></label>
+    <div class="impact-card" [class.debit]="regularizationDelta()<0"><app-icon name="balance" /><div><strong>{{regularizationDelta()>=0?regularizationDelta()+' jour(s) restitué(s)':(-regularizationDelta())+' jour(s) supplémentaire(s) débité(s)'}}</strong><span>{{regularizationEndDate()?'Fin réelle calculée : '+regularizationEndDate():'Aucun jour consommé'}}</span></div></div>
+    <label class="form-field"><span>Commentaire de régularisation</span><textarea maxlength="1000" rows="4" placeholder="Expliquez la reprise anticipée…" [ngModel]="regularizationComment()" (ngModelChange)="regularizationComment.set($event)"></textarea></label>
+    @if(regularizationError()){<p class="dialog-error" role="alert">{{regularizationError()}}</p>}
+    <footer class="dialog-actions"><button class="secondary-button" type="button" (click)="regularizationRequest.set(null)"><app-icon name="close" />Annuler</button><button class="primary-button" type="button" (click)="saveRegularization()" [disabled]="isSaving()"><app-icon name="check" />{{isSaving()?'Régularisation…':'Confirmer la régularisation'}}</button></footer>
+  </section></div>
 }

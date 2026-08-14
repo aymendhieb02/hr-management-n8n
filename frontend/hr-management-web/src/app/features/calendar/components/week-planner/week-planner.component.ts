@@ -1,12 +1,13 @@
 import { Component, computed, input, output, signal } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { CalendarEvent } from '../../models/calendar-event.model';
+import { AppIconComponent } from '../../../../shared/components/app-icon/app-icon.component';
 
 interface WeekEventSegment { event: CalendarEvent; startColumn: number; span: number; lane: number; clippedStart: boolean; clippedEnd: boolean; }
 
 @Component({
   selector: 'app-week-planner',
-  imports: [DatePipe],
+  imports: [AppIconComponent, DatePipe],
   templateUrl: './week-planner.component.html',
   styleUrl: './week-planner.component.scss'
 })
@@ -74,6 +75,7 @@ export class WeekPlannerComponent {
 
   protected eventColor(event: CalendarEvent): string {
     if (event.kind === 'HOLIDAY') return 'green';
+    if (event.kind === 'RESTORED') return 'restored';
     return event.nature === 'AUTORISATION_ABSENCE' ? 'orange' : 'blue';
   }
 

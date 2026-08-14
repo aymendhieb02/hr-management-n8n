@@ -12,6 +12,7 @@
       <div class="legend-item"><i class="blue"></i><span>Congé</span></div>
       <div class="legend-item"><i class="orange"></i><span>Autorisation d'absence</span></div>
       <div class="legend-item"><i class="green"></i><span>Jour férié</span></div>
+      <div class="legend-item"><i class="restored"></i><span>Jours restitués</span></div>
     </div>
   </aside>
 
@@ -30,13 +31,19 @@
         <div class="day-column" [class.weekend]="date.getDay() === 0 || date.getDay() === 6"></div>
       }
       <div class="event-layer">
-      @for (segment of weekEventSegments(); track segment.event.leaveRequestId) {
-        <button type="button" [class]="'leave-event connected-event ' + eventColor(segment.event)" [class.clipped-start]="segment.clippedStart" [class.clipped-end]="segment.clippedEnd" [style.grid-column]="segment.startColumn + ' / span ' + segment.span" [style.grid-row]="segment.lane" (click)="selectedEvent.set(segment.event)">
-          <div class="event-main"><strong>{{ segment.event.employeeName }}</strong><span>{{ segment.event.kind === 'HOLIDAY' ? 'Jour férié' : natureLabel(segment.event.nature) }}</span></div>
+      @for (segment of weekEventSegments(); track segment.event.eventId || segment.event.leaveRequestId) {
+        <button type="button" [class]="'leave-event connected-event ' + eventColor(segment.event)" [class.single-day]="segment.span===1" [class.clipped-start]="segment.clippedStart" [class.clipped-end]="segment.clippedEnd" [style.grid-column]="segment.startColumn + ' / span ' + segment.span" [style.grid-row]="segment.lane" (click)="selectedEvent.set(segment.event)">
+          <div class="event-main">
+            @if(segment.event.kind !== 'HOLIDAY'){
+              @if(segment.event.employeePhotoUrl){<img class="event-avatar" [src]="segment.event.employeePhotoUrl" [alt]="segment.event.employeeName" [title]="segment.event.employeeName"/>}
+              @else{<span class="event-avatar fallback" [title]="segment.event.employeeName">{{segment.event.employeeName.charAt(0)}}</span>}
+            }@else{<strong>{{segment.event.employeeName}}</strong>}
+            <span>{{ segment.event.kind === 'HOLIDAY' ? 'Jour férié' : segment.event.kind === 'RESTORED' ? 'Restitué' : natureLabel(segment.event.nature) }}</span>
+          </div>
           @if (segment.event.kind !== 'HOLIDAY') {
             @if (segment.event.nature === 'AUTORISATION_ABSENCE') { <small>{{ segment.event.startTime?.slice(0, 5) }} – {{ segment.event.endTime?.slice(0, 5) }}</small> }
             @else { <small>{{ segment.event.startDate | date:'dd/MM' }} – {{ segment.event.endDate | date:'dd/MM' }}</small> }
-            <em [class]="'status ' + segment.event.status.toLowerCase()">{{ statusLabel(segment.event.status) }}</em>
+            <em [class]="'status ' + segment.event.status.toLowerCase()">{{ segment.event.kind==='RESTORED'?'Restitué':statusLabel(segment.event.status) }}</em>
           }
         </button>
       }
@@ -48,9 +55,10 @@
 @if (selectedEvent(); as event) {
   <div class="event-backdrop" (click)="selectedEvent.set(null)">
     <section class="event-dialog" (click)="$event.stopPropagation()" aria-modal="true" role="dialog">
-      <button class="close" type="button" (click)="selectedEvent.set(null)">×</button>
-      <span class="dialog-kicker">{{ event.kind === 'HOLIDAY' ? 'Jour férié' : natureLabel(event.nature) }}</span>
+      <button class="close" type="button" aria-label="Fermer" title="Fermer" (click)="selectedEvent.set(null)"><app-icon name="close" /></button>
+      <span class="dialog-kicker">{{ event.kind === 'HOLIDAY' ? 'Jour férié' : event.kind === 'RESTORED' ? 'Période restituée' : natureLabel(event.nature) }}</span>
       <h2>{{ event.employeeName }}</h2>
+      @if(event.employeePhotoUrl){<img class="dialog-avatar" [src]="event.employeePhotoUrl" [alt]="event.employeeName"/>}
       <dl>
         @if (event.kind !== 'HOLIDAY') { <div><dt>Statut</dt><dd>{{ statusLabel(event.status) }}</dd></div> }
         <div><dt>Type</dt><dd>{{ event.leaveTypeName }}</dd></div>
@@ -58,6 +66,7 @@
         @if (event.nature === 'AUTORISATION_ABSENCE') { <div><dt>Horaire</dt><dd>{{ event.startTime?.slice(0, 5) }} – {{ event.endTime?.slice(0, 5) }}</dd></div> }
         <div><dt>Motif</dt><dd>{{ event.reason || 'Non précisé' }}</dd></div>
         @if (event.kind === 'HOLIDAY') { <div><dt>Description</dt><dd>{{ event.description || 'Aucune description' }}</dd></div> }
+        @if(event.kind==='RESTORED'){<div><dt>Consommation réelle</dt><dd>{{event.consumedDays}} jour(s)</dd></div><div><dt>Régularisé par</dt><dd>{{event.regularizedBy}}</dd></div><div><dt>Commentaire</dt><dd>{{event.regularizationComment}}</dd></div>}
       </dl>
     </section>
   </div>

@@ -1,6 +1,7 @@
 <div class="dialog-backdrop">
   <section class="dialog" aria-labelledby="user-form-title">
     <h2 id="user-form-title">{{ title() }}</h2>
+    @if(generalError()){<p class="dialog-error" role="alert">{{generalError()}}</p>}
     <form class="form" [formGroup]="form" (ngSubmit)="submit()" novalidate>
       <div class="form-grid">
         <label class="form-field">
@@ -29,7 +30,7 @@
 
         <label class="form-field">
           <span>Téléphone</span>
-          <input formControlName="phone" maxlength="30" />
+          <input formControlName="phone" maxlength="8" inputmode="numeric" pattern="[0-9]*" />
           @if (fieldError('phone')) { <p class="field-error">{{ fieldError('phone') }}</p> }
         </label>
 
@@ -40,7 +41,8 @@
 
         <label class="form-field">
           <span>Date de naissance</span>
-          <input formControlName="birthDate" type="date" />
+          <input formControlName="birthDate" type="date" [max]="maxBirthDate()" />
+          @if (fieldError('birthDate')) { <p class="field-error">{{ fieldError('birthDate') }}</p> }
         </label>
 
         <label class="form-field">
@@ -56,13 +58,14 @@
           <input formControlName="hireDate" type="date" />
         </label>
 
-        @if (!managerMode()) { <label class="form-field">
+        @if (roleEditable()) { <label class="form-field">
           <span>Rôle</span>
           <select formControlName="role">
             @for (role of roles; track role) { <option [value]="role">{{ roleLabels[role] }}</option> }
           </select>
           @if (fieldError('role')) { <p class="field-error">{{ fieldError('role') }}</p> }
         </label> }
+        @if (!user()) { <label class="form-field photo-field"><span>Photo de profil <small>(facultatif)</small></span><span class="file-picker"><span class="file-icon">📷</span><span class="file-copy"><strong>{{photoName||'Choisir une photo'}}</strong><small>{{photoName?'Cliquez pour remplacer le fichier':'JPG, PNG ou WebP · 10 Mo maximum'}}</small></span><span class="file-action">Parcourir</span><input type="file" accept="image/jpeg,image/png,image/webp" (change)="selectPhoto($event)" /></span>@if(photoError){<p class="field-error">{{photoError}}</p>}</label> }
 
         <label class="form-field">
           <span>Poste</span>
@@ -72,6 +75,7 @@
               <option [ngValue]="position.id">{{ position.title }}</option>
             }
           </select>
+          @if (fieldError('positionId')) { <p class="field-error">{{ fieldError('positionId') }}</p> }
         </label>
 
         <label class="form-field">
@@ -82,6 +86,7 @@
               <option [ngValue]="contract.id">{{ contract.name }}</option>
             }
           </select>
+          @if (fieldError('typeContractId')) { <p class="field-error">{{ fieldError('typeContractId') }}</p> }
         </label>
 
         @if (!managerMode()) { <label class="form-field">

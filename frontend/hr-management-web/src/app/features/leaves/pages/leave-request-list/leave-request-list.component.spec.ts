@@ -12,17 +12,18 @@ import { LeaveRequestListComponent } from './leave-request-list.component';
 describe('LeaveRequestListComponent', () => {
   let fixture: ComponentFixture<LeaveRequestListComponent>;
   let service: any;
-  const request = leaveRequest('PENDING');
+  const request = leaveRequest('DRAFT');
 
   function setup(path = 'my-leave-requests'): void {
     service = {
       findByRequester: vi.fn(() => of([request])),
-      findByApprover: vi.fn(() => of([request])),
+      findByApprover: vi.fn(() => of([{ ...request, status: 'PENDING' }])),
       create: vi.fn(() => of(request)),
       update: vi.fn(() => of(request)),
       delete: vi.fn(() => of(void 0)),
       approve: vi.fn(() => of({ ...request, status: 'APPROVED' })),
       reject: vi.fn(() => of({ ...request, status: 'REJECTED' }))
+      ,submit: vi.fn(() => of({ ...request, status: 'PENDING' }))
     };
     TestBed.configureTestingModule({
       imports: [LeaveRequestListComponent],
@@ -48,11 +49,11 @@ describe('LeaveRequestListComponent', () => {
     fixture.detectChanges();
     (fixture.componentInstance as any).saveRequest({ nature: 'CONGE', leaveTypeId: 1, reasonId: 1, otherReason: null, startDate: '2026-08-01', endDate: '2026-08-02', startTime: null, endTime: null, reason: null });
     expect(service.create).toHaveBeenCalledWith(expect.objectContaining({ requesterId: 7 }));
-    button('Modifier').click();
+    action('Modifier').click();
     fixture.detectChanges();
     (fixture.componentInstance as any).saveRequest({ nature: 'CONGE', leaveTypeId: 1, reasonId: 1, otherReason: null, startDate: '2026-08-01', endDate: '2026-08-02', startTime: null, endTime: null, reason: null });
     expect(service.update).toHaveBeenCalled();
-    button('Supprimer').click();
+    action('Supprimer').click();
     expect(service.delete).toHaveBeenCalledWith(1);
   });
 
@@ -60,12 +61,12 @@ describe('LeaveRequestListComponent', () => {
     setup('team-requests');
     expect(service.findByApprover).toHaveBeenCalledWith(7);
     expect(text()).toContain("Demandes de l'equipe");
-    expect(text()).toContain('Approuver');
-    button('Approuver').click();
+    expect(action('Approuver')).toBeTruthy();
+    action('Approuver').click();
     fixture.detectChanges();
     (fixture.componentInstance as any).saveDecision(null);
     expect(service.approve).toHaveBeenCalledWith(1, { approverId: 7, comment: null });
-    button('Refuser').click();
+    action('Refuser').click();
     fixture.detectChanges();
     (fixture.componentInstance as any).saveDecision('No coverage');
     expect(service.reject).toHaveBeenCalledWith(1, { approverId: 7, comment: 'No coverage' });
@@ -82,6 +83,7 @@ describe('LeaveRequestListComponent', () => {
   function button(label: string): HTMLButtonElement {
     return Array.from(fixture.nativeElement.querySelectorAll('button')).find((el: any) => el.textContent.trim() === label) as HTMLButtonElement;
   }
+  function action(label:string):HTMLButtonElement{return fixture.nativeElement.querySelector(`button[aria-label="${label}"]`) as HTMLButtonElement;}
 
   function leaveRequest(status: LeaveRequestResponse['status']): LeaveRequestResponse {
     return {

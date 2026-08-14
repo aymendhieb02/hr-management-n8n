@@ -64,6 +64,6 @@ export class ReportsComponent implements OnInit {
     return [...rows.entries()].map(([Department, Requests]) => ({ Department, Requests }));
   }
 
-  private statusLabel(status: LeaveRequestResponse['status']): string { return { PENDING:'En attente', APPROVED:'Approuvée', REJECTED:'Refusée', CANCELLED:'Annulée' }[status]; }
-  private roleLabel(role: UserResponse['role']): string { return { EMPLOYEE:'Employé', MANAGER:'Manager', HR:'Ressources humaines', ADMIN:'Administrateur' }[role]; }
+  private statusLabel(status: LeaveRequestResponse['status']): string { return { DRAFT:'Brouillon', PENDING:'En attente', APPROVED:'Approuvée', REJECTED:'Refusée', CANCELLED:'Annulée' }[status]; }
+  private roleLabel(role: UserResponse['role']): string { return { EMPLOYEE:'Employé', MANAGER:'Directeur général', DG:'Directeur général', DT:'Directeur technique', HR:'Ressources humaines', ADMIN:'Administrateur' }[role]; }
 }

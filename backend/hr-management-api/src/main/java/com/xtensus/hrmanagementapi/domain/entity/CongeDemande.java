@@ -64,11 +64,30 @@ public class CongeDemande {
     @Column(name = "conge_demande_heure_fin")
     private LocalTime heureFin;
 
-    @Column(name = "conge_demande_date_soumission", nullable = false)
+    @Column(name = "conge_demande_date_soumission")
     private LocalDateTime dateSoumission;
 
     @Column(name = "conge_demande_nombre_jours", nullable = false, precision = 5, scale = 2)
     private BigDecimal nombreJours;
+
+    @Column(name = "samedi_compte", nullable = false)
+    private Boolean samediCompte;
+
+    @Column(name = "nombre_jours_consomme", precision = 5, scale = 2)
+    private BigDecimal nombreJoursConsomme;
+
+    @Column(name = "date_fin_reelle")
+    private LocalDate dateFinReelle;
+
+    @Column(name = "date_regularisation")
+    private LocalDateTime dateRegularisation;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "regularise_par_id")
+    private Employe regularisePar;
+
+    @Column(name = "commentaire_regularisation", length = 1000)
+    private String commentaireRegularisation;
 
     @Column(name = "conge_demande_commentaire_employe", length = 1000)
     private String commentaireEmploye;

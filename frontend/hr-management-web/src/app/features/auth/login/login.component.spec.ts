@@ -23,7 +23,10 @@ describe('LoginComponent', () => {
   const authService = {
     isAuthenticated: vi.fn(),
     getCurrentUser: vi.fn(),
-    login: vi.fn()
+    login: vi.fn(),
+    requestPasswordReset: vi.fn(),
+    verifyResetCode: vi.fn(),
+    resetPassword: vi.fn()
   };
 
   let fixture: ComponentFixture<LoginComponent>;
@@ -79,13 +82,45 @@ describe('LoginComponent', () => {
     expect(navigateSpy).toHaveBeenCalledWith('/home');
   });
 
+  it('redirects a new employee to the profile password dialog', () => {
+    const navigateSpy = vi.spyOn(router, 'navigateByUrl').mockResolvedValue(true);
+    authService.login.mockReturnValue(of(response({ ...employee, passwordChangeRequired: true })));
+
+    fillAndSubmit('employee', 'temporary-code');
+
+    expect(navigateSpy).toHaveBeenCalledWith('/profile');
+  });
+
   it('shows a safe generic error after failed login', () => {
     authService.login.mockReturnValue(throwError(() => ({ status: 401 })));
 
     fillAndSubmit('employee', 'wrong');
     fixture.detectChanges();
 
-    expect(fixture.nativeElement.textContent).toContain('Invalid username/email or password.');
+    expect(fixture.nativeElement.textContent).toContain('Identifiant, adresse email ou mot de passe incorrect.');
+  });
+
+  it('explains that a still-valid reset code has already been sent', () => {
+    authService.requestPasswordReset.mockReturnValue(throwError(() => ({
+      status: 409,
+      error: { message: 'Un code de vérification a déjà été envoyé et reste valide.' }
+    })));
+
+    openForgotPasswordAndRequestCode('employee');
+
+    expect(fixture.nativeElement.textContent).toContain('Un code de vérification a déjà été envoyé et reste valide.');
+  });
+
+  it('marks an unused reset code as expired once its validity has elapsed', () => {
+    authService.requestPasswordReset.mockReturnValue(of({
+      expireLe: new Date(Date.now() - 1_000).toISOString(),
+      message: 'Code envoyé.'
+    }));
+
+    openForgotPasswordAndRequestCode('employee');
+
+    expect(fixture.nativeElement.textContent).toContain('Ce code a expiré. Demandez un nouveau code.');
+    expect(fixture.nativeElement.textContent).toContain('Recevoir un nouveau code');
   });
 
   function fillAndSubmit(usernameOrEmail: string, password: string): void {
@@ -96,6 +131,21 @@ describe('LoginComponent', () => {
     inputs[1].dispatchEvent(new Event('input'));
 
     fixture.nativeElement.querySelector('form').dispatchEvent(new Event('submit'));
+    fixture.detectChanges();
+  }
+
+  function openForgotPasswordAndRequestCode(identifier: string): void {
+    const forgotButton = Array.from(fixture.nativeElement.querySelectorAll('button') as NodeListOf<HTMLButtonElement>)
+      .find(button => button.textContent?.includes('Mot de passe oublié'))!;
+    forgotButton.click();
+    fixture.detectChanges();
+    const input = fixture.nativeElement.querySelector('input') as HTMLInputElement;
+    input.value = identifier;
+    input.dispatchEvent(new Event('input'));
+    fixture.detectChanges();
+    const sendButton = Array.from(fixture.nativeElement.querySelectorAll('button') as NodeListOf<HTMLButtonElement>)
+      .find(button => button.textContent?.includes('Envoyer le code'))!;
+    sendButton.click();
     fixture.detectChanges();
   }
 });

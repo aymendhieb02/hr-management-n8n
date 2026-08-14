@@ -24,6 +24,7 @@ import com.xtensus.hrmanagementapi.domain.entity.Raison;
 import com.xtensus.hrmanagementapi.conge.demande.historique.CongeDemandeHistoriqueService;
 import com.xtensus.hrmanagementapi.notificationfr.service.NotificationFrancaiseService;
 import com.xtensus.hrmanagementapi.conge.solde.service.CongeSoldeTransactionService;
+import com.xtensus.hrmanagementapi.workflow.CongeWorkflowService;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -35,6 +36,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class CongeDemandeService {
+    private static final String STATUT_BROUILLON = "BROUILLON";
     private static final String STATUT_EN_ATTENTE = "EN_ATTENTE";
     private static final String STATUT_APPROUVEE = "APPROUVEE";
     private static final String STATUT_REFUSEE = "REFUSEE";
@@ -50,6 +52,8 @@ public class CongeDemandeService {
     private final NotificationFrancaiseService notificationService;
     private final CongeSoldeTransactionService soldeTransactionService;
     private final JourFerieRepository jourFerieRepository;
+    private final CongeWorkflowService workflowService;
+    private final com.xtensus.hrmanagementapi.workflow.EmailOutboxService emailOutboxService;
 
     public CongeDemandeService(CongeDemandeRepository demandeRepository, EmployeRepository employeRepository,
             CongeTypeRepository congeTypeRepository, CongeDemandeStatutRepository statutRepository,
@@ -57,7 +61,8 @@ public class CongeDemandeService {
             CongeDemandeHistoriqueService historiqueService,
             NotificationFrancaiseService notificationService,
             CongeSoldeTransactionService soldeTransactionService,
-            JourFerieRepository jourFerieRepository) {
+            JourFerieRepository jourFerieRepository, CongeWorkflowService workflowService,
+            com.xtensus.hrmanagementapi.workflow.EmailOutboxService emailOutboxService) {
         this.demandeRepository = demandeRepository;
         this.employeRepository = employeRepository;
         this.congeTypeRepository = congeTypeRepository;
@@ -68,6 +73,8 @@ public class CongeDemandeService {
         this.notificationService = notificationService;
         this.soldeTransactionService = soldeTransactionService;
         this.jourFerieRepository = jourFerieRepository;
+        this.workflowService = workflowService;
+        this.emailOutboxService = emailOutboxService;
     }
 
     @Transactional
@@ -78,49 +85,60 @@ public class CongeDemandeService {
         }
         CongeType type = congeType(request.getCongeTypeId());
         validerTypeNature(type, request.getNature());
-        validerPeriode(request.getNature(), request.getDateDebut(), request.getDateFin(), request.getHeureDebut(), request.getHeureFin());
-        validerAbsenceDeChevauchement(employe.getId(), null, request.getDateDebut(), request.getDateFin());
         BigDecimal nombreJours = request.getNombreJours() != null
                 ? request.getNombreJours()
                 : nombreJours(request.getDateDebut(), request.getDateFin());
-        validerSoldeAvantSoumission(employe, null, request.getNature(), nombreJours);
         LocalDateTime now = LocalDateTime.now();
         CongeDemande demande = new CongeDemande();
         demande.setEmploye(employe);
-        demande.setDecideur(employe.getManager());
+        demande.setDecideur(null);
         demande.setCongeType(type);
         demande.setNature(nature(request.getNature()));
         demande.setRaison(raison(request.getRaisonId(), request.getAutreMotif()));
-        demande.setStatut(statut(STATUT_EN_ATTENTE));
+        demande.setStatut(statut(STATUT_BROUILLON));
         demande.setDateDebut(request.getDateDebut());
         demande.setHeureDebut(request.getHeureDebut());
         demande.setDateFin(request.getDateFin());
         demande.setHeureFin(request.getHeureFin());
-        demande.setDateSoumission(now);
+        demande.setDateSoumission(null);
         demande.setNombreJours(nombreJours);
+        demande.setSamediCompte(false);
         demande.setCommentaireEmploye(trim(request.getCommentaireEmploye()));
         demande.setDateCreation(now);
         CongeDemande saved = demandeRepository.save(demande);
-        historiqueService.enregistrer(saved, "CREATION", null, STATUT_EN_ATTENTE, saved.getCommentaireEmploye());
-        notificationService.notifier(
-                saved.getDecideur(), "DEMANDE_CONGE", "Nouvelle demande en attente",
-                saved.getEmploye().getPrenom() + " " + saved.getEmploye().getNom() + " a soumis une "
-                        + libelleNature(saved) + " pour la période du " + periode(saved) + ".", "HAUTE");
-        return mapper.toResponse(saved);
+        historiqueService.enregistrer(saved, "CREATION_BROUILLON", null, STATUT_BROUILLON, saved.getCommentaireEmploye());
+        return response(saved);
     }
 
     @Transactional
-    public CongeDemandeResponse modifier(Long id, CongeDemandeModificationRequest request) {
+    public CongeDemandeResponse soumettre(Long id, Long employeConnecteId) {
         CongeDemande demande = entite(id);
-        assurerEnAttente(demande, "Seule une demande en attente peut etre modifiee");
-        validerPeriode(request.getNature(), request.getDateDebut(), request.getDateFin(), request.getHeureDebut(), request.getHeureFin());
-        validerAbsenceDeChevauchement(demande.getEmploye().getId(), demande.getId(), request.getDateDebut(), request.getDateFin());
+        assurerProprietaire(demande, employeConnecteId);
+        assurerBrouillon(demande, "Seul un brouillon peut etre confirme et envoye");
+        if (!Boolean.TRUE.equals(demande.getEmploye().getActif())) throw new CongeDemandeInvalideException("Un employe inactif ne peut pas soumettre une demande de conge");
+        validerPeriode(demande.getNature(), demande.getDateDebut(), demande.getDateFin(), demande.getHeureDebut(), demande.getHeureFin());
+        validerAbsenceDeChevauchement(demande.getEmploye().getId(), demande.getId(), demande.getDateDebut(), demande.getDateFin());
+        validerSoldeAvantSoumission(demande.getEmploye(), demande.getId(), demande.getNature(), demande.getNombreJours());
+        demande.setStatut(statut(STATUT_EN_ATTENTE));
+        demande.setDateSoumission(LocalDateTime.now());
+        demande.setDateModification(LocalDateTime.now());
+        CongeDemande saved = demandeRepository.save(demande);
+        workflowService.demarrer(saved);
+        saved = demandeRepository.save(saved);
+        historiqueService.enregistrer(saved, "SOUMISSION", STATUT_BROUILLON, STATUT_EN_ATTENTE, saved.getCommentaireEmploye());
+        return response(saved);
+    }
+
+    @Transactional
+    public CongeDemandeResponse modifier(Long id, CongeDemandeModificationRequest request, Long employeConnecteId) {
+        CongeDemande demande = entite(id);
+        assurerProprietaire(demande, employeConnecteId);
+        assurerBrouillon(demande, "Seul un brouillon peut etre modifie");
         CongeType type = congeType(request.getCongeTypeId());
         validerTypeNature(type, request.getNature());
         BigDecimal nombreJours = request.getNombreJours() != null
                 ? request.getNombreJours()
                 : nombreJours(request.getDateDebut(), request.getDateFin());
-        validerSoldeAvantSoumission(demande.getEmploye(), demande.getId(), request.getNature(), nombreJours);
         demande.setCongeType(type);
         demande.setNature(nature(request.getNature()));
         demande.setRaison(raison(request.getRaisonId(), request.getAutreMotif()));
@@ -132,33 +150,38 @@ public class CongeDemandeService {
         demande.setCommentaireEmploye(trim(request.getCommentaireEmploye()));
         demande.setDateModification(LocalDateTime.now());
         CongeDemande saved = demandeRepository.save(demande);
-        historiqueService.enregistrer(saved, "MODIFICATION", STATUT_EN_ATTENTE, STATUT_EN_ATTENTE, saved.getCommentaireEmploye());
-        notificationService.notifier(
-                saved.getDecideur(), "DEMANDE_CONGE", "Demande en attente modifiée",
-                saved.getEmploye().getPrenom() + " " + saved.getEmploye().getNom()
-                        + " a modifié sa demande. Nouvelle période : " + periode(saved) + ".", "NORMALE");
-        return mapper.toResponse(saved);
+        historiqueService.enregistrer(saved, "MODIFICATION_BROUILLON", STATUT_BROUILLON, STATUT_BROUILLON, saved.getCommentaireEmploye());
+        return response(saved);
     }
 
     @Transactional
-    public void supprimer(Long id) {
+    public void supprimer(Long id, Long employeConnecteId) {
         CongeDemande demande = entite(id);
-        assurerEnAttente(demande, "Seule une demande en attente peut etre supprimee");
+        assurerProprietaire(demande, employeConnecteId);
+        assurerBrouillon(demande, "Seul un brouillon peut etre supprime");
         demande.setStatut(statut(STATUT_ANNULEE));
         demande.setDateModification(LocalDateTime.now());
         CongeDemande saved = demandeRepository.save(demande);
-        historiqueService.enregistrer(saved, "ANNULATION", STATUT_EN_ATTENTE, STATUT_ANNULEE, null);
-        notificationService.notifier(
-                saved.getDecideur(), "DEMANDE_CONGE", "Demande annulée par l'employé",
-                saved.getEmploye().getPrenom() + " " + saved.getEmploye().getNom()
-                        + " a annulé sa demande du " + periode(saved) + ".", "NORMALE");
+        historiqueService.enregistrer(saved, "SUPPRESSION_BROUILLON", STATUT_BROUILLON, STATUT_ANNULEE, null);
     }
 
     @Transactional
     public CongeDemandeResponse approuver(Long id, CongeDecisionRequest request) {
         CongeDemande demande = entite(id);
         String ancienStatut = demande.getStatut().getLibelle();
-        appliquerDecision(demande, request, STATUT_APPROUVEE, false);
+        boolean finale = workflowService.approuver(demande, request.getDecideurId(), trim(request.getCommentaire()));
+        if (!finale) {
+            demande.setDateModification(LocalDateTime.now());
+            CongeDemande saved = demandeRepository.save(demande);
+            historiqueService.enregistrer(saved, "VALIDATION_INTERMEDIAIRE", ancienStatut, ancienStatut, request.getCommentaire());
+            return response(saved);
+        }
+        boolean samediCompte = Boolean.TRUE.equals(request.getSamediCompte());
+        demande.setSamediCompte(samediCompte);
+        if (!"AUTORISATION_ABSENCE".equals(demande.getNature())) {
+            demande.setNombreJours(nombreJoursOuvrables(demande.getDateDebut(), demande.getDateFin(), samediCompte));
+        }
+        appliquerDecisionFinale(demande, request, STATUT_APPROUVEE, false);
         soldeTransactionService.debiter(demande);
         CongeDemande saved = demandeRepository.save(demande);
         historiqueService.enregistrer(saved, "APPROBATION", ancienStatut, STATUT_APPROUVEE, request.getCommentaire());
@@ -166,7 +189,7 @@ public class CongeDemandeService {
                 saved.getEmploye(), "DECISION_CONGE", "Demande approuvée",
                 "Votre " + libelleNature(saved) + " du " + periode(saved) + " a été approuvée."
                         + commentaireDecision(saved), "HAUTE");
-        return mapper.toResponse(saved);
+        return response(saved);
     }
 
     @Transactional
@@ -176,34 +199,73 @@ public class CongeDemandeService {
         }
         CongeDemande demande = entite(id);
         String ancienStatut = demande.getStatut().getLibelle();
-        appliquerDecision(demande, request, STATUT_REFUSEE, true);
+        workflowService.refuser(demande, request.getDecideurId(), trim(request.getCommentaire()));
+        appliquerDecisionFinale(demande, request, STATUT_REFUSEE, true);
         CongeDemande saved = demandeRepository.save(demande);
         historiqueService.enregistrer(saved, "REFUS", ancienStatut, STATUT_REFUSEE, request.getCommentaire());
         notificationService.notifier(
                 saved.getEmploye(), "DECISION_CONGE", "Demande refusée",
                 "Votre " + libelleNature(saved) + " du " + periode(saved) + " a été refusée."
                         + commentaireDecision(saved), "HAUTE");
-        return mapper.toResponse(saved);
+        return response(saved);
+    }
+
+    @Transactional
+    public CongeDemandeResponse ajusterConsommation(Long id, BigDecimal joursReels, String commentaire, Long acteurId) {
+        CongeDemande demande=entite(id);
+        if (demande.getStatut()==null || !STATUT_APPROUVEE.equals(demande.getStatut().getLibelle())) {
+            throw new CongeDemandeInvalideException("Seule une demande approuvee peut etre ajustee");
+        }
+        if (demande.getDateDebut().isAfter(LocalDate.now())) throw new CongeDemandeInvalideException("La consommation ne peut etre regularisee qu'apres le debut du conge");
+        String commentaireNettoye=trim(commentaire); if(commentaireNettoye==null) throw new CongeDemandeInvalideException("Le commentaire de regularisation est obligatoire");
+        BigDecimal ancienne=demande.getNombreJoursConsomme()==null?demande.getNombreJours():demande.getNombreJoursConsomme();
+        if(joursReels!=null&&ancienne.compareTo(joursReels)==0) throw new CongeDemandeInvalideException("La consommation reelle est deja enregistree a cette valeur");
+        soldeTransactionService.ajusterConsommation(demande, joursReels);
+        demande.setNombreJoursConsomme(joursReels);
+        demande.setDateFinReelle(calculerDateFinReelle(demande.getDateDebut(),joursReels,Boolean.TRUE.equals(demande.getSamediCompte())));
+        demande.setDateRegularisation(LocalDateTime.now()); demande.setRegularisePar(employe(acteurId));
+        demande.setCommentaireRegularisation(commentaireNettoye); demande.setDateModification(LocalDateTime.now());
+        CongeDemande saved=demandeRepository.save(demande);
+        historiqueService.enregistrer(saved,"AJUSTEMENT_CONSOMMATION",STATUT_APPROUVEE,STATUT_APPROUVEE,"Consommation reelle : "+ancienne+" -> "+joursReels+" jour(s). Regularise par "+saved.getRegularisePar().getPrenom()+" "+saved.getRegularisePar().getNom()+". "+commentaireNettoye);
+        notificationService.notifier(saved.getEmploye(),"DECISION_CONGE","Conge regularise","Votre conge a ete regularise a "+joursReels+" jour(s) reellement consomme(s). Motif : "+commentaireNettoye,"NORMALE");
+        emailOutboxService.planifier(saved.getEmploye(),"XTENSUS HR - Conge regularise","Votre conge a ete regularise",
+                "La consommation reelle de votre conge du "+saved.getDateDebut()+" au "+saved.getDateFin()+" est maintenant de "+joursReels+" jour(s). Motif : "+commentaireNettoye);
+        return response(saved);
+    }
+
+    private LocalDate calculerDateFinReelle(LocalDate debut, BigDecimal joursReels, boolean samediCompte) {
+        if(joursReels==null||joursReels.signum()==0)return null;
+        int jours;
+        try { jours=joursReels.intValueExact(); } catch(ArithmeticException ex) { throw new CongeDemandeInvalideException("La consommation reelle doit etre un nombre entier de jours"); }
+        LocalDate date=debut.minusDays(1);int comptes=0;
+        while(comptes<jours){date=date.plusDays(1);if(date.getDayOfWeek()==java.time.DayOfWeek.SUNDAY)continue;if(!samediCompte&&date.getDayOfWeek()==java.time.DayOfWeek.SATURDAY)continue;if(jourFerieRepository.existsByDateAndActifTrue(date))continue;comptes++;}
+        return date;
     }
 
     @Transactional(readOnly = true)
-    public CongeDemandeResponse trouverParId(Long id) { return mapper.toResponse(entite(id)); }
+    public CongeDemandeResponse trouverParId(Long id, Long acteurId) { CongeDemande d=entite(id); if (STATUT_BROUILLON.equals(d.getStatut().getLibelle()) && !d.getEmploye().getId().equals(acteurId)) throw new DecisionCongeNonAutoriseeException("Ce brouillon est prive"); return response(d); }
 
     @Transactional(readOnly = true)
-    public List<CongeDemandeResponse> lister() { return demandeRepository.findAll().stream().map(mapper::toResponse).toList(); }
+    public List<CongeDemandeResponse> lister() { return demandeRepository.findAll().stream().filter(d -> !STATUT_BROUILLON.equals(d.getStatut().getLibelle())).map(this::response).toList(); }
 
     @Transactional(readOnly = true)
-    public List<CongeDemandeResponse> parEmploye(Long employeId) { return demandeRepository.findByEmployeIdOrderByDateSoumissionDesc(employeId).stream().map(mapper::toResponse).toList(); }
+    public List<CongeDemandeResponse> parEmploye(Long employeId, Long acteurId) { return demandeRepository.findByEmployeIdOrderByDateSoumissionDesc(employeId).stream().filter(d -> employeId.equals(acteurId) || !STATUT_BROUILLON.equals(d.getStatut().getLibelle())).map(this::response).toList(); }
 
     @Transactional(readOnly = true)
-    public List<CongeDemandeResponse> parDecideur(Long decideurId) { return demandeRepository.findByDecideurIdOrderByDateSoumissionDesc(decideurId).stream().map(mapper::toResponse).toList(); }
+    public List<CongeDemandeResponse> parDecideur(Long decideurId, com.xtensus.hrmanagementapi.domain.enums.RoleType role) {
+        java.util.LinkedHashMap<Long,CongeDemande> visibles=new java.util.LinkedHashMap<>();
+        workflowService.demandesActives(decideurId).forEach(d->visibles.put(d.getId(),d));
+        if(role==com.xtensus.hrmanagementapi.domain.enums.RoleType.DG||role==com.xtensus.hrmanagementapi.domain.enums.RoleType.DT){
+            demandeRepository.findAll().stream().filter(d->d.getStatut()!=null&&STATUT_APPROUVEE.equals(d.getStatut().getLibelle())).forEach(d->visibles.put(d.getId(),d));
+        }
+        return visibles.values().stream().map(this::response).toList();
+    }
 
-    private void appliquerDecision(CongeDemande demande, CongeDecisionRequest request, String nouveauStatut, boolean commentaireObligatoire) {
+    private CongeDemandeResponse response(CongeDemande demande) { CongeDemandeResponse r=mapper.toResponse(demande); workflowService.enrichir(r); return r; }
+
+    private void appliquerDecisionFinale(CongeDemande demande, CongeDecisionRequest request, String nouveauStatut, boolean commentaireObligatoire) {
         assurerEnAttente(demande, "Seule une demande en attente peut recevoir une decision");
         Employe decideur = employe(request.getDecideurId());
-        if (demande.getDecideur() == null || !demande.getDecideur().getId().equals(decideur.getId())) {
-            throw new DecisionCongeNonAutoriseeException("Seul le decideur assigne peut traiter cette demande");
-        }
         String commentaire = trim(request.getCommentaire());
         if (commentaireObligatoire && commentaire == null) {
             throw new CongeDemandeInvalideException("Le commentaire est obligatoire");
@@ -249,6 +311,14 @@ public class CongeDemandeService {
 
     private void assurerEnAttente(CongeDemande demande, String message) {
         if (demande.getStatut() == null || !STATUT_EN_ATTENTE.equals(demande.getStatut().getLibelle())) throw new DecisionCongeNonAutoriseeException(message);
+    }
+
+    private void assurerBrouillon(CongeDemande demande, String message) {
+        if (demande.getStatut() == null || !STATUT_BROUILLON.equals(demande.getStatut().getLibelle())) throw new DecisionCongeNonAutoriseeException(message);
+    }
+
+    private void assurerProprietaire(CongeDemande demande, Long employeId) {
+        if (employeId == null || !demande.getEmploye().getId().equals(employeId)) throw new DecisionCongeNonAutoriseeException("Vous ne pouvez agir que sur vos propres brouillons");
     }
 
     private void validerDates(LocalDate debut, LocalDate fin) {
@@ -300,6 +370,14 @@ public class CongeDemandeService {
         }
     }
     private BigDecimal nombreJours(LocalDate debut, LocalDate fin) { return BigDecimal.valueOf(ChronoUnit.DAYS.between(debut, fin) + 1); }
+    private BigDecimal nombreJoursOuvrables(LocalDate debut, LocalDate fin, boolean samediCompte) {
+        long total = debut.datesUntil(fin.plusDays(1)).filter(date -> {
+            if (date.getDayOfWeek() == java.time.DayOfWeek.SUNDAY) return false;
+            if (!samediCompte && date.getDayOfWeek() == java.time.DayOfWeek.SATURDAY) return false;
+            return !jourFerieRepository.existsByDateAndActifTrue(date);
+        }).count();
+        return BigDecimal.valueOf(total);
+    }
     private String trim(String value) { if (value == null) return null; String t = value.trim(); return t.isEmpty() ? null : t; }
 
     private String libelleNature(CongeDemande demande) {

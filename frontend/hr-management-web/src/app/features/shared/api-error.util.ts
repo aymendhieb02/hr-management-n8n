@@ -19,7 +19,9 @@ export function safeApiMessage(error: unknown, fallback: string): string {
 
 export function validationErrors(error: unknown): Record<string, string> {
   if (error instanceof HttpErrorResponse && error.error?.validationErrors) {
-    return error.error.validationErrors as Record<string, string>;
+    const source=error.error.validationErrors as Record<string,string>;
+    const aliases:Record<string,string>={telephone:'phone',dateNaissance:'birthDate',posteId:'positionId',typeContratId:'typeContractId',ageValide:'birthDate',nom:'lastName',prenom:'firstName'};
+    return Object.fromEntries(Object.entries(source).map(([key,value])=>[aliases[key]??key,value]));
   }
 
   return {};

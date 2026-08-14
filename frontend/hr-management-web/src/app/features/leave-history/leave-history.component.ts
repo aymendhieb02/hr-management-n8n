@@ -12,7 +12,7 @@ interface HistoryPage { contenu:HistoryRow[];totalElements:number;totalPages:num
 @Component({selector:'app-leave-history',imports:[FormsModule,DatePipe],templateUrl:'./leave-history.component.html',styleUrls:['../shared/resource-page.scss','./leave-history.component.scss'],host:{'[class.read-only]':'!canManage'}})
 export class LeaveHistoryComponent implements OnInit, OnDestroy {
  private readonly http=inject(HttpClient);private readonly auth=inject(AuthService);private readonly url=`${environment.apiUrl}/conge-demande-historiques`;private searchTimer?:ReturnType<typeof setTimeout>;
- protected readonly canManage=this.auth.hasAnyRole('MANAGER','ADMIN');
+ protected readonly canManage=this.auth.hasAnyRole('DG','DT','ADMIN');
  protected readonly rows=signal<HistoryRow[]>([]);protected readonly employees=signal<HistoryEmployee[]>([]);protected readonly loading=signal(false);protected readonly error=signal<string|null>(null);protected readonly search=signal('');protected readonly employeeFilter=signal<number|null>(null);protected readonly editing=signal<HistoryRow|null>(null);protected readonly deleting=signal<HistoryRow|null>(null);protected readonly page=signal(1);protected readonly pageSize=signal(8);protected readonly totalElements=signal(0);protected readonly totalPages=signal(1);
  protected readonly pageStart=()=>this.totalElements()?(this.page()-1)*this.pageSize()+1:0;protected readonly pageEnd=()=>Math.min(this.page()*this.pageSize(),this.totalElements());
  ngOnInit(){if(this.canManage)this.loadEmployees();this.load();}ngOnDestroy(){if(this.searchTimer)clearTimeout(this.searchTimer);}

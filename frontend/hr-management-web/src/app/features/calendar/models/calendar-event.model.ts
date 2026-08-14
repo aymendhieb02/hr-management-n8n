@@ -1,8 +1,10 @@
 export interface CalendarEvent {
-  kind?: 'LEAVE' | 'HOLIDAY';
+  kind?: 'LEAVE' | 'HOLIDAY' | 'RESTORED';
+  eventId?: string;
   leaveRequestId: number;
   userId: number;
   employeeName: string;
+  employeePhotoUrl?: string | null;
   leaveTypeName: string;
   departmentName: string | null;
   startDate: string;
@@ -13,4 +15,9 @@ export interface CalendarEvent {
   endTime: string | null;
   reason: string | null;
   description?: string | null;
+  consumedDays?: number|null;
+  actualEndDate?: string|null;
+  regularizedAt?: string|null;
+  regularizedBy?: string|null;
+  regularizationComment?: string|null;
 }

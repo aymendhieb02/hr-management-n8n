@@ -1,47 +1,37 @@
-<main class="login-shell">
-  <section class="login-panel" aria-labelledby="login-title">
-    <div class="brand">
-      <img class="brand-logo" src="/xtensus_logo.jfif" alt="" />
-      <div>
-        <p class="eyebrow">XTENSUS HR</p>
-        <h1 id="login-title">Sign in</h1>
-      </div>
-    </div>
-
+<main class="login-shell"><section class="login-panel" aria-labelledby="login-title">
+  <div class="brand"><img class="brand-logo" src="/xtensus_logo.jfif" alt=""/><div><p class="eyebrow">XTENSUS HR</p><h1 id="login-title">{{resetStep()===0?'Connexion':'Mot de passe oublié'}}</h1></div></div>
+  @if(resetStep()===0){
     <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
-      <label>
-        <span>Identifiant ou adresse e-mail</span>
-        <input
-          autocomplete="username"
-          formControlName="usernameOrEmail"
-          type="text"
-          [attr.aria-invalid]="hasFieldError('usernameOrEmail')"
-        />
-      </label>
-      @if (hasFieldError('usernameOrEmail')) {
-        <p class="field-error">L'identifiant ou l'adresse e-mail est obligatoire.</p>
-      }
-
-      <label>
-        <span>Mot de passe</span>
-        <input
-          autocomplete="current-password"
-          formControlName="password"
-          type="password"
-          [attr.aria-invalid]="hasFieldError('password')"
-        />
-      </label>
-      @if (hasFieldError('password')) {
-        <p class="field-error">Le mot de passe est obligatoire.</p>
-      }
-
-      @if (errorMessage()) {
-        <p class="form-error" role="alert">{{ errorMessage() }}</p>
-      }
-
-      <button type="submit" [disabled]="isSubmitDisabled()">
-        {{ isLoading() ? 'Signing in...' : 'Sign in' }}
-      </button>
+      <label><span>Identifiant ou adresse e-mail</span><input autocomplete="username" formControlName="usernameOrEmail" type="text" [attr.aria-invalid]="hasFieldError('usernameOrEmail')"/></label>
+      @if(hasFieldError('usernameOrEmail')){<p class="field-error">L'identifiant ou l'adresse e-mail est obligatoire.</p>}
+      <label><span>Mot de passe</span><input autocomplete="current-password" formControlName="password" type="password" [attr.aria-invalid]="hasFieldError('password')"/></label>
+      @if(hasFieldError('password')){<p class="field-error">Le mot de passe est obligatoire.</p>}
+      @if(errorMessage()){<p class="form-error" role="alert">{{errorMessage()}}</p>}
+      @if(successMessage()){<p class="form-success" role="status">{{successMessage()}}</p>}
+      <button type="submit" [disabled]="isSubmitDisabled()">{{isLoading()?'Connexion...':'Se connecter'}}</button>
+      <button class="link-button" type="button" (click)="resetStep.set(1);errorMessage.set(null);successMessage.set(null)">Mot de passe oublié ?</button>
     </form>
-  </section>
-</main>
+  }@else{
+    <form [formGroup]="resetForm" novalidate>
+      @if(resetStep()===1){
+        <p class="reset-help">Saisissez votre identifiant ou votre adresse email. Un code à 6 chiffres vous sera envoyé.</p>
+        <label><span>Identifiant ou adresse e-mail</span><input formControlName="identifier" autocomplete="username"/></label>
+        @if(errorMessage()){<p class="form-error" role="alert">{{errorMessage()}}</p>}
+        <button type="button" (click)="requestReset()" [disabled]="!resetForm.controls.identifier.value||isLoading()">{{isLoading()?'Envoi...':'Envoyer le code'}}</button>
+      }@else{
+        <p class="reset-help">Un code a été envoyé à l'adresse email associée à votre compte.</p>
+        @if(codeStatus()!=='expired'){<p class="countdown">Expiration dans <strong>{{tempsRestant()}}</strong></p>}
+        <label><span>Code de vérification</span><span class="code-field" [class.valid]="codeStatus()==='valid'" [class.invalid]="codeStatus()==='invalid'||codeStatus()==='expired'"><input formControlName="code" inputmode="numeric" maxlength="6" autocomplete="one-time-code" (input)="onCodeInput()"/><i>{{codeStatus()==='checking'?'…':codeStatus()==='valid'?'✓':codeStatus()==='invalid'||codeStatus()==='expired'?'!':''}}</i></span></label>
+        @if(codeMessage()){<p [class]="'code-message '+codeStatus()">{{codeMessage()}}</p>}
+        <label><span>Nouveau mot de passe</span><input formControlName="newPassword" type="password" autocomplete="new-password"/></label>
+        @if(resetForm.controls.newPassword.touched&&resetForm.controls.newPassword.invalid){<p class="field-error">Utilisez au moins 8 caractères.</p>}
+        <label><span>Confirmer le mot de passe</span><input formControlName="confirmation" type="password" autocomplete="new-password" [class.input-valid]="passwordsMatch()"/></label>
+        @if(resetForm.controls.confirmation.value&&!passwordsMatch()){<p class="field-error">Les deux mots de passe doivent être identiques.</p>}
+        @if(errorMessage()){<p class="form-error" role="alert">{{errorMessage()}}</p>}
+        <button type="button" (click)="confirmReset()" [disabled]="!canReset()">{{isLoading()?'Enregistrement...':'Changer le mot de passe'}}</button>
+        @if(codeStatus()==='expired'){<button class="resend-button" type="button" (click)="requestReset()">Recevoir un nouveau code</button>}
+      }
+      <button class="link-button" type="button" (click)="resetStep.set(0);errorMessage.set(null);codeStatus.set('idle')">Retour à la connexion</button>
+    </form>
+  }
+</section></main>

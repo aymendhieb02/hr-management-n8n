@@ -27,6 +27,11 @@ spring:
     locations: classpath:db/migration
     baseline-on-migrate: true
 
+  servlet:
+    multipart:
+      max-file-size: ${MULTIPART_MAX_FILE_SIZE:10MB}
+      max-request-size: ${MULTIPART_MAX_REQUEST_SIZE:12MB}
+
 app:
   security:
     jwt-secret: ${JWT_SECRET:replace_with_a_secure_secret_of_at_least_32_characters}
@@ -37,10 +42,18 @@ app:
   storage:
     medical-certificates-path: ${MEDICAL_CERTIFICATES_PATH:./storage/medical-certificates}
     max-file-size: 5MB
+    profile-photo-max-file-size: ${PROFILE_PHOTO_MAX_FILE_SIZE:10MB}
     allowed-types:
       - application/pdf
       - image/jpeg
       - image/png
+    profile-photos-path: ${PROFILE_PHOTOS_PATH:./storage/profile-photos}
+
+  mail:
+    enabled: ${APP_MAIL_ENABLED:false}
+    from: ${MAIL_FROM:no-reply@xtensus.com}
+    frontend-url: ${FRONTEND_URL:http://localhost:4200}
+    logo-url: ${MAIL_LOGO_URL:https://xtensus.com/wp-content/uploads/2023/04/logo.png}
 
   leave-accrual:
     enabled: ${LEAVE_ACCRUAL_ENABLED:true}

@@ -28,14 +28,14 @@ export class NotificationService {
     const userId = this.authService.getCurrentUser()?.id;
     return this.notificationsSignal().filter((item) => !item.read && item.recipient.id === userId).length;
   });
-  readonly canMarkAll = computed(() => this.authService.getCurrentUser()?.role === 'MANAGER');
+  readonly canMarkAll = computed(() => ['DG','DT'].includes(this.authService.getCurrentUser()?.role ?? ''));
 
   canManage(notification: NotificationResponse): boolean {
     return notification.recipient.id === this.authService.getCurrentUser()?.id;
   }
 
   canDelete(notification: NotificationResponse): boolean {
-    return this.authService.getCurrentUser()?.role === 'MANAGER' && this.canManage(notification);
+    return ['DG','DT'].includes(this.authService.getCurrentUser()?.role ?? '') && this.canManage(notification);
   }
 
   findAll(): Observable<NotificationResponse[]> { return of([]); }

@@ -115,3 +115,6 @@
     display: none;
   }
 }
+.avatar-link { display:grid; place-items:center; text-decoration:none; }
+.avatar { width:42px; height:42px; border-radius:50%; object-fit:cover; border:3px solid #fff; box-shadow:0 4px 14px rgba(190,91,0,.2); background:#fff3e6; }
+.avatar-fallback { display:grid; place-items:center; color:#a84d00; font-weight:800; background:linear-gradient(135deg,#fff4e8,#ffd5aa); }

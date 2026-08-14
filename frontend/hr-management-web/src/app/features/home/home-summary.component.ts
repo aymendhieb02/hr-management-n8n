@@ -28,6 +28,7 @@ export class HomeSummaryComponent implements OnInit {
   protected readonly balanceList = signal<LeaveBalanceResponse[]>([]);
   protected readonly team = signal<UserResponse[]>([]);
   protected readonly unread = signal(0);
+  protected readonly availableBalance = computed(() => Math.max(0, this.balanceList().reduce((total,balance)=>total+Number(balance.remainingDays||0),0)));
   protected readonly holidays = signal<JourFerieResponse[]>([]);
   protected readonly loading = signal(false);
   protected readonly role = computed(() => this.auth.getCurrentUser()?.role ?? 'EMPLOYEE');
@@ -44,7 +45,7 @@ export class HomeSummaryComponent implements OnInit {
     const user = this.auth.getCurrentUser();
     if (!user) return;
     this.loading.set(true);
-    const manager = user.role === 'MANAGER';
+    const manager = user.role === 'DG' || user.role === 'DT';
     forkJoin({
       requests: manager ? this.leaveRequests.findByApprover(user.id) : this.leaveRequests.findByRequester(user.id),
       balances: this.balances.findByUser(user.id),

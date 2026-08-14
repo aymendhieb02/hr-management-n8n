@@ -15,6 +15,7 @@ public interface CongeDemandeHistoriqueRepository extends JpaRepository<CongeDem
             select h from CongeDemandeHistorique h
             join h.demande d join d.employe e join d.congeType t join d.statut s
             where (:employeId is null or e.id = :employeId)
+              and (:employeId is not null or s.libelle <> 'BROUILLON')
               and (:recherche is null or lower(concat(e.prenom, ' ', e.nom)) like lower(concat('%', :recherche, '%'))
                    or lower(h.action) like lower(concat('%', :recherche, '%'))
                    or lower(t.nom) like lower(concat('%', :recherche, '%'))
@@ -24,6 +25,6 @@ public interface CongeDemandeHistoriqueRepository extends JpaRepository<CongeDem
     Page<CongeDemandeHistorique> rechercher(@Param("recherche") String recherche,
             @Param("employeId") Long employeId, Pageable pageable);
 
-    @Query("select distinct e.id, concat(e.prenom, ' ', e.nom) from CongeDemandeHistorique h join h.demande d join d.employe e order by concat(e.prenom, ' ', e.nom)")
+    @Query("select distinct e.id, concat(e.prenom, ' ', e.nom) from CongeDemandeHistorique h join h.demande d join d.employe e join d.statut s where s.libelle <> 'BROUILLON' order by concat(e.prenom, ' ', e.nom)")
     List<Object[]> listerEmployesAvecHistorique();
 }

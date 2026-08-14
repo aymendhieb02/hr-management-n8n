@@ -3,15 +3,18 @@ import { routes } from './app.routes';
 describe('app route role data', () => {
   const childRoutes = routes.find((route) => route.children)?.children ?? [];
 
-  it('allows managers to access team and reference routes', () => {
-    expect(rolesFor('team-requests')).toContain('MANAGER');
+  it('allows managers to access team routes while keeping admin references protected', () => {
+    expect(rolesFor('team-requests')).toContain('DG');
+    expect(rolesFor('team-requests')).toContain('DT');
     expect(rolesFor('team-requests')).toContain('HR');
     expect(rolesFor('team-requests')).toContain('ADMIN');
-    expect(rolesFor('team-members')).toContain('MANAGER');
+    expect(rolesFor('team-members')).toContain('DG');
+    expect(rolesFor('team-members')).toContain('DT');
     expect(rolesFor('team-members')).toContain('HR');
     expect(rolesFor('team-members')).toContain('ADMIN');
-    expect(rolesFor('team-availability')).toContain('MANAGER');
-    expect(rolesFor('positions')).toContain('MANAGER');
+    expect(rolesFor('team-availability')).toContain('DG');
+    expect(rolesFor('positions')).toEqual(['ADMIN']);
+    expect(rolesFor('jours-feries')).toEqual(['ADMIN']);
     expect(rolesFor('leave-types')).toContain('MANAGER');
   });
 
@@ -22,15 +25,15 @@ describe('app route role data', () => {
     expect(rolesFor('my-calendar')).toEqual(['EMPLOYEE', 'MANAGER', 'HR', 'ADMIN']);
   });
 
-  it('keeps dashboards and global reports restricted to HR and Admin', () => {
-    expect(rolesFor('dashboard')).toEqual(['HR', 'ADMIN']);
+  it('opens the dashboard to managers while keeping global reports restricted', () => {
+    expect(rolesFor('dashboard')).toEqual(['DG', 'DT', 'HR', 'ADMIN']);
     expect(rolesFor('reports')).toEqual(['HR', 'ADMIN']);
     expect(rolesFor('calendar')).toEqual(['HR', 'ADMIN']);
     expect(rolesFor('dashboard')).not.toContain('EMPLOYEE');
   });
 
   it('allows managers to access team calendar without global calendar access', () => {
-    expect(rolesFor('team-calendar')).toEqual(['MANAGER', 'HR', 'ADMIN']);
+    expect(rolesFor('team-calendar')).toEqual(['DG', 'DT', 'HR', 'ADMIN']);
     expect(rolesFor('calendar')).not.toContain('MANAGER');
   });
 
@@ -53,6 +56,7 @@ describe('app route role data', () => {
     expect(rolesFor('calendar')).toContain('ADMIN');
     expect(rolesFor('leave-request-statuses')).toEqual(['ADMIN']);
     expect(rolesFor('system-configuration')).toEqual(['ADMIN']);
+    expect(rolesFor('validation-pipelines')).toEqual(['ADMIN']);
   });
 
   function rolesFor(path: string): string[] {

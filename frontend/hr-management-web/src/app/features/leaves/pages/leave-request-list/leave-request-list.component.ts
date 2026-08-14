@@ -1,4 +1,5 @@
-import { HttpErrorResponse } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { environment } from '../../../../../environments/environment';
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -18,10 +19,11 @@ import { LeaveRequestResponse, LeaveRequestStatus, LeaveRequestUpdateRequest } f
 import { LeaveRequestService } from '../../services/leave-request.service';
 import { LeaveBalanceService } from '../../services/leave-balance.service';
 import { MedicalDocumentService } from '../../../medical-documents/services/medical-document.service';
+import { AppIconComponent } from '../../../../shared/components/app-icon/app-icon.component';
 
 @Component({
   selector: 'app-leave-request-list',
-  imports: [FormsModule, LeaveDecisionDialogComponent, LeaveDetailsComponent, LeaveRequestFormComponent, PaginatedTableDirective],
+  imports: [AppIconComponent, FormsModule, LeaveDecisionDialogComponent, LeaveDetailsComponent, LeaveRequestFormComponent, PaginatedTableDirective],
   templateUrl: './leave-request-list.component.html',
   styleUrls: ['../../../shared/resource-page.scss', './leave-request-list.component.scss']
 })
@@ -35,12 +37,14 @@ export class LeaveRequestListComponent implements OnInit {
   private readonly router = inject(Router);
   private readonly medicalDocumentService = inject(MedicalDocumentService);
   private readonly leaveBalanceService = inject(LeaveBalanceService);
+  private readonly http = inject(HttpClient);
 
   protected readonly requests = signal<LeaveRequestResponse[]>([]);
   protected readonly leaveTypes = signal<LeaveType[]>([]);
   protected readonly reasons = signal<Reason[]>([]);
   protected readonly holidays = signal<JourFerieResponse[]>([]);
   protected readonly currentBalance = signal<number | null>(null);
+  protected readonly minimumBalance = signal(-5);
   protected readonly isLoading = signal(false);
   protected readonly isSaving = signal(false);
   protected readonly error = signal<string | null>(null);
@@ -55,7 +59,13 @@ export class LeaveRequestListComponent implements OnInit {
   protected readonly detailRequest = signal<LeaveRequestResponse | null>(null);
   protected readonly decisionRequest = signal<LeaveRequestResponse | null>(null);
   protected readonly decisionMode = signal<'approve' | 'reject'>('approve');
-  protected readonly statuses: LeaveRequestStatus[] = ['PENDING', 'APPROVED', 'REJECTED', 'CANCELLED'];
+  protected readonly statuses: LeaveRequestStatus[] = ['DRAFT', 'PENDING', 'APPROVED', 'REJECTED', 'CANCELLED'];
+  protected readonly submitRequest = signal<LeaveRequestResponse | null>(null);
+  protected readonly submitError = signal<string | null>(null);
+  protected readonly regularizationRequest = signal<LeaveRequestResponse | null>(null);
+  protected readonly regularizationDays = signal(0);
+  protected readonly regularizationComment = signal('');
+  protected readonly regularizationError = signal<string | null>(null);
   protected readonly isManagerMode = computed(() => this.route.snapshot.routeConfig?.path === 'team-requests');
   protected readonly isCreateMode = computed(() => this.route.snapshot.routeConfig?.path === 'request-leave');
   protected readonly maximumLeaveDays = computed(() => {
@@ -65,7 +75,7 @@ export class LeaveRequestListComponent implements OnInit {
     const pendingDays = this.requests()
       .filter((request) => request.id !== editedId && request.status === 'PENDING' && request.nature === 'CONGE')
       .reduce((total, request) => total + request.requestedDays, 0);
-    return Math.max(0, balance + 5 - pendingDays);
+    return Math.max(0, balance - this.minimumBalance() - pendingDays);
   });
   protected readonly title = computed(() => this.isManagerMode() ? "Demandes de l'equipe" : this.isCreateMode() ? 'Demander un conge' : 'Mes demandes de conge');
   protected readonly filteredRequests = computed(() => {
@@ -82,6 +92,7 @@ export class LeaveRequestListComponent implements OnInit {
   });
 
   ngOnInit(): void {
+    this.http.get<{soldeMinimum:number}>(`${environment.apiUrl}/variables-systeme/politique-conges`).subscribe({next:p=>this.minimumBalance.set(Number(p.soldeMinimum)),error:()=>{}});
     this.leaveTypeService.findActive().subscribe({ next: (types) => this.leaveTypes.set(types), error: () => {} });
     this.reasonService.findAvailable().subscribe({ next: (reasons) => this.reasons.set(reasons), error: () => {} });
     this.jourFerieService.getActive().subscribe({ next: (holidays) => this.holidays.set(holidays), error: () => {} });
@@ -145,7 +156,7 @@ export class LeaveRequestListComponent implements OnInit {
       next: () => {
         this.isSaving.set(false);
         this.formOpen.set(false);
-        this.success.set('Demande de conge enregistree.');
+        this.success.set('Brouillon enregistre. Vous pouvez maintenant le confirmer et l’envoyer.');
         this.loadRequests();
         if (this.isCreateMode()) void this.router.navigate(['/my-leave-requests']);
       },
@@ -172,16 +183,43 @@ export class LeaveRequestListComponent implements OnInit {
     });
   }
 
+  protected askSubmit(request: LeaveRequestResponse): void {
+    this.submitError.set(null);
+    this.submitRequest.set(request);
+  }
+
+  protected confirmSubmit(): void {
+    const request = this.submitRequest();
+    if (!request) return;
+    this.isSaving.set(true);
+    this.submitError.set(null);
+    this.leaveRequestService.submit(request.id).subscribe({
+      next: () => {
+        this.isSaving.set(false);
+        this.submitRequest.set(null);
+        this.success.set('Votre demande a ete envoyee au premier decideur.');
+        this.loadRequests();
+      },
+      error: (error) => {
+        this.submitError.set(safeApiMessage(error, "Impossible d'envoyer cette demande."));
+        this.isSaving.set(false);
+      }
+    });
+  }
+
   protected openDecision(request: LeaveRequestResponse, mode: 'approve' | 'reject'): void {
     this.decisionRequest.set(request);
     this.decisionMode.set(mode);
   }
 
-  protected saveDecision(comment: string | null): void {
+  protected saveDecision(value: {comment:string|null;saturdayCounts:boolean}|string|null): void {
     const currentUser = this.authService.getCurrentUser();
     const request = this.decisionRequest();
     if (!currentUser || !request) return;
-    const payload = { approverId: currentUser.id, comment };
+    const decision=typeof value==='object'&&value!==null?value:{comment:value,saturdayCounts:false};
+    const payload = decision.saturdayCounts
+      ? { approverId: currentUser.id, comment:decision.comment, saturdayCounts:true }
+      : { approverId: currentUser.id, comment:decision.comment };
     const operation = this.decisionMode() === 'approve'
       ? this.leaveRequestService.approve(request.id, payload)
       : this.leaveRequestService.reject(request.id, payload);
@@ -201,7 +239,7 @@ export class LeaveRequestListComponent implements OnInit {
   }
 
   protected statusLabel(status: LeaveRequestStatus): string {
-    return { PENDING: 'En attente', APPROVED: 'Approuvee', REJECTED: 'Refusee', CANCELLED: 'Annulee' }[status];
+    return { DRAFT: 'Brouillon', PENDING: 'En attente', APPROVED: 'Approuvee', REJECTED: 'Refusee', CANCELLED: 'Annulee' }[status];
   }
 
   protected countStatus(status: LeaveRequestStatus): number {
@@ -209,8 +247,10 @@ export class LeaveRequestListComponent implements OnInit {
   }
 
   protected isSickLeave(request: LeaveRequestResponse): boolean {
-    const reason = (request.reason ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
-    return request.nature === 'CONGE' && (reason.includes('maladie') || reason.includes('medical'));
+    if (request.medicalCertificateRequired) return true;
+    const configuredReason = request.reasonId == null ? '' : this.reasons().find(reason => reason.id === request.reasonId)?.commentaire ?? '';
+    const reason = `${request.reason ?? ''} ${configuredReason}`.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+    return request.nature === 'CONGE' && (reason.includes('malad') || reason.includes('medical') || reason.includes('sante'));
   }
 
   protected hasCertificate(requestId: number): boolean {
@@ -220,6 +260,33 @@ export class LeaveRequestListComponent implements OnInit {
   protected markCertificateAdded(requestId: number): void {
     this.certificateRequestIds.update((ids) => new Set(ids).add(requestId));
   }
+
+  protected canRegularize(request:LeaveRequestResponse):boolean{
+    const role=this.authService.getCurrentUser()?.role;
+    return this.isManagerMode()&&(role==='DG'||role==='DT')&&request.nature==='CONGE'&&request.status==='APPROVED'&&request.startDate<=this.todayKey();
+  }
+
+  protected openRegularization(request:LeaveRequestResponse):void{
+    this.regularizationRequest.set(request);this.regularizationDays.set(request.consumedDays??request.requestedDays);this.regularizationComment.set('');this.regularizationError.set(null);
+  }
+
+  protected regularizationEndDate():string|null{
+    const request=this.regularizationRequest();const count=Number(this.regularizationDays());if(!request||!Number.isInteger(count)||count<=0)return null;
+    const holidays=new Set(this.holidays().filter(h=>h.actif!==false).map(h=>h.date));const date=new Date(`${request.startDate}T12:00:00`);let consumed=0;
+    while(consumed<count){const day=date.getDay();const key=this.dateKey(date);if(day!==0&&(request.saturdayCounts||day!==6)&&!holidays.has(key))consumed++;if(consumed<count)date.setDate(date.getDate()+1);}
+    return this.dateKey(date);
+  }
+
+  protected regularizationDelta():number{const request=this.regularizationRequest();return request?request.requestedDays-Number(this.regularizationDays()):0;}
+
+  protected saveRegularization():void{
+    const request=this.regularizationRequest();const days=Number(this.regularizationDays());const comment=this.regularizationComment().trim();
+    if(!request)return;if(!Number.isInteger(days)||days<0||days>request.requestedDays){this.regularizationError.set(`Saisissez un nombre entier entre 0 et ${request.requestedDays}.`);return}if(!comment){this.regularizationError.set('Le commentaire de régularisation est obligatoire.');return}
+    this.isSaving.set(true);this.regularizationError.set(null);this.leaveRequestService.regularizeConsumption(request.id,days,comment).subscribe({next:()=>{this.isSaving.set(false);this.regularizationRequest.set(null);this.success.set('La consommation réelle et le solde ont été régularisés.');this.loadRequests();},error:e=>{this.isSaving.set(false);this.regularizationError.set(safeApiMessage(e,'Impossible de régulariser cette consommation.'));}});
+  }
+
+  private todayKey():string{return this.dateKey(new Date())}
+  private dateKey(date:Date):string{return `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`}
 
   private loadEmployeeCertificates(employeeId: number): void {
     this.medicalDocumentService.findByEmployee(employeeId).subscribe({

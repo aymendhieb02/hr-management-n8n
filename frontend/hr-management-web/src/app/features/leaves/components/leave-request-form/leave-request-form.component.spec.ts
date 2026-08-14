@@ -14,21 +14,21 @@ describe('LeaveRequestFormComponent', () => {
 
   it('validates and emits trimmed request values', () => {
     const save = vi.spyOn(fixture.componentInstance.save, 'emit');
-    (fixture.componentInstance as any).form.setValue({ nature: 'CONGE', leaveTypeId: 1, reasonChoice: '5', otherReason: '', startDate: '2026-08-13', numberOfDays: 3, endDate: '', startTime: '', endTime: '', reason: '' });
+    (fixture.componentInstance as any).form.setValue({ nature: 'CONGE', leaveTypeId: 1, reasonChoice: '5', otherReason: '', startDate: '2027-08-16', numberOfDays: 3, endDate: '', startTime: '', endTime: '', reason: '' });
     (fixture.componentInstance as any).calculateEndDate();
     fixture.nativeElement.querySelector('form').dispatchEvent(new Event('submit'));
-    expect(save).toHaveBeenCalledWith({ nature: 'CONGE', leaveTypeId: 1, reasonId: 5, otherReason: null, startDate: '2026-08-13', endDate: '2026-08-17', numberOfDays: 3, startTime: null, endTime: null, reason: null });
+    expect(save).toHaveBeenCalledWith({ nature: 'CONGE', leaveTypeId: 1, reasonId: 5, otherReason: null, startDate: '2027-08-16', endDate: '2027-08-18', numberOfDays: 3, startTime: null, endTime: null, reason: null });
   });
 
   it('stores an authorization on one day and rejects durations over two hours', () => {
     const save = vi.spyOn(fixture.componentInstance.save, 'emit');
     const form = (fixture.componentInstance as any).form;
-    form.setValue({ nature: 'AUTORISATION_ABSENCE', leaveTypeId: 2, reasonChoice: 'OTHER', otherReason: 'Rendez-vous administratif', startDate: '2026-08-13', numberOfDays: 1, endDate: '', startTime: '08:30', endTime: '10:31', reason: '' });
+    form.setValue({ nature: 'AUTORISATION_ABSENCE', leaveTypeId: 2, reasonChoice: 'OTHER', otherReason: 'Rendez-vous administratif', startDate: '2027-08-16', numberOfDays: 1, endDate: '', startTime: '08:30', endTime: '10:31', reason: '' });
     fixture.nativeElement.querySelector('form').dispatchEvent(new Event('submit'));
     expect(save).not.toHaveBeenCalled();
     form.controls.endTime.setValue('10:30');
     fixture.nativeElement.querySelector('form').dispatchEvent(new Event('submit'));
-    expect(save).toHaveBeenCalledWith(expect.objectContaining({ nature: 'AUTORISATION_ABSENCE', otherReason: 'Rendez-vous administratif', startDate: '2026-08-13', endDate: '2026-08-13', startTime: '08:30', endTime: '10:30' }));
+    expect(save).toHaveBeenCalledWith(expect.objectContaining({ nature: 'AUTORISATION_ABSENCE', otherReason: 'Rendez-vous administratif', startDate: '2027-08-16', endDate: '2027-08-16', startTime: '08:30', endTime: '10:30' }));
     expect((fixture.componentInstance as any).endTimeOptions()).toEqual(['08:45', '09:00', '09:15', '09:30', '09:45', '10:00', '10:15', '10:30']);
     form.controls.startTime.setValue('17:00');
     expect((fixture.componentInstance as any).endTimeOptions()).toEqual(['17:15', '17:30', '17:45', '18:00']);

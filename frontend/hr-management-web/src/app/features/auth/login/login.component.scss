@@ -119,6 +119,9 @@ button:disabled {
   background: #94a3b8;
   cursor: not-allowed;
 }
+.link-button{height:auto;margin-top:2px;padding:8px;background:transparent;color:#bd5a00;font-weight:700}.link-button:hover{text-decoration:underline}.reset-help{margin:0 0 4px;color:#6f675f;line-height:1.55;font-size:.92rem}
+.form-success{margin:0;padding:10px 12px;border:1px solid #aad7b5;border-radius:8px;background:#edf9f0;color:#236c36;font-weight:650}.code-field{position:relative;display:block}.code-field input{width:100%;padding-right:44px;letter-spacing:.28em;font-weight:800}.code-field i{position:absolute;right:13px;top:50%;transform:translateY(-50%);display:grid;place-items:center;width:25px;height:25px;border-radius:50%;font-style:normal;font-weight:900}.code-field.valid input,.input-valid{border-color:#4ca567!important;box-shadow:0 0 0 3px rgba(76,165,103,.15)!important;animation:validPulse .45s ease}.code-field.valid i{background:#dff5e5;color:#26763d}.code-field.invalid input{border-color:#c96a60}.code-field.invalid i{background:#f8e1de;color:#9b4037}.code-message{margin:-7px 0 2px;font-size:.84rem;font-weight:650}.code-message.valid{color:#26763d}.code-message.invalid,.code-message.expired{color:#9b4037}.resend-button{background:#fff2e5;color:#b75a09;border:1px solid #f2c99f}.resend-button:hover{background:#ffe7ce}@keyframes validPulse{50%{transform:scale(1.012)}}
+.countdown{margin:-4px 0 0;padding:8px 11px;border-radius:9px;background:#fff7ec;color:#8d5a2c;font-size:.84rem}.countdown strong{font-variant-numeric:tabular-nums;color:#bd5a00}
 
 @media (max-width: 520px) {
   .login-shell {

@@ -6,7 +6,7 @@ import { LeaveDecisionRequest, LeaveRequestCreateRequest, LeaveRequestResponse, 
 
 interface CongeDemandeApiResponse {
   id: number;
-  employe: { id: number; nom: string; prenom: string; email: string };
+  employe: { id: number; nom: string; prenom: string; email: string; photoUrl?: string | null };
   decideur: { id: number; nom: string; prenom: string; email: string } | null;
   congeType: { id: number; nom: string };
   nature: LeaveRequestResponse['nature'];
@@ -17,10 +17,19 @@ interface CongeDemandeApiResponse {
   nombreJours: number;
   commentaireEmploye: string | null;
   raison: string | null;
+  raisonId?: number|null;
+  certificatMedicalRequis?: boolean;
   statut: { id: number; libelle: string };
-  dateSoumission: string;
+  dateSoumission: string | null;
   dateDecision: string | null;
   commentaireDecision: string | null;
+  samediCompte?: boolean;
+  nombreJoursConsomme?: number|null;
+  dateFinReelle?: string|null;
+  dateRegularisation?: string|null;
+  regularisePar?: {id:number;nom:string;prenom:string;email:string;photoUrl?:string|null}|null;
+  commentaireRegularisation?: string|null;
+  workflow?: {statut:string;etapeCourante:number|null;etapes:{id:number;priorite:number;statut:string;decideur:{id:number;nom:string;prenom:string;email:string};commentaire:string|null;dateAction:string|null}[]}|null;
 }
 
 interface CongeDemandeCreateApiRequest {
@@ -53,6 +62,7 @@ interface CongeDemandeUpdateApiRequest {
 interface CongeDecisionApiRequest {
   decideurId: number;
   commentaire: string | null;
+  samediCompte?: boolean;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -88,6 +98,14 @@ export class LeaveRequestService {
     return this.http.post<CongeDemandeApiResponse>(`${this.baseUrl}/${id}/refuser`, toDecisionRequest(request)).pipe(map(toLeaveRequest));
   }
 
+  submit(id: number): Observable<LeaveRequestResponse> {
+    return this.http.post<CongeDemandeApiResponse>(`${this.baseUrl}/${id}/soumettre`, {}).pipe(map(toLeaveRequest));
+  }
+
+  regularizeConsumption(id:number, consumedDays:number, comment:string):Observable<LeaveRequestResponse>{
+    return this.http.post<CongeDemandeApiResponse>(`${this.baseUrl}/${id}/consommation-reelle`,{nombreJoursConsommes:consumedDays,commentaire:comment.trim()}).pipe(map(toLeaveRequest));
+  }
+
   delete(id: number): Observable<void> {
     return this.http.delete<void>(`${this.baseUrl}/${id}`);
   }
@@ -96,7 +114,7 @@ export class LeaveRequestService {
 function toLeaveRequest(response: CongeDemandeApiResponse): LeaveRequestResponse {
   return {
     id: response.id,
-    requester: { id: response.employe.id, firstName: response.employe.prenom, lastName: response.employe.nom, email: response.employe.email },
+    requester: { id: response.employe.id, firstName: response.employe.prenom, lastName: response.employe.nom, email: response.employe.email, photoUrl: response.employe.photoUrl },
     approver: response.decideur ? { id: response.decideur.id, firstName: response.decideur.prenom, lastName: response.decideur.nom, email: response.decideur.email } : null,
     leaveType: { id: response.congeType.id, name: response.congeType.nom },
     nature: response.nature,
@@ -106,15 +124,26 @@ function toLeaveRequest(response: CongeDemandeApiResponse): LeaveRequestResponse
     endTime: response.heureFin,
     requestedDays: response.nombreJours,
     reason: response.raison,
+    reasonId: response.raisonId ?? null,
+    medicalCertificateRequired: Boolean(response.certificatMedicalRequis),
     status: toLeaveRequestStatus(response.statut.libelle),
-    submittedAt: response.dateSoumission,
+    submittedAt: response.dateSoumission ?? '',
     decisionAt: response.dateDecision,
-    decisionComment: response.commentaireDecision
+    decisionComment: response.commentaireDecision,
+    saturdayCounts: response.samediCompte,
+    consumedDays: response.nombreJoursConsomme,
+    actualEndDate:response.dateFinReelle,
+    regularizedAt:response.dateRegularisation,
+    regularizedBy:response.regularisePar?{id:response.regularisePar.id,firstName:response.regularisePar.prenom,lastName:response.regularisePar.nom,email:response.regularisePar.email,photoUrl:response.regularisePar.photoUrl}:null,
+    regularizationComment:response.commentaireRegularisation,
+    workflow: response.workflow ? {status:response.workflow.statut,currentStep:response.workflow.etapeCourante,steps:response.workflow.etapes.map(e=>({id:e.id,priority:e.priorite,status:e.statut,approver:{id:e.decideur.id,firstName:e.decideur.prenom,lastName:e.decideur.nom,email:e.decideur.email},comment:e.commentaire,actedAt:e.dateAction}))} : null
   };
 }
 
 function toLeaveRequestStatus(libelle: string): LeaveRequestResponse['status'] {
   switch (libelle) {
+    case 'BROUILLON':
+      return 'DRAFT';
     case 'APPROUVEE':
       return 'APPROVED';
     case 'REFUSEE':
@@ -136,5 +165,5 @@ function toUpdateRequest(request: LeaveRequestUpdateRequest): CongeDemandeUpdate
 }
 
 function toDecisionRequest(request: LeaveDecisionRequest): CongeDecisionApiRequest {
-  return { decideurId: request.approverId, commentaire: request.comment?.trim() || null };
+  return { decideurId: request.approverId, commentaire: request.comment?.trim() || null, samediCompte: request.saturdayCounts };
 }

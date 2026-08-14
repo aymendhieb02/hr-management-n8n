@@ -2,7 +2,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
-import { catchError, forkJoin, of } from 'rxjs';
+import { catchError, forkJoin, of, switchMap } from 'rxjs';
 import { AuthService } from '../../../../core/services/auth.service';
 import { safeApiMessage, validationErrors } from '../../../shared/api-error.util';
 import { PaginatedTableDirective } from '../../../shared/paginated-table.directive';
@@ -15,12 +15,13 @@ import { TypeContractService } from '../../services/type-contract.service';
 import { UserService } from '../../services/user.service';
 import { Position } from '../../../positions/models/position.model';
 import { PositionService } from '../../../positions/services/position.service';
+import { AppIconComponent } from '../../../../shared/components/app-icon/app-icon.component';
 
 @Component({
   selector: 'app-user-list',
-  imports: [DeleteUserDialogComponent, FormsModule, PasswordUpdateDialogComponent, UserDetailsComponent, UserFormComponent, PaginatedTableDirective],
+  imports: [AppIconComponent, DeleteUserDialogComponent, FormsModule, PasswordUpdateDialogComponent, UserDetailsComponent, UserFormComponent, PaginatedTableDirective],
   templateUrl: './user-list.component.html',
-  styleUrl: '../../../shared/resource-page.scss'
+  styleUrls: ['../../../shared/resource-page.scss', './user-list.component.scss']
 })
 export class UserListComponent implements OnInit {
   private readonly userService = inject(UserService);
@@ -38,6 +39,7 @@ export class UserListComponent implements OnInit {
   protected readonly isDeleting = signal(false);
   protected readonly error = signal<string | null>(null);
   protected readonly formErrors = signal<Record<string, string>>({});
+  protected readonly formGeneralError = signal<string | null>(null);
   protected readonly passwordError = signal<string | null>(null);
   protected readonly deleteError = signal<string | null>(null);
   protected readonly searchTerm = signal('');
@@ -49,8 +51,22 @@ export class UserListComponent implements OnInit {
   protected readonly deletingUser = signal<UserResponse | null>(null);
   protected readonly detailUser = signal<UserResponse | null>(null);
   protected readonly resetPasswordUser = signal<UserResponse | null>(null);
-  protected readonly roles: RoleType[] = ['EMPLOYEE', 'MANAGER', 'HR', 'ADMIN'];
-  protected readonly canManage = computed(() => this.authService.hasAnyRole('HR', 'ADMIN') || (this.authService.hasAnyRole('MANAGER') && this.isTeamMode()));
+  protected readonly roleUser = signal<UserResponse | null>(null);
+  protected readonly selectedRole = signal<RoleType>('EMPLOYEE');
+  protected readonly roleError = signal<string | null>(null);
+  protected readonly roles: RoleType[] = ['EMPLOYEE', 'DG', 'DT', 'HR', 'ADMIN'];
+  protected readonly assignableRoles = computed(() => {
+    const edited = this.roleUser();
+    const occupied = new Set(this.users()
+      .filter(user => user.id !== edited?.id && (user.role === 'DG' || user.role === 'DT' || user.role === 'MANAGER'))
+      .map(user => user.role === 'MANAGER' ? 'DG' : user.role));
+    return this.roles.filter(role => role !== 'MANAGER'
+      && !(role === 'ADMIN' && !this.isAdmin())
+      && !occupied.has(role));
+  });
+  protected readonly canManage = computed(() => this.authService.hasAnyRole('HR', 'ADMIN', 'DG', 'DT'));
+  protected readonly isAdmin = computed(() => this.authService.hasAnyRole('ADMIN'));
+  protected readonly canAssignRole = computed(() => this.authService.hasAnyRole('ADMIN', 'DG', 'DT'));
   protected readonly isTeamMode = computed(() => this.route.snapshot.routeConfig?.path === 'team-members');
   protected readonly title = computed(() => this.isTeamMode() ? "Membres de l'équipe" : 'Employés');
   protected readonly filteredUsers = computed(() => {
@@ -100,12 +116,14 @@ export class UserListComponent implements OnInit {
 
   protected openCreate(): void {
     this.formErrors.set({});
+    this.formGeneralError.set(null);
     this.editingUser.set(null);
     this.formOpen.set(true);
   }
 
   protected openEdit(user: UserResponse): void {
     this.formErrors.set({});
+    this.formGeneralError.set(null);
     this.editingUser.set(user);
     this.formOpen.set(true);
   }
@@ -114,10 +132,14 @@ export class UserListComponent implements OnInit {
     const current = this.editingUser();
     const operation = current
       ? this.userService.update(current.id, request as UserUpdateRequest)
-      : this.userService.create(request as UserCreateRequest);
+      : this.userService.create(request as UserCreateRequest).pipe(switchMap(created => {
+          const photo=(request as UserCreateRequest).photoFile;
+          return photo ? this.userService.uploadPhoto(created.id,photo).pipe(switchMap(()=>of(created))) : of(created);
+        }));
 
     this.isSaving.set(true);
     this.formErrors.set({});
+    this.formGeneralError.set(null);
     operation.subscribe({
       next: () => {
         this.isSaving.set(false);
@@ -127,7 +149,7 @@ export class UserListComponent implements OnInit {
       },
       error: (error: HttpErrorResponse) => {
         this.formErrors.set(validationErrors(error));
-        this.error.set(safeApiMessage(error, "Impossible d'enregistrer l'employé."));
+        this.formGeneralError.set(safeApiMessage(error, "Impossible d'enregistrer l'employé."));
         this.isSaving.set(false);
       }
     });
@@ -173,6 +195,18 @@ export class UserListComponent implements OnInit {
     this.resetPasswordUser.set(user);
   }
 
+  protected askRole(user: UserResponse): void {
+    this.roleError.set(null);
+    this.selectedRole.set(user.role === 'MANAGER' ? 'DG' : user.role);
+    this.roleUser.set(user);
+  }
+
+  protected assignRole(): void {
+    const user=this.roleUser(); if(!user)return;
+    this.isSaving.set(true);this.roleError.set(null);
+    this.userService.assignRole(user.id,this.selectedRole()).subscribe({next:()=>{this.isSaving.set(false);this.roleUser.set(null);this.loadUsers();},error:e=>{this.roleError.set(safeApiMessage(e,"Impossible d'attribuer ce rôle."));this.isSaving.set(false);}});
+  }
+
   protected resetPasswordToDefault(): void {
     const user = this.resetPasswordUser();
     if (!user) return;
@@ -203,7 +237,7 @@ export class UserListComponent implements OnInit {
   }
 
   private loadReferenceData(): void {
-    if (!this.authService.hasAnyRole('MANAGER', 'HR', 'ADMIN')) {
+    if (!this.authService.hasAnyRole('DG', 'DT', 'HR', 'ADMIN')) {
       return;
     }
 
@@ -224,6 +258,10 @@ export class UserListComponent implements OnInit {
   }
 
   protected roleLabel(role: RoleType): string {
-    return { EMPLOYEE: 'Employé', MANAGER: 'Manager', HR: 'Ressources humaines', ADMIN: 'Administrateur' }[role];
+    return { EMPLOYEE: 'Employé', MANAGER: 'Directeur général', DG: 'Directeur général', DT: 'Directeur technique', HR: 'Ressources humaines', ADMIN: 'Administrateur' }[role];
+  }
+
+  protected initials(user: UserResponse): string {
+    return `${user.firstName?.charAt(0) ?? ''}${user.lastName?.charAt(0) ?? ''}`.toUpperCase();
   }
 }

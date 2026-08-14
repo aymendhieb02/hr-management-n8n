@@ -65,6 +65,8 @@ public class AuthenticationService {
         response.setFirstName(employe.getPrenom());
         response.setLastName(employe.getNom());
         response.setRole(RoleType.fromDatabaseRole(employe.getRole()));
+        response.setPhotoUrl(employe.getPhotoProfil() == null ? null : "/api/employes/" + employe.getId() + "/photo");
+        response.setPasswordChangeRequired(Boolean.TRUE.equals(employe.getChangementMotDePasseRequis()));
         return response;
     }
 }

@@ -9,12 +9,14 @@
     <dl class="detail-grid">
       <div><dt><i>▣</i> Période</dt><dd>{{ request().startDate }} au {{ request().endDate }}</dd></div>
       <div><dt><i>◷</i> Nombre de jours</dt><dd class="detail-number">{{ request().requestedDays }}</dd></div>
-      <div><dt><i>✓</i> Décideur</dt><dd>{{ request().approver ? request().approver?.firstName + ' ' + request().approver?.lastName : 'Non assigné' }}</dd></div>
+      <div><dt><i><app-icon name="check" /></i> Décideur</dt><dd>{{ request().approver ? request().approver?.firstName + ' ' + request().approver?.lastName : 'Non assigné' }}</dd></div>
       <div><dt><i>◇</i> Motif</dt><dd>{{ request().reason || 'Aucun' }}</dd></div>
       <div class="detail-wide"><dt><i>☷</i> Commentaire de décision</dt><dd>{{ request().decisionComment || 'Aucun commentaire' }}</dd></div>
       <div><dt><i>↥</i> Date de soumission</dt><dd>{{ request().submittedAt }}</dd></div>
       <div><dt><i>◆</i> Date de décision</dt><dd>{{ request().decisionAt || 'Aucune' }}</dd></div>
     </dl>
+    @if(request().consumedDays!=null){<section class="regularization-detail"><header><app-icon name="transactions" /><div><span>CONGÉ RÉGULARISÉ</span><h3>Consommation réelle</h3></div></header><div><p><span>Jours consommés</span><strong>{{request().consumedDays}} / {{request().requestedDays}}</strong></p><p><span>Fin réelle</span><strong>{{request().actualEndDate||'Aucun jour consommé'}}</strong></p><p><span>Régularisé par</span><strong>{{request().regularizedBy?.firstName}} {{request().regularizedBy?.lastName}}</strong></p></div><blockquote>{{request().regularizationComment}}</blockquote></section>}
+    @if(request().workflow?.steps?.length){<section class="workflow-progress"><div class="workflow-title"><div><span>Circuit de validation</span><h3>Progression de la demande</h3></div><b>{{request().workflow!.status}}</b></div><ol>@for(step of request().workflow!.steps;track step.id){<li [class.done]="step.status==='APPROUVEE'" [class.current]="request().workflow!.currentStep===step.priority" [class.rejected]="step.status==='REFUSEE'" [class.anomaly]="step.status==='ANOMALIE'"><span>@if(step.status==='APPROUVEE'){<app-icon name="check" />} @else { {{ step.priority }} }</span><div><strong>{{step.approver.firstName}} {{step.approver.lastName}}</strong><small>{{step.status.replace('_',' ')}}</small>@if(step.comment){<p>{{step.comment}}</p>}</div></li>}</ol></section>}
     @if (isSickLeave()) {
       <section class="medical-certificate-card">
         <div class="certificate-heading"><span class="certificate-icon" aria-hidden="true">✚</span><div><h2>Certificat médical</h2><p>Document associé à cette demande de congé maladie.</p></div></div>

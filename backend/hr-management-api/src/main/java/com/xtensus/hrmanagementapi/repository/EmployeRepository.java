@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 public interface EmployeRepository extends JpaRepository<Employe, Long> {
+    boolean existsByRoleIgnoreCaseAndIdNot(String role, Long id);
 
     Optional<Employe> findByEmailIgnoreCase(String email);
 

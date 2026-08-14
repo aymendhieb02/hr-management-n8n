@@ -18,9 +18,12 @@ import com.xtensus.hrmanagementapi.repository.TypeContratRepository;
 import com.xtensus.hrmanagementapi.typecontrat.exception.TypeContratIntrouvableException;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.security.SecureRandom;
+import java.time.temporal.ChronoUnit;
 import org.springframework.stereotype.Service;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
+import com.xtensus.hrmanagementapi.notificationfr.service.NotificationFrancaiseService;
 
 @Service
 public class EmployeService {
@@ -30,19 +33,27 @@ public class EmployeService {
     private final TypeContratRepository typeContratRepository;
     private final EmployeMapper employeMapper;
     private final PasswordEncoder passwordEncoder;
+    private final CompteEmailService compteEmailService;
+    private final NotificationFrancaiseService notificationService;
+    private static final SecureRandom RANDOM = new SecureRandom();
+    private static final String ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%";
 
     public EmployeService(
             EmployeRepository employeRepository,
             PosteRepository posteRepository,
             TypeContratRepository typeContratRepository,
             EmployeMapper employeMapper,
-            PasswordEncoder passwordEncoder
+            PasswordEncoder passwordEncoder,
+            CompteEmailService compteEmailService,
+            NotificationFrancaiseService notificationService
     ) {
         this.employeRepository = employeRepository;
         this.posteRepository = posteRepository;
         this.typeContratRepository = typeContratRepository;
         this.employeMapper = employeMapper;
         this.passwordEncoder = passwordEncoder;
+        this.compteEmailService = compteEmailService;
+        this.notificationService = notificationService;
     }
 
     @Transactional
@@ -53,6 +64,12 @@ public class EmployeService {
     @Transactional
     public EmployeResponse createForManager(EmployeRequest request, Long managerId) {
         return createInternal(request, findEntity(managerId));
+    }
+
+    @Transactional
+    public EmployeResponse createForHr(EmployeRequest request) {
+        request.setRole(RoleType.EMPLOYEE.toDatabaseRole());
+        return createInternal(request, null);
     }
 
     private EmployeResponse createInternal(EmployeRequest request, Employe forcedManager) {
@@ -69,13 +86,23 @@ public class EmployeService {
         employe.setEmail(email);
         employe.setUsername(username);
         applyTechnicalDefaults(employe);
+        validerRoleUnique(employe.getRole(), null);
         attachReferences(request, employe);
         if (forcedManager != null) {
             employe.setManager(forcedManager);
             employe.setRole(RoleType.EMPLOYEE.toDatabaseRole());
         }
         employe.setCreatedAt(LocalDateTime.now());
-        return employeMapper.toResponse(employeRepository.save(employe));
+        String secret = genererSecretTemporaire();
+        employe.setMotDePasseHash(passwordEncoder.encode(secret));
+        employe.setCodeActivationHash(passwordEncoder.encode(secret));
+        employe.setChangementMotDePasseRequis(true);
+        employe.setCodeActivationExpireLe(LocalDateTime.now().plus(7, ChronoUnit.DAYS));
+        Employe saved = employeRepository.save(employe);
+        notificationService.notifier(saved, "SECURITE_COMPTE", "Changez votre mot de passe temporaire",
+                "Pour sécuriser votre compte, modifiez le mot de passe temporaire reçu par email dès votre première connexion.", "HAUTE");
+        compteEmailService.envoyerBienvenue(saved, secret);
+        return employeMapper.toResponse(saved);
     }
 
     @Transactional
@@ -94,6 +121,7 @@ public class EmployeService {
         employe.setEmail(email);
         employe.setUsername(username);
         applyTechnicalDefaults(employe);
+        validerRoleUnique(employe.getRole(), id);
         attachReferences(request, employe);
         if (employe.getManager() != null && employe.getManager().getId().equals(employe.getId())) {
             throw new EmployeInvalideException("Un employe ne peut pas etre son propre manager");
@@ -110,6 +138,12 @@ public class EmployeService {
         employe.setManager(findEntity(managerId));
         employe.setRole(RoleType.EMPLOYEE.toDatabaseRole());
         return employeMapper.toResponse(employeRepository.save(employe));
+    }
+
+    @Transactional
+    public EmployeResponse updateForHr(Long id, EmployeRequest request) {
+        request.setRole(findEntity(id).getRole());
+        return update(id, request);
     }
 
     @Transactional
@@ -141,14 +175,13 @@ public class EmployeService {
 
     @Transactional
     public void resetPasswordToDefault(Long id) {
-        findEntity(id);
-        employeRepository.resetPasswordToDatabaseDefault(id);
+        reinitialiserMotDePasse(findEntity(id));
     }
 
     @Transactional
     public void resetPasswordToDefaultForManager(Long id, Long managerId) {
         ensureManagedBy(id, managerId);
-        employeRepository.resetPasswordToDatabaseDefault(id);
+        reinitialiserMotDePasse(findEntity(id));
     }
 
     @Transactional(readOnly = true)
@@ -165,6 +198,9 @@ public class EmployeService {
             throw new EmployeInvalideException("Le mot de passe actuel est incorrect");
         }
         employe.setMotDePasseHash(passwordEncoder.encode(request.getNouveauMotDePasse()));
+        employe.setCodeActivationHash(null);
+        employe.setCodeActivationExpireLe(null);
+        employe.setChangementMotDePasseRequis(false);
         employe.setUpdatedAt(LocalDateTime.now());
         employeRepository.save(employe);
     }
@@ -187,6 +223,34 @@ public class EmployeService {
     @Transactional(readOnly = true)
     public List<EmployeResponse> findEquipe(Long managerId) {
         return employeRepository.findByManagerId(managerId).stream().map(employeMapper::toResponse).toList();
+    }
+
+    @Transactional
+    public EmployeResponse attribuerRole(Long id, String roleDemande, RoleType roleActeur, Long acteurId) {
+        Employe employe = findEntity(id);
+        RoleType nouveauRole;
+        try { nouveauRole = RoleType.valueOf(roleDemande == null ? "" : roleDemande.trim().toUpperCase()); }
+        catch (IllegalArgumentException ex) { throw new EmployeInvalideException("Role invalide"); }
+        if ((roleActeur == RoleType.DG || roleActeur == RoleType.DT)) {
+            ensureManagedBy(id, acteurId);
+            if (nouveauRole == RoleType.ADMIN) throw new EmployeInvalideException("Seul un administrateur peut attribuer le role Administrateur");
+        } else if (roleActeur != RoleType.ADMIN) {
+            throw new EmployeInvalideException("Vous n'etes pas autorise a attribuer un role");
+        }
+        validerRoleUnique(nouveauRole.toDatabaseRole(), id);
+        employe.setRole(nouveauRole.toDatabaseRole());
+        employe.setUpdatedAt(LocalDateTime.now());
+        return employeMapper.toResponse(employeRepository.save(employe));
+    }
+
+    private void validerRoleUnique(String role, Long employeId) {
+        RoleType type = RoleType.fromDatabaseRole(role);
+        if ((type == RoleType.DG || type == RoleType.DT)
+                && employeRepository.existsByRoleIgnoreCaseAndIdNot(type.toDatabaseRole(), employeId == null ? -1L : employeId)) {
+            throw new EmployeInvalideException(type == RoleType.DG
+                    ? "Un directeur general est deja designe."
+                    : "Un directeur technique est deja designe.");
+        }
     }
 
     private void applyTechnicalDefaults(Employe employe) {
@@ -238,6 +302,23 @@ public class EmployeService {
             throw new EmployeInvalideException(message);
         }
         return value.trim();
+    }
+
+    private void reinitialiserMotDePasse(Employe employe) {
+        String secret = genererSecretTemporaire();
+        employe.setMotDePasseHash(passwordEncoder.encode(secret));
+        employe.setCodeActivationHash(passwordEncoder.encode(secret));
+        employe.setChangementMotDePasseRequis(true);
+        employe.setCodeActivationExpireLe(LocalDateTime.now().plusDays(7));
+        employe.setUpdatedAt(LocalDateTime.now());
+        employeRepository.save(employe);
+        compteEmailService.envoyerBienvenue(employe, secret);
+    }
+
+    private String genererSecretTemporaire() {
+        StringBuilder value = new StringBuilder(14);
+        for (int i = 0; i < 14; i++) value.append(ALPHABET.charAt(RANDOM.nextInt(ALPHABET.length())));
+        return value.toString();
     }
 }
 

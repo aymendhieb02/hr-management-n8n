@@ -13,6 +13,8 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.access.hierarchicalroles.RoleHierarchy;
+import org.springframework.security.access.hierarchicalroles.RoleHierarchyImpl;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
@@ -23,6 +25,10 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 @Configuration
 @EnableMethodSecurity
 public class SecurityConfig {
+    @Bean
+    RoleHierarchy roleHierarchy() {
+        return RoleHierarchyImpl.fromHierarchy("ROLE_DG > ROLE_MANAGER\nROLE_DT > ROLE_MANAGER");
+    }
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final JwtAuthenticationEntryPoint authenticationEntryPoint;
@@ -55,10 +61,15 @@ public class SecurityConfig {
                         authorize
                                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                                 .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
+                                .requestMatchers(HttpMethod.POST, "/api/auth/mot-de-passe-oublie", "/api/auth/verifier-code", "/api/auth/reinitialiser-mot-de-passe").permitAll()
                                 .requestMatchers(HttpMethod.POST, "/api/auth/logout").permitAll()
                                 .requestMatchers("/error").permitAll()
                                 .requestMatchers(HttpMethod.GET, "/actuator/health").permitAll()
                                 .requestMatchers("/ws-notifications/**").permitAll()
+                                .requestMatchers(HttpMethod.GET, "/api/variables-systeme/politique-conges").authenticated()
+                                .requestMatchers(HttpMethod.GET, "/api/variables-systeme/**").hasRole("ADMIN")
+                                .requestMatchers(HttpMethod.PUT, "/api/variables-systeme/**").hasRole("ADMIN")
+                                .requestMatchers("/api/pipelines-validation/**").hasRole("ADMIN")
 
                                 .requestMatchers(HttpMethod.GET, "/api/departements/**").authenticated()
                                 .requestMatchers(HttpMethod.POST, "/api/departements").hasAnyRole("HR", "ADMIN")
@@ -87,6 +98,9 @@ public class SecurityConfig {
                                 .requestMatchers(HttpMethod.GET, "/api/employes/*/equipe").hasAnyRole("MANAGER", "HR", "ADMIN")
                                 .requestMatchers(HttpMethod.GET, "/api/employes/me").authenticated()
                                 .requestMatchers(HttpMethod.PUT, "/api/employes/me/password").authenticated()
+                                .requestMatchers(HttpMethod.POST, "/api/employes/me/photo").authenticated()
+                                .requestMatchers(HttpMethod.POST, "/api/employes/*/photo").hasAnyRole("MANAGER", "HR", "ADMIN")
+                                .requestMatchers(HttpMethod.GET, "/api/employes/*/photo").authenticated()
                                 .requestMatchers(HttpMethod.GET, "/api/users/role/**", "/api/employes/role/**").hasAnyRole("HR", "ADMIN")
                                 .requestMatchers(HttpMethod.GET, "/api/users/department/**").hasAnyRole("HR", "ADMIN")
                                 .requestMatchers("/api/users/**", "/api/employes/**").hasAnyRole("MANAGER", "HR", "ADMIN")
@@ -108,6 +122,7 @@ public class SecurityConfig {
                                 .requestMatchers(HttpMethod.GET, "/api/conge-demandes-v2/decideur/**").hasAnyRole("MANAGER", "HR", "ADMIN")
                                 .requestMatchers(HttpMethod.POST, "/api/conge-demandes-v2/*/approuver").hasAnyRole("MANAGER", "HR", "ADMIN")
                                 .requestMatchers(HttpMethod.POST, "/api/conge-demandes-v2/*/refuser").hasAnyRole("MANAGER", "HR", "ADMIN")
+                                .requestMatchers(HttpMethod.POST, "/api/conge-demandes-v2/*/consommation-reelle").hasAnyRole("MANAGER", "HR", "ADMIN")
                                 .requestMatchers(HttpMethod.PUT, "/api/conge-demandes-v2/**").authenticated()
                                 .requestMatchers(HttpMethod.DELETE, "/api/conge-demandes-v2/**").authenticated()
                                 .requestMatchers(HttpMethod.GET, "/api/conge-demandes-v2/**").authenticated()

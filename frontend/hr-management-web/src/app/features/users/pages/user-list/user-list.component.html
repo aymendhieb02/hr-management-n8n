@@ -1,11 +1,11 @@
 <section class="resource-page">
   <header class="page-header">
     <div>
-      <h1>{{ title() }}</h1>
+      <h1><app-icon name="team" />{{ title() }}</h1>
       <p>{{ isTeamMode() ? 'Gérez les employés affectés à votre équipe.' : 'Gérez les comptes employés et leurs affectations.' }}</p>
     </div>
     @if (canManage()) {
-      <button class="primary-button" type="button" (click)="openCreate()">Ajouter un employé</button>
+      <button class="primary-button" type="button" (click)="openCreate()"><app-icon name="plus" />Ajouter un employé</button>
     }
   </header>
 
@@ -35,7 +35,7 @@
         </select>
       </label>
     }
-    <button class="secondary-button" type="button" (click)="loadUsers()">Actualiser</button>
+    <button class="secondary-button" type="button" (click)="loadUsers()"><app-icon name="history" />Actualiser</button>
   </div>
 
   @if (error()) {
@@ -47,11 +47,11 @@
   } @else if (filteredUsers().length === 0) {
     <p class="state">{{ isTeamMode() ? "Aucun membre de l'équipe trouvé." : 'Aucun employé trouvé.' }}</p>
   } @else {
-    <div class="table-card">
-      <table appPaginatedTable>
+    <div class="table-card users-table-card">
+      <table appPaginatedTable class="users-table">
         <thead>
           <tr>
-            <th>Nom complet</th>
+            <th class="identity-column">Employé</th>
             <th>Identifiant</th>
             <th>Email</th>
             <th>Rôle</th>
@@ -59,15 +59,21 @@
             <th>Manager</th>
             <th>Statut</th>
             <th>État du compte</th>
-            <th>Actions</th>
+            <th class="actions-column">Actions</th>
           </tr>
         </thead>
         <tbody>
           @for (user of filteredUsers(); track user.id) {
             <tr>
-              <td>{{ user.firstName }} {{ user.lastName }}</td>
-              <td>{{ user.username }}</td>
-              <td>{{ user.email }}</td>
+              <td class="identity-cell">
+                <span class="user-avatar" aria-hidden="true">{{ initials(user) }}</span>
+                <span class="user-identity">
+                  <strong>{{ user.firstName }} {{ user.lastName }}</strong>
+                  <small>{{ user.email }}</small>
+                </span>
+              </td>
+              <td><span class="username-chip">{{ user.username }}</span></td>
+              <td class="email-cell">{{ user.email }}</td>
               <td>{{ roleLabel(user.role) }}</td>
               <td>{{ user.typeContract?.name || 'Aucun' }}</td>
               <td>{{ user.manager ? user.manager.firstName + ' ' + user.manager.lastName : 'Aucun' }}</td>
@@ -81,14 +87,14 @@
                   {{ user.enabled ? 'Activé' : 'Désactivé' }}
                 </span>
               </td>
-              <td>
-                <div class="actions">
-                  <button class="secondary-button" type="button" (click)="detailUser.set(user)">Voir les détails</button>
+              <td class="actions-cell">
+                <div class="actions user-actions">
+                  <button class="table-action view-action" type="button" (click)="detailUser.set(user)" title="Voir les détails" aria-label="Voir les détails"><app-icon name="info" /></button>
                   @if (canManage()) {
-                    <button class="secondary-button" type="button" (click)="openEdit(user)">Modifier</button>
-                    <button class="secondary-button" type="button" (click)="askResetPassword(user)">Mot de passe par défaut</button>
-                    <button class="secondary-button" type="button" (click)="toggleActive(user)">{{ user.enabled ? 'Bloquer' : 'Débloquer' }}</button>
-                    <button class="danger-button" type="button" (click)="requestDelete(user)">Supprimer</button>
+                    <button class="table-action edit-action" type="button" (click)="openEdit(user)" title="Modifier l’employé" aria-label="Modifier l’employé"><app-icon name="edit" /></button>
+                    @if(canAssignRole()){<button class="table-action role-action" type="button" (click)="askRole(user)" title="Attribuer un rôle" aria-label="Attribuer un rôle"><app-icon name="role-shield" /></button>}
+                    <button class="table-action toggle-action" type="button" (click)="toggleActive(user)" [title]="user.enabled ? 'Bloquer le compte' : 'Débloquer le compte'" [attr.aria-label]="user.enabled?'Bloquer le compte':'Débloquer le compte'"><app-icon [name]="user.enabled?'lock':'unlock'" /></button>
+                    <button class="table-action delete-action" type="button" (click)="requestDelete(user)" title="Supprimer l’employé" aria-label="Supprimer l’employé"><app-icon name="delete" /></button>
                   }
                 </div>
               </td>
@@ -108,10 +114,29 @@
     [positions]="positions()"
     [loading]="isSaving()"
     [validationErrors]="formErrors()"
+    [generalError]="formGeneralError()"
     [managerMode]="isTeamMode()"
+    [roleEditable]="isAdmin()"
     (save)="saveUser($event)"
     (cancel)="formOpen.set(false)"
   />
+}
+@if (roleUser(); as user) {
+  <div class="dialog-backdrop"><section class="dialog role-dialog" role="dialog" aria-modal="true">
+    <header class="role-dialog-header"><span class="role-dialog-icon"><app-icon name="role-shield" /></span><div><span class="eyebrow">GESTION DES ACCÈS</span><h2>Attribuer un rôle</h2><p>{{ user.firstName }} {{ user.lastName }}</p></div></header>
+    <fieldset class="role-options"><legend>Nouveau rôle</legend>
+      @for(role of assignableRoles();track role){
+        <label class="role-option" [class.selected]="selectedRole()===role">
+          <input type="radio" name="nouveau-role" [value]="role" [ngModel]="selectedRole()" (ngModelChange)="selectedRole.set($event)">
+          <span class="role-option-icon"><app-icon [name]="role==='ADMIN'?'settings':role==='EMPLOYEE'?'profile':'role-shield'" /></span>
+          <span><strong>{{roleLabel(role)}}</strong><small>{{role==='DG'||role==='DT'?'Rôle unique dans l’organisation':'Accès adapté aux responsabilités'}}</small></span>
+          <app-icon class="role-check" name="check" />
+        </label>
+      }
+    </fieldset>
+    @if(roleError()){<p class="dialog-error" role="alert">{{roleError()}}</p>}
+    <div class="dialog-actions"><button class="secondary-button" type="button" (click)="roleUser.set(null)"><app-icon name="close" />Annuler</button><button class="primary-button" type="button" (click)="assignRole()" [disabled]="isSaving()"><app-icon name="check" />{{isSaving()?'Enregistrement...':'Confirmer le rôle'}}</button></div>
+  </section></div>
 }
 
 @if (passwordUser()) {

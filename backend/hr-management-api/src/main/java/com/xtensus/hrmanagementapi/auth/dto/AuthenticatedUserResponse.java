@@ -21,4 +21,6 @@ public class AuthenticatedUserResponse {
     private String lastName;
 
     private RoleType role;
+    private String photoUrl;
+    private boolean passwordChangeRequired;
 }

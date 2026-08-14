@@ -13,6 +13,7 @@ describe('UserFormComponent', () => {
     fixture = TestBed.createComponent(UserFormComponent);
     fixture.componentRef.setInput('users', [manager, hr, employee]);
     fixture.componentRef.setInput('typeContracts', [{ id: 1, name: 'CDI' }]);
+    fixture.componentRef.setInput('positions', [{ id: 1, title: 'Développeur', description: null, level: null, active: true, createdAt: '', updatedAt: null }]);
     fixture.detectChanges();
   });
 
@@ -29,6 +30,7 @@ describe('UserFormComponent', () => {
     setValue(1, '  NEW.USER@TEST.COM  ');
     setValue(2, '  New  ');
     setValue(3, '  User  ');
+    (fixture.componentInstance as any).form.patchValue({phone:'12345678',birthDate:'1990-01-01',positionId:1,typeContractId:1});
 
     fixture.nativeElement.querySelector('form').dispatchEvent(new Event('submit'));
 
@@ -69,14 +71,16 @@ describe('UserFormComponent', () => {
       email: `${role.toLowerCase()}@test.com`,
       firstName: label,
       lastName: 'User',
-      phone: null,
+      phone: '12345678',
+      birthDate: '1990-01-01',
       hireDate: null,
       role,
       status: 'ACTIVE',
       enabled: true,
       manager: null,
       department: null,
-      position: null,
+      position: {id:1,name:'Développeur'},
+      typeContract: {id:1,name:'CDI'},
       createdAt: '',
       updatedAt: null
     };
