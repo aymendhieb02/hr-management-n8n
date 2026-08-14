@@ -1,0 +1,17 @@
+.setting-card input[readonly],
+.setting-card select:disabled {
+  cursor: default;
+  border-color: #e7dfd7;
+  background: #f7f4f1;
+  color: #756c65;
+  opacity: 1;
+}
+
+.setting-card.editing-card {
+  border-color: #ef9a4b;
+  box-shadow: 0 0 0 3px rgb(239 138 44 / 10%), 0 12px 30px #48342312;
+}
+
+.setting-actions { display: flex; gap: 8px; }
+.setting-card .cancel-edit { border: 1px solid #e4d4c5; background: #fff8f1; color: #a45616; }
+.hero-icon app-icon { width: 30px; height: 30px; }
