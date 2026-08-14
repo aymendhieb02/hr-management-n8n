@@ -248,8 +248,8 @@ public class EmployeService {
         if ((type == RoleType.DG || type == RoleType.DT)
                 && employeRepository.existsByRoleIgnoreCaseAndIdNot(type.toDatabaseRole(), employeId == null ? -1L : employeId)) {
             throw new EmployeInvalideException(type == RoleType.DG
-                    ? "Un Directeur general est deja affecte"
-                    : "Une Directrice technique est deja affectee");
+                    ? "Un directeur general est deja designe."
+                    : "Un directeur technique est deja designe.");
         }
     }
 

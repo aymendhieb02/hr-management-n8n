@@ -36,6 +36,10 @@ public class CongeDemandeMapper {
         response.setNombreJours(demande.getNombreJours());
         response.setSamediCompte(demande.getSamediCompte());
         response.setNombreJoursConsomme(demande.getNombreJoursConsomme());
+        response.setDateFinReelle(demande.getDateFinReelle());
+        response.setDateRegularisation(demande.getDateRegularisation());
+        response.setRegularisePar(toEmployeResume(demande.getRegularisePar()));
+        response.setCommentaireRegularisation(demande.getCommentaireRegularisation());
         response.setCommentaireEmploye(demande.getCommentaireEmploye());
         response.setCommentaireDecision(demande.getCommentaireDecision());
         response.setDateDecision(demande.getDateDecision());

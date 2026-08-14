@@ -4,6 +4,8 @@ import com.xtensus.hrmanagementapi.conge.demande.dto.CongeDecisionRequest;
 import com.xtensus.hrmanagementapi.conge.demande.dto.CongeDemandeCreationRequest;
 import com.xtensus.hrmanagementapi.conge.demande.dto.CongeDemandeModificationRequest;
 import com.xtensus.hrmanagementapi.conge.demande.dto.CongeDemandeResponse;
+import com.xtensus.hrmanagementapi.conge.demande.dto.ConsommationReelleRequest;
+import com.xtensus.hrmanagementapi.domain.enums.RoleType;
 import com.xtensus.hrmanagementapi.conge.demande.service.CongeDemandeService;
 import jakarta.validation.Valid;
 import java.util.List;
@@ -56,8 +58,9 @@ public class CongeDemandeController {
     }
 
     @GetMapping("/decideur/{decideurId}")
-    public ResponseEntity<List<CongeDemandeResponse>> parDecideur(@PathVariable Long decideurId) {
-        return ResponseEntity.ok(service.parDecideur(decideurId));
+    public ResponseEntity<List<CongeDemandeResponse>> parDecideur(@PathVariable Long decideurId, @AuthenticationPrincipal CustomUserDetails principal) {
+        if(principal==null||!principal.getId().equals(decideurId)) throw new com.xtensus.hrmanagementapi.conge.demande.exception.DecisionCongeNonAutoriseeException("Consultation non autorisee");
+        return ResponseEntity.ok(service.parDecideur(decideurId,principal.getRole()));
     }
 
     @PutMapping("/{id}")
@@ -85,10 +88,13 @@ public class CongeDemandeController {
     }
 
     @PostMapping("/{id}/consommation-reelle")
-    public ResponseEntity<CongeDemandeResponse> ajusterConsommation(@PathVariable Long id, @RequestBody ConsommationReelle request) {
-        return ResponseEntity.ok(service.ajusterConsommation(id, request.nombreJours()));
+    public ResponseEntity<CongeDemandeResponse> ajusterConsommation(@PathVariable Long id,
+            @Valid @RequestBody ConsommationReelleRequest request, @AuthenticationPrincipal CustomUserDetails principal) {
+        if (principal == null || (principal.getRole() != RoleType.DG && principal.getRole() != RoleType.DT)) {
+            throw new com.xtensus.hrmanagementapi.conge.demande.exception.DecisionCongeNonAutoriseeException("Seuls DG et DT peuvent regulariser une consommation");
+        }
+        return ResponseEntity.ok(service.ajusterConsommation(id, request.nombreJoursConsommes(), request.commentaire(), principal.getId()));
     }
-    public record ConsommationReelle(java.math.BigDecimal nombreJours) {}
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> supprimer(@PathVariable Long id, @AuthenticationPrincipal CustomUserDetails principal) {

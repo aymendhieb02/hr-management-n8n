@@ -43,7 +43,12 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiErrorResponse> handleDataIntegrityViolation(DataIntegrityViolationException exception, HttpServletRequest request) {
         String details = exception.getMostSpecificCause() == null ? "" : exception.getMostSpecificCause().getMessage();
         String message;
-        if (details != null && details.toLowerCase().contains("duplicate")) {
+        String normalizedDetails = details == null ? "" : details.toLowerCase();
+        if (normalizedDetails.contains("uk_employes_role_direction") && normalizedDetails.contains("dg")) {
+            message = "Un directeur general est deja designe.";
+        } else if (normalizedDetails.contains("uk_employes_role_direction") && normalizedDetails.contains("dt")) {
+            message = "Un directeur technique est deja designe.";
+        } else if (normalizedDetails.contains("duplicate")) {
             message = "Cette valeur existe deja. Utilisez un libelle ou un identifiant unique.";
         } else if (details != null && details.toLowerCase().contains("cannot be null")) {
             message = "Une donnee obligatoire est absente. Actualisez la page puis reessayez.";

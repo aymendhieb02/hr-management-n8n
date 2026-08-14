@@ -76,6 +76,19 @@ public class CongeDemande {
     @Column(name = "nombre_jours_consomme", precision = 5, scale = 2)
     private BigDecimal nombreJoursConsomme;
 
+    @Column(name = "date_fin_reelle")
+    private LocalDate dateFinReelle;
+
+    @Column(name = "date_regularisation")
+    private LocalDateTime dateRegularisation;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "regularise_par_id")
+    private Employe regularisePar;
+
+    @Column(name = "commentaire_regularisation", length = 1000)
+    private String commentaireRegularisation;
+
     @Column(name = "conge_demande_commentaire_employe", length = 1000)
     private String commentaireEmploye;
 

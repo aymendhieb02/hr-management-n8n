@@ -82,9 +82,11 @@ public class CongeSoldeTransactionService {
         BigDecimal dejaCompte = demande.getNombreJoursConsomme() == null ? demande.getNombreJours() : demande.getNombreJoursConsomme();
         BigDecimal correction = dejaCompte.subtract(joursReels).setScale(2, RoundingMode.HALF_UP);
         if (correction.signum() == 0) return;
-        String reference = "AJUSTEMENT_DEMANDE:" + demande.getId() + ":" + joursReels.stripTrailingZeros().toPlainString();
-        if (historiques.existe(reference)) return;
+        String reference = "AJUSTEMENT_DEMANDE:" + demande.getId() + ":" + java.util.UUID.randomUUID();
         CongeSolde solde=assurerSolde(demande.getEmploye()); BigDecimal avant=solde.getRestants(); BigDecimal apres=avant.add(correction);
+        if (correction.signum() < 0 && apres.compareTo(soldeMinimum()) < 0) {
+            throw new CongeDemandeInvalideException("Solde insuffisant pour augmenter la consommation reelle");
+        }
         solde.setRestants(apres); solde.setJoursUtilises(solde.getJoursUtilises().subtract(correction)); solde.setDateModification(LocalDateTime.now());
         soldes.save(solde); historiques.enregistrer(solde,demande,"AJUSTEMENT_CONSOMMATION",correction,avant,apres,reference);
     }
