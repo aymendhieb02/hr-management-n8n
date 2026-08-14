@@ -12,6 +12,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -52,6 +53,12 @@ public class GlobalExceptionHandler {
             message = "Impossible d'enregistrer cette modification en raison d'une contrainte de la base de donnees.";
         }
         return buildResponse(HttpStatus.CONFLICT, message, request, null);
+    }
+
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public ResponseEntity<ApiErrorResponse> handleUploadTooLarge(MaxUploadSizeExceededException exception, HttpServletRequest request) {
+        return buildResponse(HttpStatus.PAYLOAD_TOO_LARGE,
+                "Le fichier est trop volumineux. Une photo de profil peut faire au maximum 10 Mo.", request, null);
     }
 
     @ExceptionHandler(Exception.class)

@@ -32,8 +32,17 @@ public class Employe {
     @Column(name = "username", nullable = false, unique = true, length = 100)
     private String username;
 
-    @Column(name = "mot_de_passe_hash", nullable = false, length = 255, insertable = false)
+    @Column(name = "mot_de_passe_hash", nullable = false, length = 255)
     private String motDePasseHash;
+
+    @Column(name = "code_activation_hash", length = 255)
+    private String codeActivationHash;
+
+    @Column(name = "changement_mot_de_passe_requis", nullable = false)
+    private Boolean changementMotDePasseRequis;
+
+    @Column(name = "code_activation_expire_le")
+    private LocalDateTime codeActivationExpireLe;
 
     @Column(name = "employe_nom", nullable = false, length = 100)
     private String nom;
@@ -56,8 +65,14 @@ public class Employe {
     @Column(name = "employe_date_embauche")
     private LocalDate dateEmbauche;
 
+    @Column(name = "derniere_acquisition_conge")
+    private LocalDate derniereAcquisitionConge;
+
     @Column(name = "employe_sexe", length = 30)
     private String sexe;
+
+    @Column(name = "photo_profil", length = 500)
+    private String photoProfil;
 
     @Column(name = "role", nullable = false, length = 30)
     private String role;

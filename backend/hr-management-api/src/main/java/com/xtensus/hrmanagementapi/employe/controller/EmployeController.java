@@ -4,6 +4,7 @@ import com.xtensus.hrmanagementapi.employe.dto.EmployeRequest;
 import com.xtensus.hrmanagementapi.employe.dto.EmployeResponse;
 import com.xtensus.hrmanagementapi.employe.dto.MotDePasseModificationRequest;
 import com.xtensus.hrmanagementapi.employe.service.EmployeService;
+import com.xtensus.hrmanagementapi.employe.service.PhotoProfilService;
 import com.xtensus.hrmanagementapi.security.user.CustomUserDetails;
 import jakarta.validation.Valid;
 import java.util.List;
@@ -19,15 +20,22 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.RequestPart;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.http.MediaType;
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.beans.factory.ObjectProvider;
 
 @RestController
 @RequestMapping("/api/employes")
 public class EmployeController {
 
     private final EmployeService employeService;
+    private final ObjectProvider<PhotoProfilService> photoProfilService;
 
-    public EmployeController(EmployeService employeService) {
+    public EmployeController(EmployeService employeService, ObjectProvider<PhotoProfilService> photoProfilService) {
         this.employeService = employeService;
+        this.photoProfilService = photoProfilService;
     }
 
     @PostMapping
@@ -93,6 +101,30 @@ public class EmployeController {
         employeService.updateOwnPassword(principal.getId(), request);
         return ResponseEntity.noContent().build();
     }
+
+    @PostMapping(value = "/me/photo", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<Void> updateOwnPhoto(@RequestPart("fichier") MultipartFile fichier,
+            @AuthenticationPrincipal CustomUserDetails principal) {
+        photos().enregistrer(principal.getId(), fichier); return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping(value = "/{id}/photo", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<Void> updatePhoto(@PathVariable Long id, @RequestPart("fichier") MultipartFile fichier,
+            @AuthenticationPrincipal CustomUserDetails principal) {
+        if (isManager(principal)) employeService.findAccessible(id, principal.getId(), true);
+        photos().enregistrer(id, fichier); return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/{id}/photo")
+    public ResponseEntity<FileSystemResource> photo(@PathVariable Long id) {
+        FileSystemResource photo = photos().lire(id);
+        return ResponseEntity.ok().contentType(MediaType.parseMediaType(
+                java.util.Optional.ofNullable(photo.getFile().toPath()).map(p -> {
+                    try { return java.nio.file.Files.probeContentType(p); } catch (Exception e) { return null; }
+                }).orElse("image/jpeg"))).body(photo);
+    }
+
+    private PhotoProfilService photos() { return photoProfilService.getObject(); }
 
     @PatchMapping("/{id}/active/{active}")
     public ResponseEntity<EmployeResponse> setActive(@PathVariable Long id, @PathVariable boolean active,

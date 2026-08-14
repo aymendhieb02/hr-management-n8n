@@ -76,6 +76,12 @@ public class CongeDemandeController {
         return ResponseEntity.ok(service.refuser(id, request));
     }
 
+    @PostMapping("/{id}/consommation-reelle")
+    public ResponseEntity<CongeDemandeResponse> ajusterConsommation(@PathVariable Long id, @RequestBody ConsommationReelle request) {
+        return ResponseEntity.ok(service.ajusterConsommation(id, request.nombreJours()));
+    }
+    public record ConsommationReelle(java.math.BigDecimal nombreJours) {}
+
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> supprimer(@PathVariable Long id) {
         service.supprimer(id);

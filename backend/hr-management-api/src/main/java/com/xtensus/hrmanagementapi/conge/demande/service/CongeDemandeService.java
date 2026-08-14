@@ -98,6 +98,7 @@ public class CongeDemandeService {
         demande.setHeureFin(request.getHeureFin());
         demande.setDateSoumission(now);
         demande.setNombreJours(nombreJours);
+        demande.setSamediCompte(false);
         demande.setCommentaireEmploye(trim(request.getCommentaireEmploye()));
         demande.setDateCreation(now);
         CongeDemande saved = demandeRepository.save(demande);
@@ -158,6 +159,11 @@ public class CongeDemandeService {
     public CongeDemandeResponse approuver(Long id, CongeDecisionRequest request) {
         CongeDemande demande = entite(id);
         String ancienStatut = demande.getStatut().getLibelle();
+        boolean samediCompte = Boolean.TRUE.equals(request.getSamediCompte());
+        demande.setSamediCompte(samediCompte);
+        if (!"AUTORISATION_ABSENCE".equals(demande.getNature())) {
+            demande.setNombreJours(nombreJoursOuvrables(demande.getDateDebut(), demande.getDateFin(), samediCompte));
+        }
         appliquerDecision(demande, request, STATUT_APPROUVEE, false);
         soldeTransactionService.debiter(demande);
         CongeDemande saved = demandeRepository.save(demande);
@@ -183,6 +189,20 @@ public class CongeDemandeService {
                 saved.getEmploye(), "DECISION_CONGE", "Demande refusée",
                 "Votre " + libelleNature(saved) + " du " + periode(saved) + " a été refusée."
                         + commentaireDecision(saved), "HAUTE");
+        return mapper.toResponse(saved);
+    }
+
+    @Transactional
+    public CongeDemandeResponse ajusterConsommation(Long id, BigDecimal joursReels) {
+        CongeDemande demande=entite(id);
+        if (demande.getStatut()==null || !STATUT_APPROUVEE.equals(demande.getStatut().getLibelle())) {
+            throw new CongeDemandeInvalideException("Seule une demande approuvee peut etre ajustee");
+        }
+        soldeTransactionService.ajusterConsommation(demande, joursReels);
+        demande.setNombreJoursConsomme(joursReels); demande.setDateModification(LocalDateTime.now());
+        CongeDemande saved=demandeRepository.save(demande);
+        historiqueService.enregistrer(saved,"AJUSTEMENT_CONSOMMATION",STATUT_APPROUVEE,STATUT_APPROUVEE,"Consommation reelle : "+joursReels+" jour(s)");
+        notificationService.notifier(saved.getEmploye(),"DECISION_CONGE","Congé régularisé","Votre congé a été régularisé à "+joursReels+" jour(s) réellement consommé(s).","NORMALE");
         return mapper.toResponse(saved);
     }
 
@@ -300,6 +320,14 @@ public class CongeDemandeService {
         }
     }
     private BigDecimal nombreJours(LocalDate debut, LocalDate fin) { return BigDecimal.valueOf(ChronoUnit.DAYS.between(debut, fin) + 1); }
+    private BigDecimal nombreJoursOuvrables(LocalDate debut, LocalDate fin, boolean samediCompte) {
+        long total = debut.datesUntil(fin.plusDays(1)).filter(date -> {
+            if (date.getDayOfWeek() == java.time.DayOfWeek.SUNDAY) return false;
+            if (!samediCompte && date.getDayOfWeek() == java.time.DayOfWeek.SATURDAY) return false;
+            return !jourFerieRepository.existsByDateAndActifTrue(date);
+        }).count();
+        return BigDecimal.valueOf(total);
+    }
     private String trim(String value) { if (value == null) return null; String t = value.trim(); return t.isEmpty() ? null : t; }
 
     private String libelleNature(CongeDemande demande) {

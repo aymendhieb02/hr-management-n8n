@@ -21,6 +21,8 @@ public class EmployeResponse {
     private LocalDate dateNaissance;
     private LocalDate dateEmbauche;
     private String sexe;
+    private String photoUrl;
+    private Boolean changementMotDePasseRequis;
     private Boolean actif;
     private String role;
     private String statut;

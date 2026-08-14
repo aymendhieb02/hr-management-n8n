@@ -29,6 +29,8 @@ public class EmployeMapper {
         response.setDateNaissance(employe.getDateNaissance());
         response.setDateEmbauche(employe.getDateEmbauche());
         response.setSexe(employe.getSexe());
+        response.setPhotoUrl(employe.getPhotoProfil() == null ? null : "/api/employes/" + employe.getId() + "/photo");
+        response.setChangementMotDePasseRequis(Boolean.TRUE.equals(employe.getChangementMotDePasseRequis()));
         response.setActif(employe.getActif());
         response.setRole(RoleType.fromDatabaseRole(employe.getRole()).name());
         response.setStatut(employe.getStatut());

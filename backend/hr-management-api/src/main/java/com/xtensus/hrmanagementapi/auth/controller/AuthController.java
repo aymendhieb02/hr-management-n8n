@@ -4,6 +4,9 @@ import com.xtensus.hrmanagementapi.auth.dto.AuthenticatedUserResponse;
 import com.xtensus.hrmanagementapi.auth.dto.LoginRequest;
 import com.xtensus.hrmanagementapi.auth.dto.LoginResponse;
 import com.xtensus.hrmanagementapi.auth.service.AuthenticationService;
+import com.xtensus.hrmanagementapi.auth.service.MotDePasseOublieService;
+import com.xtensus.hrmanagementapi.auth.dto.MotDePasseOublieRequest;
+import com.xtensus.hrmanagementapi.auth.dto.ReinitialisationMotDePasseRequest;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.HttpHeaders;
@@ -21,13 +24,33 @@ public class AuthController {
 
     private final AuthenticationService authenticationService;
     private final boolean cookieSecure;
+    private final MotDePasseOublieService motDePasseOublieService;
     private static final String AUTH_COOKIE = "xtensus_hr_token";
 
-    public AuthController(AuthenticationService authenticationService,
+    public AuthController(AuthenticationService authenticationService, MotDePasseOublieService motDePasseOublieService,
             @Value("${app.security.cookie-secure:false}") boolean cookieSecure) {
         this.authenticationService = authenticationService;
+        this.motDePasseOublieService = motDePasseOublieService;
         this.cookieSecure = cookieSecure;
     }
+
+    @PostMapping("/mot-de-passe-oublie")
+    public ResponseEntity<MotDePasseOublieService.DemandeCode> motDePasseOublie(@Valid @RequestBody MotDePasseOublieRequest request) {
+        return ResponseEntity.ok(motDePasseOublieService.demander(request.identifiant()));
+    }
+
+    @PostMapping("/reinitialiser-mot-de-passe")
+    public ResponseEntity<Void> reinitialiser(@Valid @RequestBody ReinitialisationMotDePasseRequest request) {
+        motDePasseOublieService.reinitialiser(request); return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/verifier-code")
+    public ResponseEntity<MotDePasseOublieService.VerificationCode> verifierCode(@Valid @RequestBody VerificationRequest request) {
+        return ResponseEntity.ok(motDePasseOublieService.verifier(request.identifiant(), request.code()));
+    }
+
+    public record VerificationRequest(@jakarta.validation.constraints.NotBlank String identifiant,
+            @jakarta.validation.constraints.Pattern(regexp="\\d{6}") String code) {}
 
     @PostMapping("/login")
     public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest request) {

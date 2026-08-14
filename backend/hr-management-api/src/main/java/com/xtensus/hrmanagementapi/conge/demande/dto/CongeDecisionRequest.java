@@ -14,4 +14,5 @@ public class CongeDecisionRequest {
     private Long decideurId;
     @Size(max = 1000, message = "Le commentaire ne doit pas depasser 1000 caracteres")
     private String commentaire;
+    private Boolean samediCompte;
 }

@@ -70,6 +70,12 @@ public class CongeDemande {
     @Column(name = "conge_demande_nombre_jours", nullable = false, precision = 5, scale = 2)
     private BigDecimal nombreJours;
 
+    @Column(name = "samedi_compte", nullable = false)
+    private Boolean samediCompte;
+
+    @Column(name = "nombre_jours_consomme", precision = 5, scale = 2)
+    private BigDecimal nombreJoursConsomme;
+
     @Column(name = "conge_demande_commentaire_employe", length = 1000)
     private String commentaireEmploye;
 

@@ -18,6 +18,8 @@ public class CongeDemandeResponse {
     private TypeCongeResume congeType;
     private StatutResume statut;
     private String raison;
+    private Long raisonId;
+    private Boolean certificatMedicalRequis;
     private String nature;
     private LocalDate dateDebut;
     private LocalTime heureDebut;
@@ -25,6 +27,8 @@ public class CongeDemandeResponse {
     private LocalTime heureFin;
     private LocalDateTime dateSoumission;
     private BigDecimal nombreJours;
+    private Boolean samediCompte;
+    private BigDecimal nombreJoursConsomme;
     private String commentaireEmploye;
     private String commentaireDecision;
     private LocalDateTime dateDecision;
@@ -35,6 +39,7 @@ public class CongeDemandeResponse {
         private String nom;
         private String prenom;
         private String email;
+        private String photoUrl;
     }
 
     @Getter @Setter @NoArgsConstructor
