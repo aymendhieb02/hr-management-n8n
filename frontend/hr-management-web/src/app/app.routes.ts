@@ -46,28 +46,28 @@ export const routes: Routes = [
       {
         path: 'my-leave-requests',
         canActivate: [roleGuard],
-        data: { title: 'Mes demandes de conge', roles: ['EMPLOYEE', 'MANAGER', 'HR', 'ADMIN'] },
+        data: { title: 'Mes demandes de conge', roles: ['EMPLOYEE', 'MANAGER', 'DT', 'HR', 'ADMIN'] },
         loadComponent: () => import('./features/leaves/pages/leave-request-list/leave-request-list.component')
           .then((m) => m.LeaveRequestListComponent)
       },
       {
         path: 'request-leave',
         canActivate: [roleGuard],
-        data: { title: 'Demander un conge', roles: ['EMPLOYEE', 'MANAGER', 'HR', 'ADMIN'] },
+        data: { title: 'Demander un conge', roles: ['EMPLOYEE', 'MANAGER', 'DT', 'HR', 'ADMIN'] },
         loadComponent: () => import('./features/leaves/pages/leave-request-list/leave-request-list.component')
           .then((m) => m.LeaveRequestListComponent)
       },
       {
         path: 'my-balance',
         canActivate: [roleGuard],
-        data: { title: 'Mon solde de congé', roles: ['EMPLOYEE', 'MANAGER', 'HR', 'ADMIN'] },
+        data: { title: 'Mon solde de congé', roles: ['EMPLOYEE', 'MANAGER', 'DT', 'HR', 'ADMIN'] },
         loadComponent: () => import('./features/leaves/pages/leave-balance-list/leave-balance-list.component')
           .then((m) => m.LeaveBalanceListComponent)
       },
       {
         path: 'my-calendar',
         canActivate: [roleGuard],
-        data: { title: 'Mon calendrier', roles: ['EMPLOYEE', 'MANAGER', 'HR', 'ADMIN'] },
+        data: { title: 'Mon calendrier', roles: ['EMPLOYEE', 'MANAGER', 'DT', 'HR', 'ADMIN'] },
         loadComponent: () => import('./features/calendar/pages/calendar/calendar.component').then((m) => m.CalendarComponent)
       },
       {
@@ -166,7 +166,7 @@ export const routes: Routes = [
       {
         path: 'balance-transactions',
         canActivate: [roleGuard],
-        data: { title: 'Transactions de congé', roles: ['DG', 'DT', 'HR', 'ADMIN'] },
+        data: { title: 'Soldes et transactions de congé', roles: ['DG', 'DT', 'HR', 'ADMIN'] },
         loadComponent: () => import('./features/leaves/pages/leave-balance-list/leave-balance-list.component').then((m) => m.LeaveBalanceListComponent)
       },
       {

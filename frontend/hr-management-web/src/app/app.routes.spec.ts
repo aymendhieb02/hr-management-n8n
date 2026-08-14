@@ -19,10 +19,10 @@ describe('app route role data', () => {
   });
 
   it('allows all business roles to access their own leave pages', () => {
-    expect(rolesFor('my-leave-requests')).toEqual(['EMPLOYEE', 'MANAGER', 'HR', 'ADMIN']);
-    expect(rolesFor('request-leave')).toEqual(['EMPLOYEE', 'MANAGER', 'HR', 'ADMIN']);
-    expect(rolesFor('my-balance')).toEqual(['EMPLOYEE', 'MANAGER', 'HR', 'ADMIN']);
-    expect(rolesFor('my-calendar')).toEqual(['EMPLOYEE', 'MANAGER', 'HR', 'ADMIN']);
+    expect(rolesFor('my-leave-requests')).toEqual(['EMPLOYEE', 'MANAGER', 'DT', 'HR', 'ADMIN']);
+    expect(rolesFor('request-leave')).toEqual(['EMPLOYEE', 'MANAGER', 'DT', 'HR', 'ADMIN']);
+    expect(rolesFor('my-balance')).toEqual(['EMPLOYEE', 'MANAGER', 'DT', 'HR', 'ADMIN']);
+    expect(rolesFor('my-calendar')).toEqual(['EMPLOYEE', 'MANAGER', 'DT', 'HR', 'ADMIN']);
   });
 
   it('opens the dashboard to managers while keeping global reports restricted', () => {
