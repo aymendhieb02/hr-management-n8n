@@ -45,7 +45,7 @@
       <article class="pipeline-card table-card">
         <div class="card-head">
           <div class="pipeline-identity"><span class="pipeline-emblem"><app-icon name="workflow" /></span><div><div class="title-line"><h2>{{p.nom}}</h2><span class="badge" [class.success]="p.actif" [class.muted]="!p.actif">{{p.actif?'Actif':'Inactif'}}</span></div><p>Collaborateur concerné · <strong>{{p.employe.prenom}} {{p.employe.nom}}</strong></p></div></div>
-          <div class="actions"><button class="secondary-button icon-button" type="button" title="Modifier le circuit" aria-label="Modifier le circuit" (click)="edit(p)"><app-icon name="edit" /></button><button class="danger-button icon-button" type="button" title="Désactiver le circuit" aria-label="Désactiver le circuit" (click)="disable(p)"><app-icon name="ban" /></button></div>
+          <div class="actions"><button class="secondary-button icon-button" type="button" title="Copier le circuit" aria-label="Copier le circuit" (click)="copy(p)"><app-icon name="copy" /></button><button class="secondary-button icon-button" type="button" title="Modifier le circuit" aria-label="Modifier le circuit" (click)="edit(p)"><app-icon name="edit" /></button><button class="danger-button icon-button" type="button" title="Désactiver le circuit" aria-label="Désactiver le circuit" (click)="disable(p)"><app-icon name="ban" /></button></div>
         </div>
         <div class="flow-caption"><span>Parcours de décision</span><small>{{p.etapes.length}} étape(s)</small></div>
         <div class="horizontal-flow">
@@ -61,7 +61,7 @@
 
 @if(open()){
   <div class="dialog-backdrop" (click)="open.set(false)"><section class="dialog pipeline-dialog" (click)="$event.stopPropagation()">
-    <header class="dialog-header"><div><span class="eyebrow">CONSTRUCTEUR DE WORKFLOW</span><h2><app-icon name="workflow" />{{editing()?'Modifier':'Créer'}} un circuit</h2><p>Chaque étape sera sollicitée dans l’ordre affiché.</p></div><button class="icon-button secondary-button close-button" type="button" (click)="open.set(false)" aria-label="Fermer"><app-icon name="close" /></button></header>
+    <header class="dialog-header"><div><span class="eyebrow">CONSTRUCTEUR DE WORKFLOW</span><h2><app-icon name="workflow" />{{editing()?'Modifier':copying()?'Copier':'Créer'}} un circuit</h2><p>{{copying()?'Choisissez un autre collaborateur et adaptez le nom avant l’enregistrement.':'Chaque étape sera sollicitée dans l’ordre affiché.'}}</p></div><button class="icon-button secondary-button close-button" type="button" (click)="open.set(false)" aria-label="Fermer"><app-icon name="close" /></button></header>
     <section class="configuration-panel">
       <div class="form-grid"><label class="form-field"><span>Nom du circuit</span><input [(ngModel)]="name" placeholder="Ex. Validation direction générale"></label><label class="form-field"><span>Collaborateur concerné</span><select [(ngModel)]="employeeId"><option [ngValue]="null">Sélectionnez un collaborateur</option>@for(u of employees();track u.id){<option [ngValue]="u.id">{{u.firstName}} {{u.lastName}}</option>}</select></label></div>
     </section>
@@ -77,6 +77,7 @@
       }
     </div>
     <label class="toggle"><input type="checkbox" [(ngModel)]="active"><span class="toggle-control"></span><span><strong>Activer ce circuit</strong><small>Il sera utilisé pour les prochaines demandes du collaborateur.</small></span></label>
-    <footer class="dialog-actions"><button class="secondary-button" type="button" (click)="open.set(false)"><app-icon name="close" />Annuler</button><button class="primary-button" type="button" (click)="save()"><app-icon name="check" />Enregistrer le circuit</button></footer>
+    @if(dialogError()){<p class="dialog-error pipeline-dialog-error" role="alert"><app-icon name="info" />{{dialogError()}}</p>}
+    <footer class="dialog-actions"><button class="secondary-button" type="button" (click)="open.set(false)"><app-icon name="close" />Annuler</button><button class="primary-button" type="button" (click)="save()" [disabled]="!formComplete()"><app-icon name="check" />Enregistrer le circuit</button></footer>
   </section></div>
 }

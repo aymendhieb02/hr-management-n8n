@@ -2,7 +2,8 @@
   <header class="page-header dashboard-hero">
     <div class="hero-copy">
       <span class="eyebrow">{{ isManager() ? "PILOTAGE DE L'ÉQUIPE" : 'CENTRE DE PILOTAGE RH' }}</span>
-      <h1>Bonjour, {{ fullName() }}</h1>
+      <h1><app-icon name="dashboard" />Tableau de bord</h1>
+      <strong class="welcome-line">Bonjour, {{ fullName() }}</strong>
       <p>{{ isManager() ? "Suivez la disponibilité, les demandes et la capacité de votre équipe." : "Une vision consolidée des effectifs, des congés et des actions qui nécessitent votre attention." }}</p>
     </div>
     <div class="hero-actions">

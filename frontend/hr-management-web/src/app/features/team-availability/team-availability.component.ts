@@ -8,13 +8,14 @@ import { LeaveRequestResponse } from '../leaves/models/leave-request.model';
 import { LeaveRequestService } from '../leaves/services/leave-request.service';
 import { UserResponse } from '../users/models/user.model';
 import { UserService } from '../users/services/user.service';
+import { AppIconComponent } from '../../shared/components/app-icon/app-icon.component';
 
 type AvailabilityKind = 'AVAILABLE' | 'LEAVE' | 'AUTHORIZATION' | 'HOLIDAY';
 interface AvailabilityState { kind: AvailabilityKind; label: string; detail: string; }
 
 @Component({
   selector: 'app-team-availability',
-  imports: [FormsModule],
+  imports: [AppIconComponent, FormsModule],
   templateUrl: './team-availability.component.html',
   styleUrl: './team-availability.component.scss'
 })
