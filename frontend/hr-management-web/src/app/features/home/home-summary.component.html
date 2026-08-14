@@ -2,13 +2,13 @@
   <header class="page-header"><div><h1>Accueil</h1><p>Votre tableau de bord RH en un coup d'œil.</p></div></header>
   @if (loading()) { <p class="state">Chargement du tableau de bord...</p> } @else {
     <div class="summary-grid">
-      @if (role() === 'MANAGER') { <section class="summary-card"><span>Membres de l'équipe</span><strong>{{ team().length }}</strong><i class="orange-mark"></i></section> }
+      @if (role() === 'DG' || role() === 'DT') { <section class="summary-card"><span>Membres de l'équipe</span><strong>{{ team().length }}</strong><i class="orange-mark"></i></section> }
       <section class="summary-card"><span>Demandes en attente</span><strong>{{ pending() }}</strong><i class="amber-mark"></i></section>
       <section class="summary-card"><span>Demandes approuvées</span><strong>{{ approved() }}</strong><i class="green-mark"></i></section>
       <section class="summary-card"><span>Demandes refusées</span><strong>{{ rejected() }}</strong><i class="red-mark"></i></section>
       <section class="summary-card"><span>Notifications non lues</span><strong>{{ unread() }}</strong><i class="orange-mark"></i></section>
-      @if (role() === 'MANAGER') { <section class="summary-card"><span>Absents aujourd'hui</span><strong>{{ absentToday() }}</strong><i class="blue-mark"></i></section> }
-      @if (role() !== 'MANAGER') { <section class="summary-card"><span>Solde disponible</span><strong>{{ availableBalance() }}</strong><i class="blue-mark"></i></section> }
+      @if (role() === 'DG' || role() === 'DT') { <section class="summary-card"><span>Absents aujourd'hui</span><strong>{{ absentToday() }}</strong><i class="blue-mark"></i></section> }
+      @if (role() !== 'DG' && role() !== 'DT') { <section class="summary-card"><span>Solde disponible</span><strong>{{ availableBalance() }}</strong><i class="blue-mark"></i></section> }
     </div>
     @if (nextAbsence()) { <p class="state">Prochaine absence approuvée : du {{ nextAbsence()!.startDate }} au {{ nextAbsence()!.endDate }}</p> }
     <section class="holiday-section">

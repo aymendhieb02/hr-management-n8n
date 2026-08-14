@@ -1,0 +1,41 @@
+<section class="resource-page pipeline-page">
+  <header class="page-header">
+    <div><span class="eyebrow">Administration</span><h1>Circuits de validation</h1><p>Organisez l’ordre des décideurs pour chaque employé.</p></div>
+    <button class="primary-button" type="button" (click)="create()">＋ Nouveau circuit</button>
+  </header>
+  @if(message()){<p class="state success">{{message()}}</p>}
+  @if(error()){<p class="state error">{{error()}}</p>}
+  <section class="filters-card">
+    <label class="search-field"><span>Rechercher</span><input type="search" placeholder="Nom du circuit ou de l’employé" [ngModel]="search()" (ngModelChange)="search.set($event)"></label>
+    <span class="result-count">{{filtered().length}} circuit(s)</span>
+  </section>
+  @if(anomalies().length){
+    <section class="anomalies table-card"><header><div><span class="eyebrow">Action requise</span><h2>Circuits bloqués</h2></div><b>{{anomalies().length}}</b></header>
+      @for(a of anomalies();track a.etapeId){<div class="anomaly-row"><div><strong>Demande #{{a.demandeId}} · {{a.employe}}</strong><small>Étape {{a.priorite}} · décideur indisponible : {{a.decideur}}</small></div><select #replacement (change)="reassign(a,replacement.value)"><option value="">Réaffecter à...</option>@for(u of approvers();track u.id){<option [value]="u.id">{{u.firstName}} {{u.lastName}} · {{u.role}}</option>}</select></div>}
+    </section>
+  }
+  <div class="pipeline-list">
+    @for(p of filtered();track p.id){
+      <article class="pipeline-card table-card">
+        <div class="card-head"><div><span class="badge" [class.success]="p.actif" [class.muted]="!p.actif">{{p.actif?'Actif':'Inactif'}}</span><h2>{{p.nom}}</h2><p>Employé : <strong>{{p.employe.prenom}} {{p.employe.nom}}</strong></p></div><div class="actions"><button class="secondary-button icon-button" title="Modifier" (click)="edit(p)">✎</button><button class="danger-button icon-button" title="Désactiver" (click)="disable(p)">⊘</button></div></div>
+        <div class="horizontal-flow">@for(step of p.etapes;track step.id;let last=$last){<div class="flow-step"><span>{{step.priorite}}</span><div><strong>{{step.decideur.prenom}} {{step.decideur.nom}}</strong><small>{{step.decideur.role}}</small></div></div>@if(!last){<i class="flow-arrow">→</i>}}</div>
+      </article>
+    } @empty {<div class="empty-state table-card"><strong>Aucun circuit configuré</strong><p>Créez le premier parcours de validation.</p></div>}
+  </div>
+</section>
+
+@if(open()){
+  <div class="dialog-backdrop" (click)="open.set(false)"><section class="dialog pipeline-dialog" (click)="$event.stopPropagation()">
+    <header class="dialog-header"><div><span class="eyebrow">Constructeur</span><h2>{{editing()?'Modifier':'Créer'}} un circuit</h2><p>Définissez l’employé et l’ordre exact des validations.</p></div><button class="icon-button secondary-button" (click)="open.set(false)" aria-label="Fermer">×</button></header>
+    <div class="form-grid"><label class="form-field"><span>Nom du circuit</span><input [(ngModel)]="name" placeholder="Ex. Validation direction"></label><label class="form-field"><span>Employé concerné</span><select [(ngModel)]="employeeId"><option [ngValue]="null">Sélectionnez un employé</option>@for(u of employees();track u.id){<option [ngValue]="u.id">{{u.firstName}} {{u.lastName}}</option>}</select></label></div>
+    <div class="builder-head"><div><h3>Ordre de validation</h3><p>Le dernier décideur rend la décision finale.</p></div><button class="secondary-button" type="button" (click)="addStep()">＋ Ajouter une étape</button></div>
+    <div class="steps-horizontal">
+      @for(step of steps;track $index;let i=$index;let last=$last){
+        <article class="step-card"><header><span class="step-number">{{i+1}}</span><small>{{last?'Décision finale':'Validation intermédiaire'}}</small></header><label class="form-field"><span>Décideur</span><select [(ngModel)]="step.decideurId"><option [ngValue]="null">Sélectionnez un décideur</option>@for(u of approversFor(i);track u.id){<option [ngValue]="u.id">{{u.firstName}} {{u.lastName}} · {{u.role}}</option>}</select></label><div class="step-actions"><button class="secondary-button" type="button" (click)="move(i,-1)" [disabled]="i===0" title="Déplacer à gauche">←</button><button class="secondary-button" type="button" (click)="move(i,1)" [disabled]="last" title="Déplacer à droite">→</button><button class="danger-button" type="button" (click)="removeStep(i)" [disabled]="steps.length===1" title="Supprimer">×</button></div></article>
+        @if(!last){<i class="builder-arrow">→</i>}
+      }
+    </div>
+    <label class="toggle"><input type="checkbox" [(ngModel)]="active"><span>Activer ce circuit</span></label>
+    <footer class="dialog-actions"><button class="secondary-button" type="button" (click)="open.set(false)">Annuler</button><button class="primary-button" type="button" (click)="save()">Enregistrer le circuit</button></footer>
+  </section></div>
+}

@@ -50,7 +50,7 @@
               <td>{{ request.leaveType.name }}</td>
               <td>{{ request.startDate }} au {{ request.endDate }}</td>
               <td>{{ request.requestedDays }}</td>
-              <td><span class="badge" [class.success]="request.status === 'APPROVED'" [class.warning]="request.status === 'PENDING'" [class.muted]="request.status !== 'APPROVED' && request.status !== 'PENDING'">{{ statusLabel(request.status) }}</span></td>
+              <td><span class="badge" [class.success]="request.status === 'APPROVED'" [class.warning]="request.status === 'PENDING'" [class.draft]="request.status === 'DRAFT'" [class.muted]="request.status !== 'APPROVED' && request.status !== 'PENDING' && request.status !== 'DRAFT'">{{ statusLabel(request.status) }}</span></td>
               <td>{{ request.approver ? request.approver.firstName + ' ' + request.approver.lastName : 'Non assigne' }}</td>
               <td>
                 <div class="actions">
@@ -58,9 +58,10 @@
                   @if (!isManagerMode() && isSickLeave(request) && (request.status === 'PENDING' || request.status === 'APPROVED')) {
                     <button class="certificate-button" type="button" (click)="detailRequest.set(request)" title="Gérer le certificat médical" aria-label="Gérer le certificat médical">{{ hasCertificate(request.id) ? 'Voir le certificat' : '✚ Ajouter un certificat' }}</button>
                   }
-                  @if (!isManagerMode() && request.status === 'PENDING') {
+                  @if (!isManagerMode() && request.status === 'DRAFT') {
                     <button class="secondary-button" type="button" (click)="openEdit(request)">Modifier</button>
                     <button class="danger-button" type="button" (click)="deleteRequest(request)" [disabled]="isSaving()">Supprimer</button>
+                    <button class="primary-button" type="button" (click)="askSubmit(request)">Confirmer et envoyer</button>
                   }
                   @if (isManagerMode() && request.status === 'PENDING') {
                     <button class="primary-button" type="button" (click)="openDecision(request, 'approve')">Approuver</button>
@@ -77,6 +78,20 @@
 </section>
 @if (formOpen()) {
   <app-leave-request-form [request]="editingRequest()" [leaveTypes]="leaveTypes()" [reasons]="reasons()" [holidays]="holidays()" [maximumLeaveDays]="maximumLeaveDays()" [loading]="isSaving()" [validationErrors]="formErrors()" [submissionError]="formSubmissionError()" (save)="saveRequest($event)" (cancel)="closeForm()" />
+}
+@if (submitRequest()) {
+  <div class="dialog-backdrop" (click)="submitRequest.set(null)">
+    <section class="dialog submit-dialog" role="alertdialog" aria-modal="true" (click)="$event.stopPropagation()">
+      <span class="eyebrow">ENVOI DE LA DEMANDE</span>
+      <h2>Confirmer et envoyer ?</h2>
+      <p>Les dates, le solde et le circuit de validation seront contrôlés avant l’envoi au premier décideur.</p>
+      @if (submitError()) { <p class="dialog-error" role="alert">{{ submitError() }}</p> }
+      <div class="dialog-actions">
+        <button class="secondary-button" type="button" (click)="submitRequest.set(null)" [disabled]="isSaving()">Annuler</button>
+        <button class="primary-button" type="button" (click)="confirmSubmit()" [disabled]="isSaving()">{{ isSaving() ? 'Envoi...' : 'Confirmer et envoyer' }}</button>
+      </div>
+    </section>
+  </div>
 }
 @if (detailRequest()) {
   <app-leave-details [request]="detailRequest()!" (certificateAdded)="markCertificateAdded($event)" (close)="detailRequest.set(null)" />

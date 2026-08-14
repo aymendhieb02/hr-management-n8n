@@ -12,17 +12,18 @@ import { LeaveRequestListComponent } from './leave-request-list.component';
 describe('LeaveRequestListComponent', () => {
   let fixture: ComponentFixture<LeaveRequestListComponent>;
   let service: any;
-  const request = leaveRequest('PENDING');
+  const request = leaveRequest('DRAFT');
 
   function setup(path = 'my-leave-requests'): void {
     service = {
       findByRequester: vi.fn(() => of([request])),
-      findByApprover: vi.fn(() => of([request])),
+      findByApprover: vi.fn(() => of([{ ...request, status: 'PENDING' }])),
       create: vi.fn(() => of(request)),
       update: vi.fn(() => of(request)),
       delete: vi.fn(() => of(void 0)),
       approve: vi.fn(() => of({ ...request, status: 'APPROVED' })),
       reject: vi.fn(() => of({ ...request, status: 'REJECTED' }))
+      ,submit: vi.fn(() => of({ ...request, status: 'PENDING' }))
     };
     TestBed.configureTestingModule({
       imports: [LeaveRequestListComponent],

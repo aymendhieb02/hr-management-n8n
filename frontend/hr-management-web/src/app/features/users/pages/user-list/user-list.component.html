@@ -89,12 +89,12 @@
               </td>
               <td class="actions-cell">
                 <div class="actions user-actions">
-                  <button class="table-action view-action" type="button" (click)="detailUser.set(user)" title="Voir les détails" [attr.aria-label]="isTeamMode()?'Voir les détails':null">{{isTeamMode()?'◉':'Voir les détails'}}</button>
+                  <button class="table-action view-action" type="button" (click)="detailUser.set(user)" title="Voir les détails" aria-label="Voir les détails">◉</button>
                   @if (canManage()) {
-                    <button class="table-action edit-action" type="button" (click)="openEdit(user)" title="Modifier l’employé" [attr.aria-label]="isTeamMode()?'Modifier l’employé':null">{{isTeamMode()?'✎':'Modifier'}}</button>
-                    @if(!isTeamMode()){<button class="table-action password-action" type="button" (click)="askResetPassword(user)" title="Réinitialiser le mot de passe">Mot de passe</button>}
-                    <button class="table-action toggle-action" type="button" (click)="toggleActive(user)" [title]="user.enabled ? 'Bloquer le compte' : 'Débloquer le compte'" [attr.aria-label]="isTeamMode()?(user.enabled?'Bloquer le compte':'Débloquer le compte'):null">{{isTeamMode()?(user.enabled?'⊘':'✓'):(user.enabled?'Bloquer':'Débloquer')}}</button>
-                    <button class="table-action delete-action" type="button" (click)="requestDelete(user)" title="Supprimer l’employé" [attr.aria-label]="isTeamMode()?'Supprimer l’employé':null">{{isTeamMode()?'⌫':'Supprimer'}}</button>
+                    <button class="table-action edit-action" type="button" (click)="openEdit(user)" title="Modifier l’employé" aria-label="Modifier l’employé">✎</button>
+                    @if(canAssignRole()){<button class="table-action role-action" type="button" (click)="askRole(user)" title="Attribuer un rôle" aria-label="Attribuer un rôle">♙</button>}
+                    <button class="table-action toggle-action" type="button" (click)="toggleActive(user)" [title]="user.enabled ? 'Bloquer le compte' : 'Débloquer le compte'" [attr.aria-label]="user.enabled?'Bloquer le compte':'Débloquer le compte'">{{user.enabled?'⊘':'✓'}}</button>
+                    <button class="table-action delete-action" type="button" (click)="requestDelete(user)" title="Supprimer l’employé" aria-label="Supprimer l’employé">⌫</button>
                   }
                 </div>
               </td>
@@ -116,9 +116,21 @@
     [validationErrors]="formErrors()"
     [generalError]="formGeneralError()"
     [managerMode]="isTeamMode()"
+    [roleEditable]="isAdmin()"
     (save)="saveUser($event)"
     (cancel)="formOpen.set(false)"
   />
+}
+@if (roleUser(); as user) {
+  <div class="dialog-backdrop"><section class="dialog role-dialog" role="dialog" aria-modal="true">
+    <span class="eyebrow">GESTION DES ACCÈS</span><h2>Attribuer un rôle</h2>
+    <p>{{ user.firstName }} {{ user.lastName }}</p>
+    <label class="form-field"><span>Nouveau rôle</span><select [ngModel]="selectedRole()" (ngModelChange)="selectedRole.set($event)">
+      @for(role of roles;track role){ @if(role !== 'MANAGER' && !(role === 'ADMIN' && !isAdmin())){<option [value]="role">{{roleLabel(role)}}</option>} }
+    </select></label>
+    @if(roleError()){<p class="dialog-error" role="alert">{{roleError()}}</p>}
+    <div class="dialog-actions"><button class="secondary-button" type="button" (click)="roleUser.set(null)">Annuler</button><button class="primary-button" type="button" (click)="assignRole()" [disabled]="isSaving()">Confirmer</button></div>
+  </section></div>
 }
 
 @if (passwordUser()) {

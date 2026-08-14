@@ -33,7 +33,7 @@ export class DashboardComponent implements OnInit {
   protected readonly lastUpdated = signal<Date | null>(null);
 
   protected readonly currentUser = computed(() => this.auth.getCurrentUser());
-  protected readonly isManager = computed(() => this.currentUser()?.role === 'MANAGER');
+  protected readonly isManager = computed(() => ['DG','DT'].includes(this.currentUser()?.role ?? ''));
   protected readonly pending = computed(() => this.count('PENDING'));
   protected readonly approved = computed(() => this.count('APPROVED'));
   protected readonly rejected = computed(() => this.count('REJECTED'));
@@ -75,7 +75,7 @@ export class DashboardComponent implements OnInit {
 
   protected readonly roleBreakdown = computed<ChartItem[]>(() => this.toPercent([
     { label: 'Employés', value: this.roleCount('EMPLOYEE') },
-    { label: 'Managers', value: this.roleCount('MANAGER') },
+    { label: 'Direction', value: this.roleCount('DG') + this.roleCount('DT') },
     { label: 'Ressources humaines', value: this.roleCount('HR') },
     { label: 'Administrateurs', value: this.roleCount('ADMIN') }
   ]));

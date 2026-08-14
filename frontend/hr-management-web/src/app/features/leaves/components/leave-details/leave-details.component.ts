@@ -84,7 +84,7 @@ export class LeaveDetailsComponent {
   });
 
   protected statusLabel(): string {
-    return { PENDING: 'En attente', APPROVED: 'Approuvee', REJECTED: 'Refusee', CANCELLED: 'Annulee' }[this.request().status];
+    return { DRAFT: 'Brouillon', PENDING: 'En attente', APPROVED: 'Approuvee', REJECTED: 'Refusee', CANCELLED: 'Annulee' }[this.request().status];
   }
 
   private normalize(value: string): string {

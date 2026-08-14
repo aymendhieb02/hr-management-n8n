@@ -27,6 +27,7 @@ describe('UserListComponent', () => {
     updatePassword: ReturnType<typeof vi.fn>;
     setActive: ReturnType<typeof vi.fn>;
     resetPasswordToDefault: ReturnType<typeof vi.fn>;
+    assignRole: ReturnType<typeof vi.fn>;
     delete: ReturnType<typeof vi.fn>;
   };
   let authService: {
@@ -48,6 +49,7 @@ describe('UserListComponent', () => {
       updatePassword: vi.fn(() => of(void 0)),
       setActive: vi.fn(() => of(users[0])),
       resetPasswordToDefault: vi.fn(() => of(void 0)),
+      assignRole: vi.fn(() => of(users[0])),
       delete: vi.fn(() => of(void 0))
     };
     authService = {
@@ -75,13 +77,13 @@ describe('UserListComponent', () => {
     expect(userService.findAll).toHaveBeenCalled();
     expect(text()).toContain('Alice Admin');
     expect(text()).toContain('Ajouter un employé');
-    expect(text()).toContain('Modifier');
-    expect(text()).toContain('Bloquer');
-    expect(text()).toContain('Supprimer');
+    expect(fixture.nativeElement.querySelector('[aria-label="Modifier l’employé"]')).toBeTruthy();
+    expect(fixture.nativeElement.querySelector('[aria-label="Bloquer le compte"]')).toBeTruthy();
+    expect(fixture.nativeElement.querySelector('[aria-label="Supprimer l’employé"]')).toBeTruthy();
   });
 
   it('loads only team members and lets managers administer their team', () => {
-    configure('MANAGER', 'team-members');
+    configure('DG', 'team-members');
 
     expect(userService.findTeamMembers).toHaveBeenCalledWith(2);
     expect(text()).toContain("Membres de l'équipe");
@@ -139,23 +141,23 @@ describe('UserListComponent', () => {
     expect(userService.create).toHaveBeenCalledWith(expect.objectContaining({ username: 'new.user', email: 'new@test.com', password: '' }));
 
     fixture.detectChanges();
-    buttonByText('Modifier').click();
+    (fixture.nativeElement.querySelector('[aria-label="Modifier l’employé"]') as HTMLButtonElement).click();
     fixture.detectChanges();
     fixture.nativeElement.querySelector('app-user-form form').dispatchEvent(new Event('submit'));
     expect(userService.update).toHaveBeenCalledWith(1, expect.not.objectContaining({ password: expect.anything() }));
 
     fixture.detectChanges();
-    buttonByText('Bloquer').click();
+    (fixture.nativeElement.querySelector('[aria-label="Bloquer le compte"]') as HTMLButtonElement).click();
     expect(userService.setActive).toHaveBeenCalledWith(1, false);
 
     fixture.detectChanges();
-    buttonByText('Supprimer').click();
+    (fixture.nativeElement.querySelector('[aria-label="Supprimer l’employé"]') as HTMLButtonElement).click();
     fixture.detectChanges();
     confirmDeleteButton().click();
     expect(userService.delete).toHaveBeenCalledWith(1);
 
     userService.delete.mockReturnValue(throwError(() => new HttpErrorResponse({ status: 409 })));
-    buttonByText('Supprimer').click();
+    (fixture.nativeElement.querySelector('[aria-label="Supprimer l’employé"]') as HTMLButtonElement).click();
     fixture.detectChanges();
     confirmDeleteButton().click();
     fixture.detectChanges();
@@ -165,7 +167,7 @@ describe('UserListComponent', () => {
   it('shows details without exposing passwordHash', () => {
     configure('HR', 'users', of([{ ...users[0], passwordHash: 'secret-hash' } as UserResponse]));
 
-    buttonByText('Voir les détails').click();
+    (fixture.nativeElement.querySelector('[aria-label="Voir les détails"]') as HTMLButtonElement).click();
     fixture.detectChanges();
 
     expect(text()).toContain('Alice Admin');

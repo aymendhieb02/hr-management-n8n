@@ -21,6 +21,7 @@ export class UserService {
  updatePassword(_id:number,request:PasswordUpdateRequest):Observable<void>{return this.http.put<void>(`${this.baseUrl}/me/password`,{motDePasseActuel:request.currentPassword,nouveauMotDePasse:request.newPassword});}
  setActive(id:number,active:boolean):Observable<UserResponse>{return this.http.patch<EmployeApiResponse>(`${this.baseUrl}/${id}/active/${active}`,{}).pipe(map(toUser));}
  resetPasswordToDefault(id:number):Observable<void>{return this.http.patch<void>(`${this.baseUrl}/${id}/password/default`,{});}
+ assignRole(id:number,role:RoleType):Observable<UserResponse>{return this.http.patch<EmployeApiResponse>(`${this.baseUrl}/${id}/role`,{role}).pipe(map(toUser));}
  delete(id:number):Observable<void>{return this.http.delete<void>(`${this.baseUrl}/${id}`);}
  uploadOwnPhoto(file:File):Observable<void>{const data=new FormData();data.append('fichier',file);return this.http.post<void>(`${this.baseUrl}/me/photo`,data);}
  uploadPhoto(id:number,file:File):Observable<void>{const data=new FormData();data.append('fichier',file);return this.http.post<void>(`${this.baseUrl}/${id}/photo`,data);}

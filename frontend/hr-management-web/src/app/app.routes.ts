@@ -27,19 +27,19 @@ export const routes: Routes = [
       {
         path: 'home',
         canActivate: [roleGuard],
-        data: { title: 'Accueil', roles: ['EMPLOYEE', 'MANAGER', 'HR', 'ADMIN'] },
+        data: { title: 'Accueil', roles: ['EMPLOYEE', 'DG', 'DT', 'HR', 'ADMIN'] },
         loadComponent: () => import('./features/home/home-summary.component').then((m) => m.HomeSummaryComponent)
       },
       {
         path: 'profile',
         canActivate: [roleGuard],
-        data: { title: 'Mon profil', roles: ['EMPLOYEE', 'MANAGER', 'HR', 'ADMIN'] },
+        data: { title: 'Mon profil', roles: ['EMPLOYEE', 'DG', 'DT', 'HR', 'ADMIN'] },
         loadComponent: () => import('./features/profile/profile.component').then((m) => m.ProfileComponent)
       },
       {
         path: 'notifications',
         canActivate: [roleGuard],
-        data: { title: 'Notifications', roles: ['EMPLOYEE', 'MANAGER', 'HR', 'ADMIN'] },
+        data: { title: 'Notifications', roles: ['EMPLOYEE', 'DG', 'DT', 'HR', 'ADMIN'] },
         loadComponent: () => import('./features/notifications/pages/notification-list/notification-list.component')
           .then((m) => m.NotificationListComponent)
       },
@@ -73,34 +73,34 @@ export const routes: Routes = [
       {
         path: 'team-requests',
         canActivate: [roleGuard],
-        data: { title: 'Demandes de l equipe', roles: ['MANAGER', 'HR', 'ADMIN'] },
+        data: { title: 'Demandes de l equipe', roles: ['DG', 'DT', 'HR', 'ADMIN'] },
         loadComponent: () => import('./features/leaves/pages/leave-request-list/leave-request-list.component')
           .then((m) => m.LeaveRequestListComponent)
       },
       {
         path: 'team-members',
         canActivate: [roleGuard],
-        data: { title: 'Membres de l equipe', roles: ['MANAGER', 'HR', 'ADMIN'] },
+        data: { title: 'Membres de l equipe', roles: ['DG', 'DT', 'HR', 'ADMIN'] },
         loadComponent: () => import('./features/users/pages/user-list/user-list.component')
           .then((m) => m.UserListComponent)
       },
       {
         path: 'team-calendar',
         canActivate: [roleGuard],
-        data: { title: 'Calendrier de l equipe', roles: ['MANAGER', 'HR', 'ADMIN'] },
+        data: { title: 'Calendrier de l equipe', roles: ['DG', 'DT', 'HR', 'ADMIN'] },
         loadComponent: () => import('./features/calendar/pages/calendar/calendar.component').then((m) => m.CalendarComponent)
       },
       {
         path: 'team-availability',
         canActivate: [roleGuard],
-        data: { title: "Disponibilité de l'équipe", roles: ['MANAGER'] },
+        data: { title: "Disponibilité de l'équipe", roles: ['DG', 'DT'] },
         loadComponent: () => import('./features/team-availability/team-availability.component')
           .then((m) => m.TeamAvailabilityComponent)
       },
       {
         path: 'dashboard',
         canActivate: [roleGuard],
-        data: { title: 'Tableau de bord', roles: ['MANAGER', 'HR', 'ADMIN'] },
+        data: { title: 'Tableau de bord', roles: ['DG', 'DT', 'HR', 'ADMIN'] },
         loadComponent: () => import('./features/dashboard/pages/dashboard/dashboard.component').then((m) => m.DashboardComponent)
       },
       {
@@ -166,7 +166,7 @@ export const routes: Routes = [
       {
         path: 'balance-transactions',
         canActivate: [roleGuard],
-        data: { title: 'Transactions de congé', roles: ['MANAGER', 'HR', 'ADMIN'] },
+        data: { title: 'Transactions de congé', roles: ['DG', 'DT', 'HR', 'ADMIN'] },
         loadComponent: () => import('./features/leaves/pages/leave-balance-list/leave-balance-list.component').then((m) => m.LeaveBalanceListComponent)
       },
       {
@@ -199,10 +199,15 @@ export const routes: Routes = [
         canActivate: [roleGuard],
         data: { title: 'Configuration système', roles: ['ADMIN'] },
         loadComponent: () => import('./features/system-configuration/system-configuration.component').then((m) => m.SystemConfigurationComponent)
+      },
+      {
+        path: 'validation-pipelines', canActivate: [roleGuard],
+        data: { title: 'Circuits de validation', roles: ['ADMIN'] },
+        loadComponent: () => import('./features/validation-pipelines/validation-pipelines.component').then((m) => m.ValidationPipelinesComponent)
       }
       ,{
         path: 'leave-history', canActivate: [roleGuard],
-        data: { title: 'Historique des demandes', roles: ['EMPLOYEE', 'MANAGER', 'ADMIN'] },
+        data: { title: 'Historique des demandes', roles: ['EMPLOYEE', 'DG', 'DT', 'ADMIN'] },
         loadComponent: () => import('./features/leave-history/leave-history.component').then((m) => m.LeaveHistoryComponent)
       }
     ]

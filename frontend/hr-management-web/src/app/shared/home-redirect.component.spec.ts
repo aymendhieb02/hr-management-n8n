@@ -31,7 +31,7 @@ describe('HomeRedirectComponent', () => {
   it('redirects employees and managers to home from root', () => {
     const router = TestBed.inject(Router);
     const navigateSpy = vi.spyOn(router, 'navigateByUrl').mockResolvedValue(true);
-    authService.getCurrentUser.mockReturnValue({ ...user, role: 'MANAGER' });
+    authService.getCurrentUser.mockReturnValue({ ...user, role: 'DG' });
 
     TestBed.createComponent(HomeRedirectComponent).detectChanges();
 

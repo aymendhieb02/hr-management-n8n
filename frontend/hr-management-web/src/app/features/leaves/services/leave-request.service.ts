@@ -20,11 +20,12 @@ interface CongeDemandeApiResponse {
   raisonId?: number|null;
   certificatMedicalRequis?: boolean;
   statut: { id: number; libelle: string };
-  dateSoumission: string;
+  dateSoumission: string | null;
   dateDecision: string | null;
   commentaireDecision: string | null;
   samediCompte?: boolean;
   nombreJoursConsomme?: number|null;
+  workflow?: {statut:string;etapeCourante:number|null;etapes:{id:number;priorite:number;statut:string;decideur:{id:number;nom:string;prenom:string;email:string};commentaire:string|null;dateAction:string|null}[]}|null;
 }
 
 interface CongeDemandeCreateApiRequest {
@@ -93,6 +94,10 @@ export class LeaveRequestService {
     return this.http.post<CongeDemandeApiResponse>(`${this.baseUrl}/${id}/refuser`, toDecisionRequest(request)).pipe(map(toLeaveRequest));
   }
 
+  submit(id: number): Observable<LeaveRequestResponse> {
+    return this.http.post<CongeDemandeApiResponse>(`${this.baseUrl}/${id}/soumettre`, {}).pipe(map(toLeaveRequest));
+  }
+
   delete(id: number): Observable<void> {
     return this.http.delete<void>(`${this.baseUrl}/${id}`);
   }
@@ -114,16 +119,19 @@ function toLeaveRequest(response: CongeDemandeApiResponse): LeaveRequestResponse
     reasonId: response.raisonId ?? null,
     medicalCertificateRequired: Boolean(response.certificatMedicalRequis),
     status: toLeaveRequestStatus(response.statut.libelle),
-    submittedAt: response.dateSoumission,
+    submittedAt: response.dateSoumission ?? '',
     decisionAt: response.dateDecision,
     decisionComment: response.commentaireDecision,
     saturdayCounts: response.samediCompte,
-    consumedDays: response.nombreJoursConsomme
+    consumedDays: response.nombreJoursConsomme,
+    workflow: response.workflow ? {status:response.workflow.statut,currentStep:response.workflow.etapeCourante,steps:response.workflow.etapes.map(e=>({id:e.id,priority:e.priorite,status:e.statut,approver:{id:e.decideur.id,firstName:e.decideur.prenom,lastName:e.decideur.nom,email:e.decideur.email},comment:e.commentaire,actedAt:e.dateAction}))} : null
   };
 }
 
 function toLeaveRequestStatus(libelle: string): LeaveRequestResponse['status'] {
   switch (libelle) {
+    case 'BROUILLON':
+      return 'DRAFT';
     case 'APPROUVEE':
       return 'APPROVED';
     case 'REFUSEE':

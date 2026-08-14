@@ -1,4 +1,4 @@
-export type LeaveRequestStatus = 'PENDING' | 'APPROVED' | 'REJECTED' | 'CANCELLED';
+export type LeaveRequestStatus = 'DRAFT' | 'PENDING' | 'APPROVED' | 'REJECTED' | 'CANCELLED';
 export type LeaveRequestNature = 'CONGE' | 'AUTORISATION_ABSENCE';
 
 export interface PersonSummary {
@@ -68,4 +68,5 @@ export interface LeaveRequestResponse {
   decisionComment: string | null;
   saturdayCounts?: boolean;
   consumedDays?: number | null;
+  workflow?: { status:string; currentStep:number|null; steps:{id:number;priority:number;status:string;approver:PersonSummary;comment:string|null;actedAt:string|null}[] } | null;
 }

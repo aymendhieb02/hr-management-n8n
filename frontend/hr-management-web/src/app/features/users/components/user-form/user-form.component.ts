@@ -19,12 +19,13 @@ export class UserFormComponent implements OnChanges {
   readonly validationErrors = input<Record<string, string>>({});
   readonly generalError = input<string | null>(null);
   readonly managerMode = input(false);
+  readonly roleEditable = input(false);
   @Output() readonly save = new EventEmitter<UserCreateRequest | UserUpdateRequest>();
   @Output() readonly cancel = new EventEmitter<void>();
 
-  protected readonly roles: RoleType[] = ['EMPLOYEE', 'MANAGER', 'HR', 'ADMIN'];
+  protected readonly roles: RoleType[] = ['EMPLOYEE', 'DG', 'DT', 'HR', 'ADMIN'];
   protected readonly statuses: UserStatus[] = ['ACTIVE', 'INACTIVE'];
-  protected readonly roleLabels: Record<RoleType, string> = { EMPLOYEE: 'Employé', MANAGER: 'Manager', HR: 'Ressources humaines', ADMIN: 'Administrateur' };
+  protected readonly roleLabels: Record<RoleType, string> = { EMPLOYEE: 'Employé', MANAGER: 'Directeur général', DG: 'Directeur général', DT: 'Directrice technique', HR: 'Ressources humaines', ADMIN: 'Administrateur' };
   protected readonly form = new FormBuilder().nonNullable.group({
     username: ['', [Validators.required, Validators.maxLength(100)]],
     email: ['', [Validators.required, Validators.email, Validators.maxLength(150)]],
@@ -47,7 +48,7 @@ export class UserFormComponent implements OnChanges {
   protected readonly eligibleManagers = computed(() => {
     const editedId = this.user()?.id;
     return this.users().filter((candidate) =>
-      ['MANAGER', 'HR', 'ADMIN'].includes(candidate.role) && candidate.id !== editedId
+      ['DG', 'DT', 'HR', 'ADMIN'].includes(candidate.role) && candidate.id !== editedId
     );
   });
 

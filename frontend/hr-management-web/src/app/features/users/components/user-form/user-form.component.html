@@ -58,7 +58,7 @@
           <input formControlName="hireDate" type="date" />
         </label>
 
-        @if (!managerMode()) { <label class="form-field">
+        @if (roleEditable()) { <label class="form-field">
           <span>Rôle</span>
           <select formControlName="role">
             @for (role of roles; track role) { <option [value]="role">{{ roleLabels[role] }}</option> }

@@ -50,8 +50,13 @@ export class UserListComponent implements OnInit {
   protected readonly deletingUser = signal<UserResponse | null>(null);
   protected readonly detailUser = signal<UserResponse | null>(null);
   protected readonly resetPasswordUser = signal<UserResponse | null>(null);
-  protected readonly roles: RoleType[] = ['EMPLOYEE', 'MANAGER', 'HR', 'ADMIN'];
-  protected readonly canManage = computed(() => this.authService.hasAnyRole('HR', 'ADMIN') || (this.authService.hasAnyRole('MANAGER') && this.isTeamMode()));
+  protected readonly roleUser = signal<UserResponse | null>(null);
+  protected readonly selectedRole = signal<RoleType>('EMPLOYEE');
+  protected readonly roleError = signal<string | null>(null);
+  protected readonly roles: RoleType[] = ['EMPLOYEE', 'DG', 'DT', 'HR', 'ADMIN'];
+  protected readonly canManage = computed(() => this.authService.hasAnyRole('HR', 'ADMIN', 'DG', 'DT'));
+  protected readonly isAdmin = computed(() => this.authService.hasAnyRole('ADMIN'));
+  protected readonly canAssignRole = computed(() => this.authService.hasAnyRole('ADMIN', 'DG', 'DT'));
   protected readonly isTeamMode = computed(() => this.route.snapshot.routeConfig?.path === 'team-members');
   protected readonly title = computed(() => this.isTeamMode() ? "Membres de l'équipe" : 'Employés');
   protected readonly filteredUsers = computed(() => {
@@ -180,6 +185,18 @@ export class UserListComponent implements OnInit {
     this.resetPasswordUser.set(user);
   }
 
+  protected askRole(user: UserResponse): void {
+    this.roleError.set(null);
+    this.selectedRole.set(user.role === 'MANAGER' ? 'DG' : user.role);
+    this.roleUser.set(user);
+  }
+
+  protected assignRole(): void {
+    const user=this.roleUser(); if(!user)return;
+    this.isSaving.set(true);this.roleError.set(null);
+    this.userService.assignRole(user.id,this.selectedRole()).subscribe({next:()=>{this.isSaving.set(false);this.roleUser.set(null);this.loadUsers();},error:e=>{this.roleError.set(safeApiMessage(e,"Impossible d'attribuer ce rôle."));this.isSaving.set(false);}});
+  }
+
   protected resetPasswordToDefault(): void {
     const user = this.resetPasswordUser();
     if (!user) return;
@@ -210,7 +227,7 @@ export class UserListComponent implements OnInit {
   }
 
   private loadReferenceData(): void {
-    if (!this.authService.hasAnyRole('MANAGER', 'HR', 'ADMIN')) {
+    if (!this.authService.hasAnyRole('DG', 'DT', 'HR', 'ADMIN')) {
       return;
     }
 
@@ -231,7 +248,7 @@ export class UserListComponent implements OnInit {
   }
 
   protected roleLabel(role: RoleType): string {
-    return { EMPLOYEE: 'Employé', MANAGER: 'Manager', HR: 'Ressources humaines', ADMIN: 'Administrateur' }[role];
+    return { EMPLOYEE: 'Employé', MANAGER: 'Directeur général', DG: 'Directeur général', DT: 'Directrice technique', HR: 'Ressources humaines', ADMIN: 'Administrateur' }[role];
   }
 
   protected initials(user: UserResponse): string {

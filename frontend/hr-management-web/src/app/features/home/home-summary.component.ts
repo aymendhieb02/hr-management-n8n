@@ -45,7 +45,7 @@ export class HomeSummaryComponent implements OnInit {
     const user = this.auth.getCurrentUser();
     if (!user) return;
     this.loading.set(true);
-    const manager = user.role === 'MANAGER';
+    const manager = user.role === 'DG' || user.role === 'DT';
     forkJoin({
       requests: manager ? this.leaveRequests.findByApprover(user.id) : this.leaveRequests.findByRequester(user.id),
       balances: this.balances.findByUser(user.id),

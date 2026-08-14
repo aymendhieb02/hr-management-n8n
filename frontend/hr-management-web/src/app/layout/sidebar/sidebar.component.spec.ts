@@ -58,7 +58,7 @@ describe('SidebarComponent', () => {
   });
 
   it('shows manager team items and hides employee self-service items', () => {
-    currentUser.set({ ...user, role: 'MANAGER' });
+    currentUser.set({ ...user, role: 'DG' });
     fixture.detectChanges();
 
     expect(text()).toContain('Tableau de bord');
@@ -72,7 +72,7 @@ describe('SidebarComponent', () => {
   });
 
   it('shows only applicable reference menu items to managers', () => {
-    currentUser.set({ ...user, role: 'MANAGER' });
+    currentUser.set({ ...user, role: 'DG' });
     fixture.detectChanges();
 
     expect(text()).not.toContain('Postes');
@@ -81,7 +81,7 @@ describe('SidebarComponent', () => {
   });
 
   it('does not show restricted medical or system configuration items to managers', () => {
-    currentUser.set({ ...user, role: 'MANAGER' });
+    currentUser.set({ ...user, role: 'DG' });
     fixture.detectChanges();
 
     expect(text()).not.toContain('Documents médicaux');

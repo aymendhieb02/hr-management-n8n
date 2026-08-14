@@ -58,7 +58,9 @@ export class LeaveRequestListComponent implements OnInit {
   protected readonly detailRequest = signal<LeaveRequestResponse | null>(null);
   protected readonly decisionRequest = signal<LeaveRequestResponse | null>(null);
   protected readonly decisionMode = signal<'approve' | 'reject'>('approve');
-  protected readonly statuses: LeaveRequestStatus[] = ['PENDING', 'APPROVED', 'REJECTED', 'CANCELLED'];
+  protected readonly statuses: LeaveRequestStatus[] = ['DRAFT', 'PENDING', 'APPROVED', 'REJECTED', 'CANCELLED'];
+  protected readonly submitRequest = signal<LeaveRequestResponse | null>(null);
+  protected readonly submitError = signal<string | null>(null);
   protected readonly isManagerMode = computed(() => this.route.snapshot.routeConfig?.path === 'team-requests');
   protected readonly isCreateMode = computed(() => this.route.snapshot.routeConfig?.path === 'request-leave');
   protected readonly maximumLeaveDays = computed(() => {
@@ -149,7 +151,7 @@ export class LeaveRequestListComponent implements OnInit {
       next: () => {
         this.isSaving.set(false);
         this.formOpen.set(false);
-        this.success.set('Demande de conge enregistree.');
+        this.success.set('Brouillon enregistre. Vous pouvez maintenant le confirmer et l’envoyer.');
         this.loadRequests();
         if (this.isCreateMode()) void this.router.navigate(['/my-leave-requests']);
       },
@@ -171,6 +173,30 @@ export class LeaveRequestListComponent implements OnInit {
       },
       error: (error) => {
         this.error.set(safeApiMessage(error, 'Impossible de supprimer la demande de conge.'));
+        this.isSaving.set(false);
+      }
+    });
+  }
+
+  protected askSubmit(request: LeaveRequestResponse): void {
+    this.submitError.set(null);
+    this.submitRequest.set(request);
+  }
+
+  protected confirmSubmit(): void {
+    const request = this.submitRequest();
+    if (!request) return;
+    this.isSaving.set(true);
+    this.submitError.set(null);
+    this.leaveRequestService.submit(request.id).subscribe({
+      next: () => {
+        this.isSaving.set(false);
+        this.submitRequest.set(null);
+        this.success.set('Votre demande a ete envoyee au premier decideur.');
+        this.loadRequests();
+      },
+      error: (error) => {
+        this.submitError.set(safeApiMessage(error, "Impossible d'envoyer cette demande."));
         this.isSaving.set(false);
       }
     });
@@ -208,7 +234,7 @@ export class LeaveRequestListComponent implements OnInit {
   }
 
   protected statusLabel(status: LeaveRequestStatus): string {
-    return { PENDING: 'En attente', APPROVED: 'Approuvee', REJECTED: 'Refusee', CANCELLED: 'Annulee' }[status];
+    return { DRAFT: 'Brouillon', PENDING: 'En attente', APPROVED: 'Approuvee', REJECTED: 'Refusee', CANCELLED: 'Annulee' }[status];
   }
 
   protected countStatus(status: LeaveRequestStatus): number {

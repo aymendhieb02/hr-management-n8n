@@ -38,7 +38,7 @@ describe('HomeSummaryComponent', () => {
   });
 
   it('manager summary uses team endpoints', () => {
-    setup('MANAGER');
+    setup('DG');
     expect(requests.findByApprover).toHaveBeenCalledWith(7);
     expect(users.findTeamMembers).toHaveBeenCalledWith(7);
     expect(fixture.nativeElement.textContent).toContain("Membres de l'équipe");

@@ -1,4 +1,4 @@
-export type RoleType = 'EMPLOYEE' | 'MANAGER' | 'HR' | 'ADMIN';
+export type RoleType = 'EMPLOYEE' | 'MANAGER' | 'DG' | 'DT' | 'HR' | 'ADMIN';
 export type UserStatus = 'ACTIVE' | 'INACTIVE';
 
 export interface UserSummary {
