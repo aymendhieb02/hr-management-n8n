@@ -13,16 +13,16 @@ export const NAVIGATION_ITEMS: NavigationItem[] = [
   { label: 'Mon profil', path: '/profile', roles: ['EMPLOYEE', 'DG', 'DT', 'HR', 'ADMIN'], icon: 'profile' },
   { label: 'Notifications', path: '/notifications', roles: ['EMPLOYEE', 'DG', 'DT', 'HR', 'ADMIN'], icon: 'bell' },
 
-  { label: 'Mes demandes de congé', path: '/my-leave-requests', roles: ['EMPLOYEE', 'HR'], icon: 'request' },
-  { label: 'Demander un congé', path: '/request-leave', roles: ['EMPLOYEE', 'HR'], icon: 'add-calendar' },
-  { label: 'Mon solde de congé', path: '/my-balance', roles: ['EMPLOYEE', 'HR'], icon: 'balance' },
-  { label: 'Mon calendrier', path: '/my-calendar', roles: ['EMPLOYEE', 'HR'], icon: 'calendar' },
+  { label: 'Mes demandes de congé', path: '/my-leave-requests', roles: ['EMPLOYEE', 'DT', 'HR'], icon: 'request' },
+  { label: 'Demander un congé', path: '/request-leave', roles: ['EMPLOYEE', 'DT', 'HR'], icon: 'add-calendar' },
+  { label: 'Mon solde de congé', path: '/my-balance', roles: ['EMPLOYEE', 'DT', 'HR'], icon: 'balance' },
+  { label: 'Mon calendrier', path: '/my-calendar', roles: ['EMPLOYEE', 'DT', 'HR'], icon: 'calendar' },
 
   { label: "Demandes de l'équipe", path: '/team-requests', roles: ['DG', 'DT', 'HR'], icon: 'team-request' },
   { label: "Membres de l'équipe", path: '/team-members', roles: ['DG', 'DT'], icon: 'team' },
   { label: "Calendrier de l'équipe", path: '/team-calendar', roles: ['DG', 'DT', 'HR'], icon: 'calendar' },
   { label: "Disponibilité de l'équipe", path: '/team-availability', roles: ['DG', 'DT'], icon: 'availability' },
-  { label: 'Transactions de congé', path: '/balance-transactions', roles: ['DG', 'DT', 'HR', 'ADMIN'], icon: 'transactions' },
+  { label: 'Soldes et transactions de congé', path: '/balance-transactions', roles: ['DG', 'DT', 'HR', 'ADMIN'], icon: 'transactions' },
 
   { label: 'Employés', path: '/users', roles: ['HR'], icon: 'team' },
   { label: 'Postes', path: '/positions', roles: ['ADMIN'], icon: 'position' },
