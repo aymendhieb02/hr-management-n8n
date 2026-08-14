@@ -25,7 +25,7 @@ export class UserFormComponent implements OnChanges {
 
   protected readonly roles: RoleType[] = ['EMPLOYEE', 'DG', 'DT', 'HR', 'ADMIN'];
   protected readonly statuses: UserStatus[] = ['ACTIVE', 'INACTIVE'];
-  protected readonly roleLabels: Record<RoleType, string> = { EMPLOYEE: 'Employé', MANAGER: 'Directeur général', DG: 'Directeur général', DT: 'Directrice technique', HR: 'Ressources humaines', ADMIN: 'Administrateur' };
+  protected readonly roleLabels: Record<RoleType, string> = { EMPLOYEE: 'Employé', MANAGER: 'Directeur général', DG: 'Directeur général', DT: 'Directeur technique', HR: 'Ressources humaines', ADMIN: 'Administrateur' };
   protected readonly form = new FormBuilder().nonNullable.group({
     username: ['', [Validators.required, Validators.maxLength(100)]],
     email: ['', [Validators.required, Validators.email, Validators.maxLength(150)]],

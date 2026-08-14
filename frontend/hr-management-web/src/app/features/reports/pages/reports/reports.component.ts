@@ -65,5 +65,5 @@ export class ReportsComponent implements OnInit {
   }
 
   private statusLabel(status: LeaveRequestResponse['status']): string { return { DRAFT:'Brouillon', PENDING:'En attente', APPROVED:'Approuvée', REJECTED:'Refusée', CANCELLED:'Annulée' }[status]; }
-  private roleLabel(role: UserResponse['role']): string { return { EMPLOYEE:'Employé', MANAGER:'Directeur général', DG:'Directeur général', DT:'Directrice technique', HR:'Ressources humaines', ADMIN:'Administrateur' }[role]; }
+  private roleLabel(role: UserResponse['role']): string { return { EMPLOYEE:'Employé', MANAGER:'Directeur général', DG:'Directeur général', DT:'Directeur technique', HR:'Ressources humaines', ADMIN:'Administrateur' }[role]; }
 }

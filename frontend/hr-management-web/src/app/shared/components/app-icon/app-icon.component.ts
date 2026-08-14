@@ -27,6 +27,23 @@ import { Component, input } from '@angular/core';
         @case ('history') { <path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5M12 7v5l3 2"/> }
         @case ('workflow') { <circle cx="6" cy="5" r="2"/><circle cx="18" cy="12" r="2"/><circle cx="6" cy="19" r="2"/><path d="M8 5h3a4 4 0 0 1 4 4v1M16 14v1a4 4 0 0 1-4 4H8"/> }
         @case ('settings') { <circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.06.06-2.83 2.83-.06-.06A1.7 1.7 0 0 0 15 19.4a1.7 1.7 0 0 0-1 .6 1.7 1.7 0 0 0-.4 1v.1h-4v-.1a1.7 1.7 0 0 0-1.1-1.6 1.7 1.7 0 0 0-1.88.34l-.06.06-2.83-2.83.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-.6-1 1.7 1.7 0 0 0-1-.4h-.1v-4H3A1.7 1.7 0 0 0 4.6 8.5a1.7 1.7 0 0 0-.34-1.88l-.06-.06 2.83-2.83.06.06A1.7 1.7 0 0 0 9 4.6a1.7 1.7 0 0 0 1-.6 1.7 1.7 0 0 0 .4-1v-.1h4V3a1.7 1.7 0 0 0 1.1 1.6 1.7 1.7 0 0 0 1.88-.34l.06-.06 2.83 2.83-.06.06A1.7 1.7 0 0 0 19.4 9c.16.37.37.7.6 1 .28.25.64.39 1 .4h.1v4H21a1.7 1.7 0 0 0-1.6.6z"/> }
+        @case ('info') { <circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7h.01"/> }
+        @case ('edit') { <path d="M4 20h4L19 9l-4-4L4 16v4zM13.5 6.5l4 4"/> }
+        @case ('delete') { <path d="M4 7h16M9 7V4h6v3M7 7l1 14h8l1-14M10 11v6M14 11v6"/> }
+        @case ('lock') { <rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/> }
+        @case ('unlock') { <rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 7-2.6"/> }
+        @case ('role-shield') { <path d="M12 3 5 6v5c0 4.7 2.8 8 7 10 4.2-2 7-5.3 7-10V6l-7-3z"/><circle cx="12" cy="10" r="2.2"/><path d="M8.8 16a3.6 3.6 0 0 1 6.4 0"/> }
+        @case ('plus') { <path d="M12 5v14M5 12h14"/> }
+        @case ('close') { <path d="m6 6 12 12M18 6 6 18"/> }
+        @case ('search') { <circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/> }
+        @case ('arrow-left') { <path d="m15 18-6-6 6-6"/> }
+        @case ('arrow-right') { <path d="m9 18 6-6-6-6"/> }
+        @case ('check') { <path d="m5 12 4 4L19 6"/> }
+        @case ('ban') { <circle cx="12" cy="12" r="9"/><path d="m6 6 12 12"/> }
+        @case ('filter') { <path d="M4 5h16l-6 7v6l-4 2v-8z"/> }
+        @case ('download') { <path d="M12 3v12M7 10l5 5 5-5M5 21h14"/> }
+        @case ('send') { <path d="m3 11 18-8-8 18-2-8-8-2zM11 13l5-5"/> }
+        @case ('chart') { <path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/> }
         @default { <circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/> }
       }
     </svg>

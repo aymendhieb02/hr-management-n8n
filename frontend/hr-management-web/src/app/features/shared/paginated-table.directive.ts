@@ -35,7 +35,14 @@ export class PaginatedTableDirective implements AfterViewInit, OnDestroy {
   private createPager(): void {
     const pager = this.renderer.createElement('div') as HTMLElement;
     this.renderer.addClass(pager, 'table-pagination');
-    this.renderer.insertBefore(this.element.nativeElement.parentElement, pager, this.element.nativeElement.nextSibling);
+    const table = this.element.nativeElement;
+    const container = table.parentElement;
+    if (container?.classList.contains('users-table-card') && container.parentElement) {
+      this.renderer.addClass(pager, 'users-table-pagination');
+      this.renderer.insertBefore(container.parentElement, pager, container.nextSibling);
+    } else {
+      this.renderer.insertBefore(container, pager, table.nextSibling);
+    }
     this.pager = pager;
   }
 

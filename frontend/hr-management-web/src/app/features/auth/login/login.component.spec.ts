@@ -82,6 +82,15 @@ describe('LoginComponent', () => {
     expect(navigateSpy).toHaveBeenCalledWith('/home');
   });
 
+  it('redirects a new employee to the profile password dialog', () => {
+    const navigateSpy = vi.spyOn(router, 'navigateByUrl').mockResolvedValue(true);
+    authService.login.mockReturnValue(of(response({ ...employee, passwordChangeRequired: true })));
+
+    fillAndSubmit('employee', 'temporary-code');
+
+    expect(navigateSpy).toHaveBeenCalledWith('/profile');
+  });
+
   it('shows a safe generic error after failed login', () => {
     authService.login.mockReturnValue(throwError(() => ({ status: 401 })));
 

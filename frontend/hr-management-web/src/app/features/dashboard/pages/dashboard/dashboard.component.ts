@@ -9,13 +9,14 @@ import { NotificationService } from '../../../notifications/services/notificatio
 import { UserResponse } from '../../../users/models/user.model';
 import { UserService } from '../../../users/services/user.service';
 import { RecentLeaveTableComponent } from '../../components/recent-leave-table/recent-leave-table.component';
+import { AppIconComponent } from '../../../../shared/components/app-icon/app-icon.component';
 
 interface ChartItem { label: string; value: number; percent: number; tone?: string; }
 interface MonthActivity { label: string; submitted: number; approved: number; }
 
 @Component({
   selector: 'app-dashboard',
-  imports: [RecentLeaveTableComponent, RouterLink],
+  imports: [AppIconComponent, RecentLeaveTableComponent, RouterLink],
   templateUrl: './dashboard.component.html',
   styleUrls: ['../../../shared/resource-page.scss', './dashboard.component.scss']
 })

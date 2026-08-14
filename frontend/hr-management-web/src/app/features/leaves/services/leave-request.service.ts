@@ -25,6 +25,10 @@ interface CongeDemandeApiResponse {
   commentaireDecision: string | null;
   samediCompte?: boolean;
   nombreJoursConsomme?: number|null;
+  dateFinReelle?: string|null;
+  dateRegularisation?: string|null;
+  regularisePar?: {id:number;nom:string;prenom:string;email:string;photoUrl?:string|null}|null;
+  commentaireRegularisation?: string|null;
   workflow?: {statut:string;etapeCourante:number|null;etapes:{id:number;priorite:number;statut:string;decideur:{id:number;nom:string;prenom:string;email:string};commentaire:string|null;dateAction:string|null}[]}|null;
 }
 
@@ -98,6 +102,10 @@ export class LeaveRequestService {
     return this.http.post<CongeDemandeApiResponse>(`${this.baseUrl}/${id}/soumettre`, {}).pipe(map(toLeaveRequest));
   }
 
+  regularizeConsumption(id:number, consumedDays:number, comment:string):Observable<LeaveRequestResponse>{
+    return this.http.post<CongeDemandeApiResponse>(`${this.baseUrl}/${id}/consommation-reelle`,{nombreJoursConsommes:consumedDays,commentaire:comment.trim()}).pipe(map(toLeaveRequest));
+  }
+
   delete(id: number): Observable<void> {
     return this.http.delete<void>(`${this.baseUrl}/${id}`);
   }
@@ -124,6 +132,10 @@ function toLeaveRequest(response: CongeDemandeApiResponse): LeaveRequestResponse
     decisionComment: response.commentaireDecision,
     saturdayCounts: response.samediCompte,
     consumedDays: response.nombreJoursConsomme,
+    actualEndDate:response.dateFinReelle,
+    regularizedAt:response.dateRegularisation,
+    regularizedBy:response.regularisePar?{id:response.regularisePar.id,firstName:response.regularisePar.prenom,lastName:response.regularisePar.nom,email:response.regularisePar.email,photoUrl:response.regularisePar.photoUrl}:null,
+    regularizationComment:response.commentaireRegularisation,
     workflow: response.workflow ? {status:response.workflow.statut,currentStep:response.workflow.etapeCourante,steps:response.workflow.etapes.map(e=>({id:e.id,priority:e.priorite,status:e.statut,approver:{id:e.decideur.id,firstName:e.decideur.prenom,lastName:e.decideur.nom,email:e.decideur.email},comment:e.commentaire,actedAt:e.dateAction}))} : null
   };
 }

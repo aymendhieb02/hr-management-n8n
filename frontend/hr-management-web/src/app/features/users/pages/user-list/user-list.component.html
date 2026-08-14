@@ -1,11 +1,11 @@
 <section class="resource-page">
   <header class="page-header">
     <div>
-      <h1>{{ title() }}</h1>
+      <h1><app-icon name="team" />{{ title() }}</h1>
       <p>{{ isTeamMode() ? 'Gérez les employés affectés à votre équipe.' : 'Gérez les comptes employés et leurs affectations.' }}</p>
     </div>
     @if (canManage()) {
-      <button class="primary-button" type="button" (click)="openCreate()">Ajouter un employé</button>
+      <button class="primary-button" type="button" (click)="openCreate()"><app-icon name="plus" />Ajouter un employé</button>
     }
   </header>
 
@@ -35,7 +35,7 @@
         </select>
       </label>
     }
-    <button class="secondary-button" type="button" (click)="loadUsers()">Actualiser</button>
+    <button class="secondary-button" type="button" (click)="loadUsers()"><app-icon name="history" />Actualiser</button>
   </div>
 
   @if (error()) {
@@ -89,12 +89,12 @@
               </td>
               <td class="actions-cell">
                 <div class="actions user-actions">
-                  <button class="table-action view-action" type="button" (click)="detailUser.set(user)" title="Voir les détails" aria-label="Voir les détails">◉</button>
+                  <button class="table-action view-action" type="button" (click)="detailUser.set(user)" title="Voir les détails" aria-label="Voir les détails"><app-icon name="info" /></button>
                   @if (canManage()) {
-                    <button class="table-action edit-action" type="button" (click)="openEdit(user)" title="Modifier l’employé" aria-label="Modifier l’employé">✎</button>
-                    @if(canAssignRole()){<button class="table-action role-action" type="button" (click)="askRole(user)" title="Attribuer un rôle" aria-label="Attribuer un rôle">♙</button>}
-                    <button class="table-action toggle-action" type="button" (click)="toggleActive(user)" [title]="user.enabled ? 'Bloquer le compte' : 'Débloquer le compte'" [attr.aria-label]="user.enabled?'Bloquer le compte':'Débloquer le compte'">{{user.enabled?'⊘':'✓'}}</button>
-                    <button class="table-action delete-action" type="button" (click)="requestDelete(user)" title="Supprimer l’employé" aria-label="Supprimer l’employé">⌫</button>
+                    <button class="table-action edit-action" type="button" (click)="openEdit(user)" title="Modifier l’employé" aria-label="Modifier l’employé"><app-icon name="edit" /></button>
+                    @if(canAssignRole()){<button class="table-action role-action" type="button" (click)="askRole(user)" title="Attribuer un rôle" aria-label="Attribuer un rôle"><app-icon name="role-shield" /></button>}
+                    <button class="table-action toggle-action" type="button" (click)="toggleActive(user)" [title]="user.enabled ? 'Bloquer le compte' : 'Débloquer le compte'" [attr.aria-label]="user.enabled?'Bloquer le compte':'Débloquer le compte'"><app-icon [name]="user.enabled?'lock':'unlock'" /></button>
+                    <button class="table-action delete-action" type="button" (click)="requestDelete(user)" title="Supprimer l’employé" aria-label="Supprimer l’employé"><app-icon name="delete" /></button>
                   }
                 </div>
               </td>
@@ -123,13 +123,19 @@
 }
 @if (roleUser(); as user) {
   <div class="dialog-backdrop"><section class="dialog role-dialog" role="dialog" aria-modal="true">
-    <span class="eyebrow">GESTION DES ACCÈS</span><h2>Attribuer un rôle</h2>
-    <p>{{ user.firstName }} {{ user.lastName }}</p>
-    <label class="form-field"><span>Nouveau rôle</span><select [ngModel]="selectedRole()" (ngModelChange)="selectedRole.set($event)">
-      @for(role of roles;track role){ @if(role !== 'MANAGER' && !(role === 'ADMIN' && !isAdmin())){<option [value]="role">{{roleLabel(role)}}</option>} }
-    </select></label>
+    <header class="role-dialog-header"><span class="role-dialog-icon"><app-icon name="role-shield" /></span><div><span class="eyebrow">GESTION DES ACCÈS</span><h2>Attribuer un rôle</h2><p>{{ user.firstName }} {{ user.lastName }}</p></div></header>
+    <fieldset class="role-options"><legend>Nouveau rôle</legend>
+      @for(role of assignableRoles();track role){
+        <label class="role-option" [class.selected]="selectedRole()===role">
+          <input type="radio" name="nouveau-role" [value]="role" [ngModel]="selectedRole()" (ngModelChange)="selectedRole.set($event)">
+          <span class="role-option-icon"><app-icon [name]="role==='ADMIN'?'settings':role==='EMPLOYEE'?'profile':'role-shield'" /></span>
+          <span><strong>{{roleLabel(role)}}</strong><small>{{role==='DG'||role==='DT'?'Rôle unique dans l’organisation':'Accès adapté aux responsabilités'}}</small></span>
+          <app-icon class="role-check" name="check" />
+        </label>
+      }
+    </fieldset>
     @if(roleError()){<p class="dialog-error" role="alert">{{roleError()}}</p>}
-    <div class="dialog-actions"><button class="secondary-button" type="button" (click)="roleUser.set(null)">Annuler</button><button class="primary-button" type="button" (click)="assignRole()" [disabled]="isSaving()">Confirmer</button></div>
+    <div class="dialog-actions"><button class="secondary-button" type="button" (click)="roleUser.set(null)"><app-icon name="close" />Annuler</button><button class="primary-button" type="button" (click)="assignRole()" [disabled]="isSaving()"><app-icon name="check" />{{isSaving()?'Enregistrement...':'Confirmer le rôle'}}</button></div>
   </section></div>
 }
 

@@ -15,10 +15,11 @@ import { TypeContractService } from '../../services/type-contract.service';
 import { UserService } from '../../services/user.service';
 import { Position } from '../../../positions/models/position.model';
 import { PositionService } from '../../../positions/services/position.service';
+import { AppIconComponent } from '../../../../shared/components/app-icon/app-icon.component';
 
 @Component({
   selector: 'app-user-list',
-  imports: [DeleteUserDialogComponent, FormsModule, PasswordUpdateDialogComponent, UserDetailsComponent, UserFormComponent, PaginatedTableDirective],
+  imports: [AppIconComponent, DeleteUserDialogComponent, FormsModule, PasswordUpdateDialogComponent, UserDetailsComponent, UserFormComponent, PaginatedTableDirective],
   templateUrl: './user-list.component.html',
   styleUrls: ['../../../shared/resource-page.scss', './user-list.component.scss']
 })
@@ -54,6 +55,15 @@ export class UserListComponent implements OnInit {
   protected readonly selectedRole = signal<RoleType>('EMPLOYEE');
   protected readonly roleError = signal<string | null>(null);
   protected readonly roles: RoleType[] = ['EMPLOYEE', 'DG', 'DT', 'HR', 'ADMIN'];
+  protected readonly assignableRoles = computed(() => {
+    const edited = this.roleUser();
+    const occupied = new Set(this.users()
+      .filter(user => user.id !== edited?.id && (user.role === 'DG' || user.role === 'DT' || user.role === 'MANAGER'))
+      .map(user => user.role === 'MANAGER' ? 'DG' : user.role));
+    return this.roles.filter(role => role !== 'MANAGER'
+      && !(role === 'ADMIN' && !this.isAdmin())
+      && !occupied.has(role));
+  });
   protected readonly canManage = computed(() => this.authService.hasAnyRole('HR', 'ADMIN', 'DG', 'DT'));
   protected readonly isAdmin = computed(() => this.authService.hasAnyRole('ADMIN'));
   protected readonly canAssignRole = computed(() => this.authService.hasAnyRole('ADMIN', 'DG', 'DT'));
@@ -248,7 +258,7 @@ export class UserListComponent implements OnInit {
   }
 
   protected roleLabel(role: RoleType): string {
-    return { EMPLOYEE: 'Employé', MANAGER: 'Directeur général', DG: 'Directeur général', DT: 'Directrice technique', HR: 'Ressources humaines', ADMIN: 'Administrateur' }[role];
+    return { EMPLOYEE: 'Employé', MANAGER: 'Directeur général', DG: 'Directeur général', DT: 'Directeur technique', HR: 'Ressources humaines', ADMIN: 'Administrateur' }[role];
   }
 
   protected initials(user: UserResponse): string {

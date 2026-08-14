@@ -70,15 +70,10 @@
 
 .identity-column,
 .identity-cell {
-  position: sticky;
-  left: 0;
-  z-index: 1;
   min-width: 230px;
-  background: inherit;
 }
 
 .identity-column {
-  z-index: 3 !important;
   background: #fff7ef !important;
 }
 
@@ -148,13 +143,22 @@
   right: 0;
   z-index: 1;
   min-width: 205px;
-  background: #fff;
-  box-shadow: -8px 0 16px rgb(77 55 38 / 4%);
+  border-left: 1px solid #f0ddcc;
+  background: linear-gradient(90deg, #fffaf5 0, #fff 22px);
+  box-shadow: -10px 0 22px rgb(77 55 38 / 8%);
 }
 
 .actions-column {
   z-index: 3;
-  background: #fff7ef;
+  background: linear-gradient(90deg, #ffedda, #fff7ef 22px);
+}
+
+:host ::ng-deep .users-table-pagination {
+  margin-top: 12px;
+  border: 1px solid #eadfd5;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 8px 22px rgb(80 55 35 / 6%);
 }
 
 .user-actions {
@@ -216,3 +220,15 @@
     display: none;
   }
 }
+.page-header h1,.primary-button,.secondary-button{display:flex;align-items:center;gap:.55rem}
+.role-dialog{width:min(520px,calc(100vw - 28px));padding:0;overflow:hidden;border-radius:22px}
+.role-dialog-header{display:flex;align-items:center;gap:14px;padding:24px 25px 18px;border-bottom:1px solid #eadccf;background:linear-gradient(125deg,#fff,#fff3e7)}
+.role-dialog-header h2{margin:2px 0;color:#38312c}.role-dialog-header p{margin:4px 0 0;color:#7d7067}
+.role-dialog-icon{display:grid;place-items:center;width:48px;height:48px;flex:none;border-radius:15px;background:#ffead5;color:#cf620b}
+.role-options{display:grid;gap:10px;margin:0;padding:20px 25px;border:0}.role-options legend{padding-top:20px;color:#5d5148;font-size:.85rem;font-weight:800}
+.role-option{position:relative;display:flex;align-items:center;gap:12px;padding:13px 14px;border:1px solid #e6d9cd;border-radius:14px;background:#fff;cursor:pointer;transition:.18s}
+.role-option:hover{border-color:#efb47f;background:#fffaf5;transform:translateY(-1px)}.role-option.selected{border-color:#ee821f;background:#fff5eb;box-shadow:0 0 0 3px rgba(238,130,31,.11)}
+.role-option input{position:absolute;opacity:0;pointer-events:none}.role-option-icon{display:grid;place-items:center;width:38px;height:38px;flex:none;border-radius:11px;background:#f4f0ec;color:#76695f}.role-option.selected .role-option-icon{background:#ffdfc0;color:#bd5500}
+.role-option>span:nth-of-type(2){display:grid;flex:1;gap:2px}.role-option strong{color:#403832}.role-option small{color:#887a70;font-size:.74rem}.role-check{color:#d9670b;opacity:0;transform:scale(.65);transition:.18s}.role-option.selected .role-check{opacity:1;transform:scale(1)}
+.role-dialog .dialog-error{margin:0 25px}.role-dialog .dialog-actions{padding:16px 25px 22px;border-top:1px solid #eadccf;background:#fffaf6}
+.table-action app-icon{width:18px;height:18px}.table-action:focus-visible,.role-option:has(input:focus-visible){outline:3px solid rgba(237,126,32,.3);outline-offset:2px}

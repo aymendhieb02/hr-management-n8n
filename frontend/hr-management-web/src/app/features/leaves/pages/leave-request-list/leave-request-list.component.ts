@@ -19,10 +19,11 @@ import { LeaveRequestResponse, LeaveRequestStatus, LeaveRequestUpdateRequest } f
 import { LeaveRequestService } from '../../services/leave-request.service';
 import { LeaveBalanceService } from '../../services/leave-balance.service';
 import { MedicalDocumentService } from '../../../medical-documents/services/medical-document.service';
+import { AppIconComponent } from '../../../../shared/components/app-icon/app-icon.component';
 
 @Component({
   selector: 'app-leave-request-list',
-  imports: [FormsModule, LeaveDecisionDialogComponent, LeaveDetailsComponent, LeaveRequestFormComponent, PaginatedTableDirective],
+  imports: [AppIconComponent, FormsModule, LeaveDecisionDialogComponent, LeaveDetailsComponent, LeaveRequestFormComponent, PaginatedTableDirective],
   templateUrl: './leave-request-list.component.html',
   styleUrls: ['../../../shared/resource-page.scss', './leave-request-list.component.scss']
 })
@@ -61,6 +62,10 @@ export class LeaveRequestListComponent implements OnInit {
   protected readonly statuses: LeaveRequestStatus[] = ['DRAFT', 'PENDING', 'APPROVED', 'REJECTED', 'CANCELLED'];
   protected readonly submitRequest = signal<LeaveRequestResponse | null>(null);
   protected readonly submitError = signal<string | null>(null);
+  protected readonly regularizationRequest = signal<LeaveRequestResponse | null>(null);
+  protected readonly regularizationDays = signal(0);
+  protected readonly regularizationComment = signal('');
+  protected readonly regularizationError = signal<string | null>(null);
   protected readonly isManagerMode = computed(() => this.route.snapshot.routeConfig?.path === 'team-requests');
   protected readonly isCreateMode = computed(() => this.route.snapshot.routeConfig?.path === 'request-leave');
   protected readonly maximumLeaveDays = computed(() => {
@@ -255,6 +260,33 @@ export class LeaveRequestListComponent implements OnInit {
   protected markCertificateAdded(requestId: number): void {
     this.certificateRequestIds.update((ids) => new Set(ids).add(requestId));
   }
+
+  protected canRegularize(request:LeaveRequestResponse):boolean{
+    const role=this.authService.getCurrentUser()?.role;
+    return this.isManagerMode()&&(role==='DG'||role==='DT')&&request.nature==='CONGE'&&request.status==='APPROVED'&&request.startDate<=this.todayKey();
+  }
+
+  protected openRegularization(request:LeaveRequestResponse):void{
+    this.regularizationRequest.set(request);this.regularizationDays.set(request.consumedDays??request.requestedDays);this.regularizationComment.set('');this.regularizationError.set(null);
+  }
+
+  protected regularizationEndDate():string|null{
+    const request=this.regularizationRequest();const count=Number(this.regularizationDays());if(!request||!Number.isInteger(count)||count<=0)return null;
+    const holidays=new Set(this.holidays().filter(h=>h.actif!==false).map(h=>h.date));const date=new Date(`${request.startDate}T12:00:00`);let consumed=0;
+    while(consumed<count){const day=date.getDay();const key=this.dateKey(date);if(day!==0&&(request.saturdayCounts||day!==6)&&!holidays.has(key))consumed++;if(consumed<count)date.setDate(date.getDate()+1);}
+    return this.dateKey(date);
+  }
+
+  protected regularizationDelta():number{const request=this.regularizationRequest();return request?request.requestedDays-Number(this.regularizationDays()):0;}
+
+  protected saveRegularization():void{
+    const request=this.regularizationRequest();const days=Number(this.regularizationDays());const comment=this.regularizationComment().trim();
+    if(!request)return;if(!Number.isInteger(days)||days<0||days>request.requestedDays){this.regularizationError.set(`Saisissez un nombre entier entre 0 et ${request.requestedDays}.`);return}if(!comment){this.regularizationError.set('Le commentaire de régularisation est obligatoire.');return}
+    this.isSaving.set(true);this.regularizationError.set(null);this.leaveRequestService.regularizeConsumption(request.id,days,comment).subscribe({next:()=>{this.isSaving.set(false);this.regularizationRequest.set(null);this.success.set('La consommation réelle et le solde ont été régularisés.');this.loadRequests();},error:e=>{this.isSaving.set(false);this.regularizationError.set(safeApiMessage(e,'Impossible de régulariser cette consommation.'));}});
+  }
+
+  private todayKey():string{return this.dateKey(new Date())}
+  private dateKey(date:Date):string{return `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`}
 
   private loadEmployeeCertificates(employeeId: number): void {
     this.medicalDocumentService.findByEmployee(employeeId).subscribe({

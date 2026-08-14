@@ -1,5 +1,5 @@
-<section class="admin-dashboard">
-  <header class="dashboard-hero">
+<section class="resource-page admin-dashboard">
+  <header class="page-header dashboard-hero">
     <div class="hero-copy">
       <span class="eyebrow">{{ isManager() ? "PILOTAGE DE L'ÉQUIPE" : 'CENTRE DE PILOTAGE RH' }}</span>
       <h1>Bonjour, {{ fullName() }}</h1>
@@ -7,7 +7,7 @@
     </div>
     <div class="hero-actions">
       @if (lastUpdated()) { <small>Actualisé à {{ lastUpdated()!.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) }}</small> }
-      <button type="button" class="refresh-button" (click)="loadDashboard()" [disabled]="loading()">↻ Actualiser</button>
+      <button type="button" class="secondary-button refresh-button" (click)="loadDashboard()" [disabled]="loading()"><app-icon name="history" />Actualiser</button>
     </div>
   </header>
 
@@ -24,9 +24,9 @@
 
     <section class="kpi-grid" aria-label="Indicateurs clés">
       <article class="kpi-card kpi-workforce"><div class="kpi-icon">♟</div><div><span>Effectif actif</span><strong>{{ activeEmployees() }}</strong><small>sur {{ userList().length }} comptes enregistrés</small></div><em>{{ userList().length ? ((activeEmployees()/userList().length)*100).toFixed(0) : 0 }}%</em></article>
-      <article class="kpi-card kpi-coverage"><div class="kpi-icon">✓</div><div><span>Disponibilité aujourd'hui</span><strong>{{ coverageRate() }}%</strong><small>{{ absentToday() }} absent{{ absentToday() > 1 ? 's' : '' }} aujourd'hui</small></div><em>{{ activeEmployees() - absentToday() }}/{{ activeEmployees() }}</em></article>
-      <article class="kpi-card kpi-approval"><div class="kpi-icon">↗</div><div><span>Taux d'approbation</span><strong>{{ approvalRate() }}%</strong><small>{{ approved() + rejected() }} décisions rendues</small></div><em>{{ approved() }} validées</em></article>
-      <article class="kpi-card kpi-time"><div class="kpi-icon">◷</div><div><span>Délai moyen de décision</span><strong>{{ averageDecisionHours() }} h</strong><small>entre soumission et décision</small></div><em>Objectif 48 h</em></article>
+      <article class="kpi-card kpi-coverage"><div class="kpi-icon"><app-icon name="check" /></div><div><span>Disponibilité aujourd'hui</span><strong>{{ coverageRate() }}%</strong><small>{{ absentToday() }} absent{{ absentToday() > 1 ? 's' : '' }} aujourd'hui</small></div><em>{{ activeEmployees() - absentToday() }}/{{ activeEmployees() }}</em></article>
+      <article class="kpi-card kpi-approval"><div class="kpi-icon"><app-icon name="chart" /></div><div><span>Taux d'approbation</span><strong>{{ approvalRate() }}%</strong><small>{{ approved() + rejected() }} décisions rendues</small></div><em>{{ approved() }} validées</em></article>
+      <article class="kpi-card kpi-time"><div class="kpi-icon"><app-icon name="history" /></div><div><span>Délai moyen de décision</span><strong>{{ averageDecisionHours() }} h</strong><small>entre soumission et décision</small></div><em>Objectif 48 h</em></article>
     </section>
 
     <div class="dashboard-main-grid">
@@ -78,9 +78,9 @@
     <section class="quick-actions">
       <header><span class="panel-kicker">ACCÈS RAPIDES</span><h2>Administrer l'application</h2></header>
       @if (isManager()) {
-        <div><a routerLink="/team-requests"><b>✓</b><span><strong>Demandes de l'équipe</strong><small>Traiter les demandes en attente</small></span></a><a routerLink="/team-members"><b>♙</b><span><strong>Membres de l'équipe</strong><small>Consulter et gérer les collaborateurs</small></span></a><a routerLink="/team-availability"><b>◷</b><span><strong>Disponibilité</strong><small>Organiser la charge de travail</small></span></a><a routerLink="/team-calendar"><b>□</b><span><strong>Calendrier de l'équipe</strong><small>Visualiser les absences planifiées</small></span></a></div>
+        <div><a routerLink="/team-requests"><b><app-icon name="check" /></b><span><strong>Demandes de l'équipe</strong><small>Traiter les demandes en attente</small></span></a><a routerLink="/team-members"><b><app-icon name="team" /></b><span><strong>Membres de l'équipe</strong><small>Consulter et gérer les collaborateurs</small></span></a><a routerLink="/team-availability"><b><app-icon name="availability" /></b><span><strong>Disponibilité</strong><small>Organiser la charge de travail</small></span></a><a routerLink="/team-calendar"><b><app-icon name="calendar" /></b><span><strong>Calendrier de l'équipe</strong><small>Visualiser les absences planifiées</small></span></a></div>
       } @else {
-        <div><a routerLink="/users"><b>＋</b><span><strong>Nouvel utilisateur</strong><small>Créer et affecter un employé</small></span></a><a routerLink="/jours-feries"><b>◇</b><span><strong>Jours fériés</strong><small>Planifier les jours non ouvrés</small></span></a><a routerLink="/reports"><b>↗</b><span><strong>Rapports</strong><small>Analyser et exporter les données</small></span></a><a routerLink="/contract-types"><b>≡</b><span><strong>Types de contrat</strong><small>Configurer les contrats disponibles</small></span></a></div>
+        <div><a routerLink="/users"><b><app-icon name="plus" /></b><span><strong>Nouvel utilisateur</strong><small>Créer et affecter un employé</small></span></a><a routerLink="/jours-feries"><b><app-icon name="holiday" /></b><span><strong>Jours fériés</strong><small>Planifier les jours non ouvrés</small></span></a><a routerLink="/reports"><b><app-icon name="reports" /></b><span><strong>Rapports</strong><small>Analyser et exporter les données</small></span></a><a routerLink="/contract-types"><b><app-icon name="contract" /></b><span><strong>Types de contrat</strong><small>Configurer les contrats disponibles</small></span></a></div>
       }
     </section>
   }

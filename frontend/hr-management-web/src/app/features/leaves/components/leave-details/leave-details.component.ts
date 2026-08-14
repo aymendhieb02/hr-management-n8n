@@ -5,10 +5,11 @@ import { LeaveRequestResponse } from '../../models/leave-request.model';
 import { MedicalDocumentMetadataResponse, MedicalDocumentResponse } from '../../../medical-documents/models/medical-document.model';
 import { MedicalDocumentService } from '../../../medical-documents/services/medical-document.service';
 import { safeApiMessage } from '../../../shared/api-error.util';
+import { AppIconComponent } from '../../../../shared/components/app-icon/app-icon.component';
 
 @Component({
   selector: 'app-leave-details',
-  imports: [MedicalDocumentUploadComponent],
+  imports: [AppIconComponent, MedicalDocumentUploadComponent],
   templateUrl: './leave-details.component.html',
   styleUrl: '../../../shared/resource-page.scss'
 })

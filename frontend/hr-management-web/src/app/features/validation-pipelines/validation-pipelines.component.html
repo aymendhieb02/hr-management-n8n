@@ -1,41 +1,82 @@
 <section class="resource-page pipeline-page">
-  <header class="page-header">
-    <div><span class="eyebrow">Administration</span><h1>Circuits de validation</h1><p>Organisez l’ordre des décideurs pour chaque employé.</p></div>
-    <button class="primary-button" type="button" (click)="create()">＋ Nouveau circuit</button>
+  <header class="page-header pipeline-hero">
+    <div class="hero-copy">
+      <span class="eyebrow">ADMINISTRATION DES VALIDATIONS</span>
+      <h1><app-icon name="workflow" />Circuits de validation</h1>
+      <p>Construisez des parcours fiables et visualisez immédiatement l’ordre de décision de chaque collaborateur.</p>
+    </div>
+    <button class="primary-button hero-action" type="button" (click)="create()"><app-icon name="plus" /> Nouveau circuit</button>
   </header>
-  @if(message()){<p class="state success">{{message()}}</p>}
-  @if(error()){<p class="state error">{{error()}}</p>}
+
+  <div class="metrics-grid" aria-label="Résumé des circuits">
+    <article><span class="metric-icon active-icon"><app-icon name="check" /></span><div><small>Circuits actifs</small><strong>{{ activeCount() }}</strong></div></article>
+    <article><span class="metric-icon steps-icon"><app-icon name="workflow" /></span><div><small>Étapes configurées</small><strong>{{ stepCount() }}</strong></div></article>
+    <article [class.alert-metric]="anomalies().length"><span class="metric-icon alert-icon"><app-icon name="info" /></span><div><small>Anomalies à traiter</small><strong>{{ anomalies().length }}</strong></div></article>
+  </div>
+
+  @if(message()){<p class="state success" role="status">{{message()}}</p>}
+  @if(error()){<p class="state error" role="alert">{{error()}}</p>}
+
   <section class="filters-card">
-    <label class="search-field"><span>Rechercher</span><input type="search" placeholder="Nom du circuit ou de l’employé" [ngModel]="search()" (ngModelChange)="search.set($event)"></label>
-    <span class="result-count">{{filtered().length}} circuit(s)</span>
+    <label class="search-field">
+      <span>Rechercher un circuit</span>
+      <div class="input-shell"><app-icon name="search" /><input type="search" placeholder="Nom du circuit ou du collaborateur" [ngModel]="search()" (ngModelChange)="search.set($event)"></div>
+    </label>
+    <span class="result-count"><strong>{{filtered().length}}</strong> résultat(s)</span>
   </section>
+
   @if(anomalies().length){
-    <section class="anomalies table-card"><header><div><span class="eyebrow">Action requise</span><h2>Circuits bloqués</h2></div><b>{{anomalies().length}}</b></header>
-      @for(a of anomalies();track a.etapeId){<div class="anomaly-row"><div><strong>Demande #{{a.demandeId}} · {{a.employe}}</strong><small>Étape {{a.priorite}} · décideur indisponible : {{a.decideur}}</small></div><select #replacement (change)="reassign(a,replacement.value)"><option value="">Réaffecter à...</option>@for(u of approvers();track u.id){<option [value]="u.id">{{u.firstName}} {{u.lastName}} · {{u.role}}</option>}</select></div>}
+    <section class="anomalies table-card">
+      <header><div><span class="eyebrow">ACTION REQUISE</span><h2>Workflows bloqués</h2><p>Réaffectez les étapes dont le décideur n’est plus disponible.</p></div><b>{{anomalies().length}}</b></header>
+      <div class="anomaly-list">
+        @for(a of anomalies();track a.etapeId){
+          <article class="anomaly-row">
+            <span class="anomaly-symbol">!</span>
+            <div class="anomaly-copy"><strong>Demande #{{a.demandeId}} · {{a.employe}}</strong><small>Étape {{a.priorite}} · Décideur indisponible : {{a.decideur}}</small></div>
+            <select #replacement (change)="reassign(a,replacement.value)"><option value="">Choisir un remplaçant</option>@for(u of approvers();track u.id){<option [value]="u.id">{{u.firstName}} {{u.lastName}} · {{ roleLabel(u.role) }}</option>}</select>
+          </article>
+        }
+      </div>
     </section>
   }
+
   <div class="pipeline-list">
     @for(p of filtered();track p.id){
       <article class="pipeline-card table-card">
-        <div class="card-head"><div><span class="badge" [class.success]="p.actif" [class.muted]="!p.actif">{{p.actif?'Actif':'Inactif'}}</span><h2>{{p.nom}}</h2><p>Employé : <strong>{{p.employe.prenom}} {{p.employe.nom}}</strong></p></div><div class="actions"><button class="secondary-button icon-button" title="Modifier" (click)="edit(p)">✎</button><button class="danger-button icon-button" title="Désactiver" (click)="disable(p)">⊘</button></div></div>
-        <div class="horizontal-flow">@for(step of p.etapes;track step.id;let last=$last){<div class="flow-step"><span>{{step.priorite}}</span><div><strong>{{step.decideur.prenom}} {{step.decideur.nom}}</strong><small>{{step.decideur.role}}</small></div></div>@if(!last){<i class="flow-arrow">→</i>}}</div>
+        <div class="card-head">
+          <div class="pipeline-identity"><span class="pipeline-emblem"><app-icon name="workflow" /></span><div><div class="title-line"><h2>{{p.nom}}</h2><span class="badge" [class.success]="p.actif" [class.muted]="!p.actif">{{p.actif?'Actif':'Inactif'}}</span></div><p>Collaborateur concerné · <strong>{{p.employe.prenom}} {{p.employe.nom}}</strong></p></div></div>
+          <div class="actions"><button class="secondary-button icon-button" type="button" title="Modifier le circuit" aria-label="Modifier le circuit" (click)="edit(p)"><app-icon name="edit" /></button><button class="danger-button icon-button" type="button" title="Désactiver le circuit" aria-label="Désactiver le circuit" (click)="disable(p)"><app-icon name="ban" /></button></div>
+        </div>
+        <div class="flow-caption"><span>Parcours de décision</span><small>{{p.etapes.length}} étape(s)</small></div>
+        <div class="horizontal-flow">
+          @for(step of p.etapes;track step.id;let last=$last){
+            <div class="flow-step" [class.final-step]="last"><span>{{step.priorite}}</span><div><small>{{last?'DÉCISION FINALE':'VALIDATION'}}</small><strong>{{step.decideur.prenom}} {{step.decideur.nom}}</strong><em>{{roleLabel(step.decideur.role)}}</em></div></div>
+            @if(!last){<i class="flow-arrow"><app-icon name="arrow-right" /></i>}
+          }
+        </div>
       </article>
-    } @empty {<div class="empty-state table-card"><strong>Aucun circuit configuré</strong><p>Créez le premier parcours de validation.</p></div>}
+    } @empty {<div class="empty-state table-card"><span><app-icon name="workflow" /></span><strong>Aucun circuit configuré</strong><p>Créez un premier parcours pour démarrer la validation séquentielle.</p><button class="primary-button" type="button" (click)="create()"><app-icon name="plus" />Créer un circuit</button></div>}
   </div>
 </section>
 
 @if(open()){
   <div class="dialog-backdrop" (click)="open.set(false)"><section class="dialog pipeline-dialog" (click)="$event.stopPropagation()">
-    <header class="dialog-header"><div><span class="eyebrow">Constructeur</span><h2>{{editing()?'Modifier':'Créer'}} un circuit</h2><p>Définissez l’employé et l’ordre exact des validations.</p></div><button class="icon-button secondary-button" (click)="open.set(false)" aria-label="Fermer">×</button></header>
-    <div class="form-grid"><label class="form-field"><span>Nom du circuit</span><input [(ngModel)]="name" placeholder="Ex. Validation direction"></label><label class="form-field"><span>Employé concerné</span><select [(ngModel)]="employeeId"><option [ngValue]="null">Sélectionnez un employé</option>@for(u of employees();track u.id){<option [ngValue]="u.id">{{u.firstName}} {{u.lastName}}</option>}</select></label></div>
-    <div class="builder-head"><div><h3>Ordre de validation</h3><p>Le dernier décideur rend la décision finale.</p></div><button class="secondary-button" type="button" (click)="addStep()">＋ Ajouter une étape</button></div>
+    <header class="dialog-header"><div><span class="eyebrow">CONSTRUCTEUR DE WORKFLOW</span><h2><app-icon name="workflow" />{{editing()?'Modifier':'Créer'}} un circuit</h2><p>Chaque étape sera sollicitée dans l’ordre affiché.</p></div><button class="icon-button secondary-button close-button" type="button" (click)="open.set(false)" aria-label="Fermer"><app-icon name="close" /></button></header>
+    <section class="configuration-panel">
+      <div class="form-grid"><label class="form-field"><span>Nom du circuit</span><input [(ngModel)]="name" placeholder="Ex. Validation direction générale"></label><label class="form-field"><span>Collaborateur concerné</span><select [(ngModel)]="employeeId"><option [ngValue]="null">Sélectionnez un collaborateur</option>@for(u of employees();track u.id){<option [ngValue]="u.id">{{u.firstName}} {{u.lastName}}</option>}</select></label></div>
+    </section>
+    <div class="builder-head"><div><span class="section-index">02</span><div><h3>Ordre de validation</h3><p>Le dernier décideur rend la décision finale.</p></div></div><button class="secondary-button add-step-button" type="button" (click)="addStep()"><app-icon name="plus" />Ajouter une étape</button></div>
     <div class="steps-horizontal">
       @for(step of steps;track $index;let i=$index;let last=$last){
-        <article class="step-card"><header><span class="step-number">{{i+1}}</span><small>{{last?'Décision finale':'Validation intermédiaire'}}</small></header><label class="form-field"><span>Décideur</span><select [(ngModel)]="step.decideurId"><option [ngValue]="null">Sélectionnez un décideur</option>@for(u of approversFor(i);track u.id){<option [ngValue]="u.id">{{u.firstName}} {{u.lastName}} · {{u.role}}</option>}</select></label><div class="step-actions"><button class="secondary-button" type="button" (click)="move(i,-1)" [disabled]="i===0" title="Déplacer à gauche">←</button><button class="secondary-button" type="button" (click)="move(i,1)" [disabled]="last" title="Déplacer à droite">→</button><button class="danger-button" type="button" (click)="removeStep(i)" [disabled]="steps.length===1" title="Supprimer">×</button></div></article>
-        @if(!last){<i class="builder-arrow">→</i>}
+        <article class="step-card" [class.final-step-card]="last">
+          <header><span class="step-number">{{i+1}}</span><div><small>{{last?'ÉTAPE FINALE':'ÉTAPE DE VALIDATION'}}</small><strong>{{person(step.decideurId)}}</strong></div><span class="step-status">{{last?'Décision':'Avis'}}</span></header>
+          <label class="form-field"><span>Décideur</span><select [(ngModel)]="step.decideurId"><option [ngValue]="null">Sélectionnez un décideur</option>@for(u of approversFor(i);track u.id){<option [ngValue]="u.id">{{u.firstName}} {{u.lastName}} · {{roleLabel(u.role)}}</option>}</select></label>
+          <div class="step-actions"><button class="secondary-button" type="button" (click)="move(i,-1)" [disabled]="i===0" title="Déplacer à gauche" aria-label="Déplacer à gauche"><app-icon name="arrow-left" /></button><button class="secondary-button" type="button" (click)="move(i,1)" [disabled]="last" title="Déplacer à droite" aria-label="Déplacer à droite"><app-icon name="arrow-right" /></button><button class="danger-button" type="button" (click)="removeStep(i)" [disabled]="steps.length===1" title="Supprimer l’étape" aria-label="Supprimer l’étape"><app-icon name="delete" /></button></div>
+        </article>
+        @if(!last){<i class="builder-arrow"><span><app-icon name="arrow-right" /></span></i>}
       }
     </div>
-    <label class="toggle"><input type="checkbox" [(ngModel)]="active"><span>Activer ce circuit</span></label>
-    <footer class="dialog-actions"><button class="secondary-button" type="button" (click)="open.set(false)">Annuler</button><button class="primary-button" type="button" (click)="save()">Enregistrer le circuit</button></footer>
+    <label class="toggle"><input type="checkbox" [(ngModel)]="active"><span class="toggle-control"></span><span><strong>Activer ce circuit</strong><small>Il sera utilisé pour les prochaines demandes du collaborateur.</small></span></label>
+    <footer class="dialog-actions"><button class="secondary-button" type="button" (click)="open.set(false)"><app-icon name="close" />Annuler</button><button class="primary-button" type="button" (click)="save()"><app-icon name="check" />Enregistrer le circuit</button></footer>
   </section></div>
 }

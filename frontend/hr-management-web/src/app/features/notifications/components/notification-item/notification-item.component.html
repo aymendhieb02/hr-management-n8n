@@ -1,5 +1,5 @@
 <article class="notification-card" [class.unread]="!notification().read">
-  <span class="notification-icon" aria-hidden="true">{{ notification().read ? '✓' : '!' }}</span>
+  <span class="notification-icon" aria-hidden="true"><app-icon [name]="notification().read ? 'check' : 'bell'" /></span>
   <div class="notification-content">
     <header>
       <div>
