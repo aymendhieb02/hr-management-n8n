@@ -13,13 +13,13 @@ import com.xtensus.hrmanagementapi.domain.entity.*; import com.xtensus.hrmanagem
  private Response enregistrer(PipelineValidation p,Request r){
   if(r.nom()==null||r.nom().isBlank())throw new IllegalArgumentException("Le nom du circuit est obligatoire"); if(r.etapes()==null||r.etapes().isEmpty())throw new IllegalArgumentException("Le circuit doit contenir au moins une étape");
   Employe cible=employes.findById(r.employeId()).orElseThrow(()->new IllegalArgumentException("Employé introuvable")); boolean actif=!Boolean.FALSE.equals(r.actif());
-  if(actif&&pipelines.existsByEmployeIdAndActifTrueAndIdNot(cible.getId(),p.getId()==null?-1L:p.getId()))throw new IllegalArgumentException("Cet employé possède déjà un circuit actif");
+  if(pipelines.existsByEmployeIdAndIdNot(cible.getId(),p.getId()==null?-1L:p.getId()))throw new IllegalArgumentException("Ce collaborateur possède déjà un circuit de validation");
   Set<Integer> priorites=new HashSet<>();Set<Long> decideurs=new HashSet<>();List<PipelineValidationEtape> nouvelles=new ArrayList<>();
   for(EtapeRequest e:r.etapes()){
    if(e.priorite()==null||e.priorite()<1||!priorites.add(e.priorite()))throw new IllegalArgumentException("Les priorités doivent être uniques et positives");
    if(e.decideurId()==null||!decideurs.add(e.decideurId()))throw new IllegalArgumentException("Un décideur ne peut apparaître qu'une fois");
    Employe d=employes.findById(e.decideurId()).orElseThrow(()->new IllegalArgumentException("Décideur introuvable")); RoleType role=RoleType.fromDatabaseRole(d.getRole());
-   if(!Boolean.TRUE.equals(d.getActif())||!(role==RoleType.DG||role==RoleType.DT||role==RoleType.HR||role==RoleType.ADMIN))throw new IllegalArgumentException("Le décideur doit être DG, DT, RH ou Administrateur actif");
+   if(!Boolean.TRUE.equals(d.getActif())||!(role==RoleType.DG||role==RoleType.DT||role==RoleType.HR))throw new IllegalArgumentException("Le décideur doit être DG, DT ou RH actif");
    PipelineValidationEtape pe=new PipelineValidationEtape();pe.setPipeline(p);pe.setDecideur(d);pe.setPriorite(e.priorite());pe.setActif(true);nouvelles.add(pe);
   }
   p.setNom(r.nom().trim());p.setEmploye(cible);p.setActif(actif);if(p.getId()==null)p.setDateCreation(LocalDateTime.now());else p.setDateModification(LocalDateTime.now());p.getEtapes().clear();p.getEtapes().addAll(nouvelles);return dto(pipelines.save(p));

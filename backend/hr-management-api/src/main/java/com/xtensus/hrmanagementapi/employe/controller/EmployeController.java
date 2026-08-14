@@ -68,7 +68,12 @@ public class EmployeController {
     }
 
     @GetMapping("/{managerId}/equipe")
-    public ResponseEntity<List<EmployeResponse>> findEquipe(@PathVariable Long managerId) {
+    public ResponseEntity<List<EmployeResponse>> findEquipe(@PathVariable Long managerId,
+            @AuthenticationPrincipal CustomUserDetails principal) {
+        if (principal != null && (principal.getRole() == com.xtensus.hrmanagementapi.domain.enums.RoleType.DG
+                || principal.getRole() == com.xtensus.hrmanagementapi.domain.enums.RoleType.DT)) {
+            return ResponseEntity.ok(employeService.findAll());
+        }
         return ResponseEntity.ok(employeService.findEquipe(managerId));
     }
 
