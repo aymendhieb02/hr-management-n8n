@@ -19,4 +19,6 @@ public class NotificationFrancaiseResponse {
     private LocalDateTime dateCreation;
     private LocalDateTime dateLecture;
     private String priorite;
+    private Long congeDemandeId;
+    private Long workflowEtapeId;
 }

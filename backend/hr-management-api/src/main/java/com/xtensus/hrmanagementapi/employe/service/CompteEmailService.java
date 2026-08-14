@@ -47,6 +47,14 @@ public class CompteEmailService {
         }
     }
 
+    public void envoyerHtml(String destinataire, String sujet, String contenuHtml) throws Exception {
+        JavaMailSender sender = expediteur();
+        var message = sender.createMimeMessage();
+        var helper = new MimeMessageHelper(message, "UTF-8");
+        helper.setFrom(emailExpediteur()); helper.setTo(destinataire); helper.setSubject(sujet); helper.setText(contenuHtml, true);
+        sender.send(message);
+    }
+
     private JavaMailSender expediteur() {
         String username = emailExpediteur();
         String password = variables.valeur("smtp_mot_de_passe_application", "").replace(" ", "");

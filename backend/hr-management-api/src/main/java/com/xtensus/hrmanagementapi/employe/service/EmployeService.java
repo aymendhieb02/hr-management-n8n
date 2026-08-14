@@ -66,6 +66,12 @@ public class EmployeService {
         return createInternal(request, findEntity(managerId));
     }
 
+    @Transactional
+    public EmployeResponse createForHr(EmployeRequest request) {
+        request.setRole(RoleType.EMPLOYEE.toDatabaseRole());
+        return createInternal(request, null);
+    }
+
     private EmployeResponse createInternal(EmployeRequest request, Employe forcedManager) {
         String email = normalizeRequired(request.getEmail(), "L'email est obligatoire");
         String username = normalizeRequired(request.getUsername(), "L'identifiant est obligatoire");
@@ -80,6 +86,7 @@ public class EmployeService {
         employe.setEmail(email);
         employe.setUsername(username);
         applyTechnicalDefaults(employe);
+        validerRoleUnique(employe.getRole(), null);
         attachReferences(request, employe);
         if (forcedManager != null) {
             employe.setManager(forcedManager);
@@ -114,6 +121,7 @@ public class EmployeService {
         employe.setEmail(email);
         employe.setUsername(username);
         applyTechnicalDefaults(employe);
+        validerRoleUnique(employe.getRole(), id);
         attachReferences(request, employe);
         if (employe.getManager() != null && employe.getManager().getId().equals(employe.getId())) {
             throw new EmployeInvalideException("Un employe ne peut pas etre son propre manager");
@@ -130,6 +138,12 @@ public class EmployeService {
         employe.setManager(findEntity(managerId));
         employe.setRole(RoleType.EMPLOYEE.toDatabaseRole());
         return employeMapper.toResponse(employeRepository.save(employe));
+    }
+
+    @Transactional
+    public EmployeResponse updateForHr(Long id, EmployeRequest request) {
+        request.setRole(findEntity(id).getRole());
+        return update(id, request);
     }
 
     @Transactional
@@ -209,6 +223,34 @@ public class EmployeService {
     @Transactional(readOnly = true)
     public List<EmployeResponse> findEquipe(Long managerId) {
         return employeRepository.findByManagerId(managerId).stream().map(employeMapper::toResponse).toList();
+    }
+
+    @Transactional
+    public EmployeResponse attribuerRole(Long id, String roleDemande, RoleType roleActeur, Long acteurId) {
+        Employe employe = findEntity(id);
+        RoleType nouveauRole;
+        try { nouveauRole = RoleType.valueOf(roleDemande == null ? "" : roleDemande.trim().toUpperCase()); }
+        catch (IllegalArgumentException ex) { throw new EmployeInvalideException("Role invalide"); }
+        if ((roleActeur == RoleType.DG || roleActeur == RoleType.DT)) {
+            ensureManagedBy(id, acteurId);
+            if (nouveauRole == RoleType.ADMIN) throw new EmployeInvalideException("Seul un administrateur peut attribuer le role Administrateur");
+        } else if (roleActeur != RoleType.ADMIN) {
+            throw new EmployeInvalideException("Vous n'etes pas autorise a attribuer un role");
+        }
+        validerRoleUnique(nouveauRole.toDatabaseRole(), id);
+        employe.setRole(nouveauRole.toDatabaseRole());
+        employe.setUpdatedAt(LocalDateTime.now());
+        return employeMapper.toResponse(employeRepository.save(employe));
+    }
+
+    private void validerRoleUnique(String role, Long employeId) {
+        RoleType type = RoleType.fromDatabaseRole(role);
+        if ((type == RoleType.DG || type == RoleType.DT)
+                && employeRepository.existsByRoleIgnoreCaseAndIdNot(type.toDatabaseRole(), employeId == null ? -1L : employeId)) {
+            throw new EmployeInvalideException(type == RoleType.DG
+                    ? "Un Directeur general est deja affecte"
+                    : "Une Directrice technique est deja affectee");
+        }
     }
 
     private void applyTechnicalDefaults(Employe employe) {

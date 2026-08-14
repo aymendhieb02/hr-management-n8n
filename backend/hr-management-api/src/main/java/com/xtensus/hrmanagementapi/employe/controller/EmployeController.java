@@ -43,7 +43,8 @@ public class EmployeController {
             @AuthenticationPrincipal CustomUserDetails principal) {
         EmployeResponse response = isManager(principal)
                 ? employeService.createForManager(request, principal.getId())
-                : employeService.create(request);
+                : principal.getRole() == com.xtensus.hrmanagementapi.domain.enums.RoleType.HR
+                    ? employeService.createForHr(request) : employeService.create(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
@@ -79,7 +80,8 @@ public class EmployeController {
     ) {
         return ResponseEntity.ok(isManager(principal)
                 ? employeService.updateForManager(id, request, principal.getId())
-                : employeService.update(id, request));
+                : principal.getRole() == com.xtensus.hrmanagementapi.domain.enums.RoleType.HR
+                    ? employeService.updateForHr(id, request) : employeService.update(id, request));
     }
 
     @DeleteMapping("/{id}")
@@ -142,7 +144,16 @@ public class EmployeController {
         return ResponseEntity.noContent().build();
     }
 
+    @PatchMapping("/{id}/role")
+    public ResponseEntity<EmployeResponse> attribuerRole(@PathVariable Long id, @RequestBody RoleRequest request,
+            @AuthenticationPrincipal CustomUserDetails principal) {
+        return ResponseEntity.ok(employeService.attribuerRole(id, request.role(), principal.getRole(), principal.getId()));
+    }
+
+    public record RoleRequest(String role) {}
+
     private boolean isManager(CustomUserDetails principal) {
-        return principal != null && principal.getRole() == com.xtensus.hrmanagementapi.domain.enums.RoleType.MANAGER;
+        return principal != null && (principal.getRole() == com.xtensus.hrmanagementapi.domain.enums.RoleType.DG
+                || principal.getRole() == com.xtensus.hrmanagementapi.domain.enums.RoleType.DT);
     }
 }

@@ -2,7 +2,8 @@ package com.xtensus.hrmanagementapi.domain.enums;
 
 public enum RoleType {
     EMPLOYEE,
-    MANAGER,
+    DG,
+    DT,
     HR,
     ADMIN;
 
@@ -10,7 +11,8 @@ public enum RoleType {
         if (role == null) return EMPLOYEE;
         return switch (role) {
             case "EMPLOYE", "EMPLOYEE" -> EMPLOYEE;
-            case "MANAGER" -> MANAGER;
+            case "MANAGER", "DG" -> DG;
+            case "DT" -> DT;
             case "RH", "HR" -> HR;
             case "ADMIN" -> ADMIN;
             default -> EMPLOYEE;
@@ -20,7 +22,8 @@ public enum RoleType {
     public String toDatabaseRole() {
         return switch (this) {
             case EMPLOYEE -> "EMPLOYE";
-            case MANAGER -> "MANAGER";
+            case DG -> "DG";
+            case DT -> "DT";
             case HR -> "RH";
             case ADMIN -> "ADMIN";
         };

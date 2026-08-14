@@ -13,6 +13,8 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.access.hierarchicalroles.RoleHierarchy;
+import org.springframework.security.access.hierarchicalroles.RoleHierarchyImpl;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
@@ -23,6 +25,10 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 @Configuration
 @EnableMethodSecurity
 public class SecurityConfig {
+    @Bean
+    RoleHierarchy roleHierarchy() {
+        return RoleHierarchyImpl.fromHierarchy("ROLE_DG > ROLE_MANAGER\nROLE_DT > ROLE_MANAGER");
+    }
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final JwtAuthenticationEntryPoint authenticationEntryPoint;
@@ -63,6 +69,7 @@ public class SecurityConfig {
                                 .requestMatchers(HttpMethod.GET, "/api/variables-systeme/politique-conges").authenticated()
                                 .requestMatchers(HttpMethod.GET, "/api/variables-systeme/**").hasRole("ADMIN")
                                 .requestMatchers(HttpMethod.PUT, "/api/variables-systeme/**").hasRole("ADMIN")
+                                .requestMatchers("/api/pipelines-validation/**").hasRole("ADMIN")
 
                                 .requestMatchers(HttpMethod.GET, "/api/departements/**").authenticated()
                                 .requestMatchers(HttpMethod.POST, "/api/departements").hasAnyRole("HR", "ADMIN")

@@ -12,4 +12,6 @@ public class NotificationFrancaise {
  @Column(name="notification_date_creation", nullable=false) private LocalDateTime dateCreation;
  @Column(name="notification_date_lecture") private LocalDateTime dateLecture;
  @Column(name="notification_priorite_notification", length=50) private String priorite;
+ @Column(name="conge_demande_id") private Long congeDemandeId;
+ @Column(name="workflow_etape_id") private Long workflowEtapeId;
 }

@@ -64,7 +64,7 @@ public class CongeDemande {
     @Column(name = "conge_demande_heure_fin")
     private LocalTime heureFin;
 
-    @Column(name = "conge_demande_date_soumission", nullable = false)
+    @Column(name = "conge_demande_date_soumission")
     private LocalDateTime dateSoumission;
 
     @Column(name = "conge_demande_nombre_jours", nullable = false, precision = 5, scale = 2)

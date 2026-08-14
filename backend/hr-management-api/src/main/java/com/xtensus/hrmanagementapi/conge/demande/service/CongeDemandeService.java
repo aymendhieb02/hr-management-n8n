@@ -24,6 +24,7 @@ import com.xtensus.hrmanagementapi.domain.entity.Raison;
 import com.xtensus.hrmanagementapi.conge.demande.historique.CongeDemandeHistoriqueService;
 import com.xtensus.hrmanagementapi.notificationfr.service.NotificationFrancaiseService;
 import com.xtensus.hrmanagementapi.conge.solde.service.CongeSoldeTransactionService;
+import com.xtensus.hrmanagementapi.workflow.CongeWorkflowService;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -35,6 +36,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class CongeDemandeService {
+    private static final String STATUT_BROUILLON = "BROUILLON";
     private static final String STATUT_EN_ATTENTE = "EN_ATTENTE";
     private static final String STATUT_APPROUVEE = "APPROUVEE";
     private static final String STATUT_REFUSEE = "REFUSEE";
@@ -50,6 +52,7 @@ public class CongeDemandeService {
     private final NotificationFrancaiseService notificationService;
     private final CongeSoldeTransactionService soldeTransactionService;
     private final JourFerieRepository jourFerieRepository;
+    private final CongeWorkflowService workflowService;
 
     public CongeDemandeService(CongeDemandeRepository demandeRepository, EmployeRepository employeRepository,
             CongeTypeRepository congeTypeRepository, CongeDemandeStatutRepository statutRepository,
@@ -57,7 +60,7 @@ public class CongeDemandeService {
             CongeDemandeHistoriqueService historiqueService,
             NotificationFrancaiseService notificationService,
             CongeSoldeTransactionService soldeTransactionService,
-            JourFerieRepository jourFerieRepository) {
+            JourFerieRepository jourFerieRepository, CongeWorkflowService workflowService) {
         this.demandeRepository = demandeRepository;
         this.employeRepository = employeRepository;
         this.congeTypeRepository = congeTypeRepository;
@@ -68,6 +71,7 @@ public class CongeDemandeService {
         this.notificationService = notificationService;
         this.soldeTransactionService = soldeTransactionService;
         this.jourFerieRepository = jourFerieRepository;
+        this.workflowService = workflowService;
     }
 
     @Transactional
@@ -78,50 +82,60 @@ public class CongeDemandeService {
         }
         CongeType type = congeType(request.getCongeTypeId());
         validerTypeNature(type, request.getNature());
-        validerPeriode(request.getNature(), request.getDateDebut(), request.getDateFin(), request.getHeureDebut(), request.getHeureFin());
-        validerAbsenceDeChevauchement(employe.getId(), null, request.getDateDebut(), request.getDateFin());
         BigDecimal nombreJours = request.getNombreJours() != null
                 ? request.getNombreJours()
                 : nombreJours(request.getDateDebut(), request.getDateFin());
-        validerSoldeAvantSoumission(employe, null, request.getNature(), nombreJours);
         LocalDateTime now = LocalDateTime.now();
         CongeDemande demande = new CongeDemande();
         demande.setEmploye(employe);
-        demande.setDecideur(employe.getManager());
+        demande.setDecideur(null);
         demande.setCongeType(type);
         demande.setNature(nature(request.getNature()));
         demande.setRaison(raison(request.getRaisonId(), request.getAutreMotif()));
-        demande.setStatut(statut(STATUT_EN_ATTENTE));
+        demande.setStatut(statut(STATUT_BROUILLON));
         demande.setDateDebut(request.getDateDebut());
         demande.setHeureDebut(request.getHeureDebut());
         demande.setDateFin(request.getDateFin());
         demande.setHeureFin(request.getHeureFin());
-        demande.setDateSoumission(now);
+        demande.setDateSoumission(null);
         demande.setNombreJours(nombreJours);
         demande.setSamediCompte(false);
         demande.setCommentaireEmploye(trim(request.getCommentaireEmploye()));
         demande.setDateCreation(now);
         CongeDemande saved = demandeRepository.save(demande);
-        historiqueService.enregistrer(saved, "CREATION", null, STATUT_EN_ATTENTE, saved.getCommentaireEmploye());
-        notificationService.notifier(
-                saved.getDecideur(), "DEMANDE_CONGE", "Nouvelle demande en attente",
-                saved.getEmploye().getPrenom() + " " + saved.getEmploye().getNom() + " a soumis une "
-                        + libelleNature(saved) + " pour la période du " + periode(saved) + ".", "HAUTE");
-        return mapper.toResponse(saved);
+        historiqueService.enregistrer(saved, "CREATION_BROUILLON", null, STATUT_BROUILLON, saved.getCommentaireEmploye());
+        return response(saved);
     }
 
     @Transactional
-    public CongeDemandeResponse modifier(Long id, CongeDemandeModificationRequest request) {
+    public CongeDemandeResponse soumettre(Long id, Long employeConnecteId) {
         CongeDemande demande = entite(id);
-        assurerEnAttente(demande, "Seule une demande en attente peut etre modifiee");
-        validerPeriode(request.getNature(), request.getDateDebut(), request.getDateFin(), request.getHeureDebut(), request.getHeureFin());
-        validerAbsenceDeChevauchement(demande.getEmploye().getId(), demande.getId(), request.getDateDebut(), request.getDateFin());
+        assurerProprietaire(demande, employeConnecteId);
+        assurerBrouillon(demande, "Seul un brouillon peut etre confirme et envoye");
+        if (!Boolean.TRUE.equals(demande.getEmploye().getActif())) throw new CongeDemandeInvalideException("Un employe inactif ne peut pas soumettre une demande de conge");
+        validerPeriode(demande.getNature(), demande.getDateDebut(), demande.getDateFin(), demande.getHeureDebut(), demande.getHeureFin());
+        validerAbsenceDeChevauchement(demande.getEmploye().getId(), demande.getId(), demande.getDateDebut(), demande.getDateFin());
+        validerSoldeAvantSoumission(demande.getEmploye(), demande.getId(), demande.getNature(), demande.getNombreJours());
+        demande.setStatut(statut(STATUT_EN_ATTENTE));
+        demande.setDateSoumission(LocalDateTime.now());
+        demande.setDateModification(LocalDateTime.now());
+        CongeDemande saved = demandeRepository.save(demande);
+        workflowService.demarrer(saved);
+        saved = demandeRepository.save(saved);
+        historiqueService.enregistrer(saved, "SOUMISSION", STATUT_BROUILLON, STATUT_EN_ATTENTE, saved.getCommentaireEmploye());
+        return response(saved);
+    }
+
+    @Transactional
+    public CongeDemandeResponse modifier(Long id, CongeDemandeModificationRequest request, Long employeConnecteId) {
+        CongeDemande demande = entite(id);
+        assurerProprietaire(demande, employeConnecteId);
+        assurerBrouillon(demande, "Seul un brouillon peut etre modifie");
         CongeType type = congeType(request.getCongeTypeId());
         validerTypeNature(type, request.getNature());
         BigDecimal nombreJours = request.getNombreJours() != null
                 ? request.getNombreJours()
                 : nombreJours(request.getDateDebut(), request.getDateFin());
-        validerSoldeAvantSoumission(demande.getEmploye(), demande.getId(), request.getNature(), nombreJours);
         demande.setCongeType(type);
         demande.setNature(nature(request.getNature()));
         demande.setRaison(raison(request.getRaisonId(), request.getAutreMotif()));
@@ -133,38 +147,38 @@ public class CongeDemandeService {
         demande.setCommentaireEmploye(trim(request.getCommentaireEmploye()));
         demande.setDateModification(LocalDateTime.now());
         CongeDemande saved = demandeRepository.save(demande);
-        historiqueService.enregistrer(saved, "MODIFICATION", STATUT_EN_ATTENTE, STATUT_EN_ATTENTE, saved.getCommentaireEmploye());
-        notificationService.notifier(
-                saved.getDecideur(), "DEMANDE_CONGE", "Demande en attente modifiée",
-                saved.getEmploye().getPrenom() + " " + saved.getEmploye().getNom()
-                        + " a modifié sa demande. Nouvelle période : " + periode(saved) + ".", "NORMALE");
-        return mapper.toResponse(saved);
+        historiqueService.enregistrer(saved, "MODIFICATION_BROUILLON", STATUT_BROUILLON, STATUT_BROUILLON, saved.getCommentaireEmploye());
+        return response(saved);
     }
 
     @Transactional
-    public void supprimer(Long id) {
+    public void supprimer(Long id, Long employeConnecteId) {
         CongeDemande demande = entite(id);
-        assurerEnAttente(demande, "Seule une demande en attente peut etre supprimee");
+        assurerProprietaire(demande, employeConnecteId);
+        assurerBrouillon(demande, "Seul un brouillon peut etre supprime");
         demande.setStatut(statut(STATUT_ANNULEE));
         demande.setDateModification(LocalDateTime.now());
         CongeDemande saved = demandeRepository.save(demande);
-        historiqueService.enregistrer(saved, "ANNULATION", STATUT_EN_ATTENTE, STATUT_ANNULEE, null);
-        notificationService.notifier(
-                saved.getDecideur(), "DEMANDE_CONGE", "Demande annulée par l'employé",
-                saved.getEmploye().getPrenom() + " " + saved.getEmploye().getNom()
-                        + " a annulé sa demande du " + periode(saved) + ".", "NORMALE");
+        historiqueService.enregistrer(saved, "SUPPRESSION_BROUILLON", STATUT_BROUILLON, STATUT_ANNULEE, null);
     }
 
     @Transactional
     public CongeDemandeResponse approuver(Long id, CongeDecisionRequest request) {
         CongeDemande demande = entite(id);
         String ancienStatut = demande.getStatut().getLibelle();
+        boolean finale = workflowService.approuver(demande, request.getDecideurId(), trim(request.getCommentaire()));
+        if (!finale) {
+            demande.setDateModification(LocalDateTime.now());
+            CongeDemande saved = demandeRepository.save(demande);
+            historiqueService.enregistrer(saved, "VALIDATION_INTERMEDIAIRE", ancienStatut, ancienStatut, request.getCommentaire());
+            return response(saved);
+        }
         boolean samediCompte = Boolean.TRUE.equals(request.getSamediCompte());
         demande.setSamediCompte(samediCompte);
         if (!"AUTORISATION_ABSENCE".equals(demande.getNature())) {
             demande.setNombreJours(nombreJoursOuvrables(demande.getDateDebut(), demande.getDateFin(), samediCompte));
         }
-        appliquerDecision(demande, request, STATUT_APPROUVEE, false);
+        appliquerDecisionFinale(demande, request, STATUT_APPROUVEE, false);
         soldeTransactionService.debiter(demande);
         CongeDemande saved = demandeRepository.save(demande);
         historiqueService.enregistrer(saved, "APPROBATION", ancienStatut, STATUT_APPROUVEE, request.getCommentaire());
@@ -172,7 +186,7 @@ public class CongeDemandeService {
                 saved.getEmploye(), "DECISION_CONGE", "Demande approuvée",
                 "Votre " + libelleNature(saved) + " du " + periode(saved) + " a été approuvée."
                         + commentaireDecision(saved), "HAUTE");
-        return mapper.toResponse(saved);
+        return response(saved);
     }
 
     @Transactional
@@ -182,14 +196,15 @@ public class CongeDemandeService {
         }
         CongeDemande demande = entite(id);
         String ancienStatut = demande.getStatut().getLibelle();
-        appliquerDecision(demande, request, STATUT_REFUSEE, true);
+        workflowService.refuser(demande, request.getDecideurId(), trim(request.getCommentaire()));
+        appliquerDecisionFinale(demande, request, STATUT_REFUSEE, true);
         CongeDemande saved = demandeRepository.save(demande);
         historiqueService.enregistrer(saved, "REFUS", ancienStatut, STATUT_REFUSEE, request.getCommentaire());
         notificationService.notifier(
                 saved.getEmploye(), "DECISION_CONGE", "Demande refusée",
                 "Votre " + libelleNature(saved) + " du " + periode(saved) + " a été refusée."
                         + commentaireDecision(saved), "HAUTE");
-        return mapper.toResponse(saved);
+        return response(saved);
     }
 
     @Transactional
@@ -203,27 +218,26 @@ public class CongeDemandeService {
         CongeDemande saved=demandeRepository.save(demande);
         historiqueService.enregistrer(saved,"AJUSTEMENT_CONSOMMATION",STATUT_APPROUVEE,STATUT_APPROUVEE,"Consommation reelle : "+joursReels+" jour(s)");
         notificationService.notifier(saved.getEmploye(),"DECISION_CONGE","Congé régularisé","Votre congé a été régularisé à "+joursReels+" jour(s) réellement consommé(s).","NORMALE");
-        return mapper.toResponse(saved);
+        return response(saved);
     }
 
     @Transactional(readOnly = true)
-    public CongeDemandeResponse trouverParId(Long id) { return mapper.toResponse(entite(id)); }
+    public CongeDemandeResponse trouverParId(Long id, Long acteurId) { CongeDemande d=entite(id); if (STATUT_BROUILLON.equals(d.getStatut().getLibelle()) && !d.getEmploye().getId().equals(acteurId)) throw new DecisionCongeNonAutoriseeException("Ce brouillon est prive"); return response(d); }
 
     @Transactional(readOnly = true)
-    public List<CongeDemandeResponse> lister() { return demandeRepository.findAll().stream().map(mapper::toResponse).toList(); }
+    public List<CongeDemandeResponse> lister() { return demandeRepository.findAll().stream().filter(d -> !STATUT_BROUILLON.equals(d.getStatut().getLibelle())).map(this::response).toList(); }
 
     @Transactional(readOnly = true)
-    public List<CongeDemandeResponse> parEmploye(Long employeId) { return demandeRepository.findByEmployeIdOrderByDateSoumissionDesc(employeId).stream().map(mapper::toResponse).toList(); }
+    public List<CongeDemandeResponse> parEmploye(Long employeId, Long acteurId) { return demandeRepository.findByEmployeIdOrderByDateSoumissionDesc(employeId).stream().filter(d -> employeId.equals(acteurId) || !STATUT_BROUILLON.equals(d.getStatut().getLibelle())).map(this::response).toList(); }
 
     @Transactional(readOnly = true)
-    public List<CongeDemandeResponse> parDecideur(Long decideurId) { return demandeRepository.findByDecideurIdOrderByDateSoumissionDesc(decideurId).stream().map(mapper::toResponse).toList(); }
+    public List<CongeDemandeResponse> parDecideur(Long decideurId) { return workflowService.demandesActives(decideurId).stream().map(this::response).toList(); }
 
-    private void appliquerDecision(CongeDemande demande, CongeDecisionRequest request, String nouveauStatut, boolean commentaireObligatoire) {
+    private CongeDemandeResponse response(CongeDemande demande) { CongeDemandeResponse r=mapper.toResponse(demande); workflowService.enrichir(r); return r; }
+
+    private void appliquerDecisionFinale(CongeDemande demande, CongeDecisionRequest request, String nouveauStatut, boolean commentaireObligatoire) {
         assurerEnAttente(demande, "Seule une demande en attente peut recevoir une decision");
         Employe decideur = employe(request.getDecideurId());
-        if (demande.getDecideur() == null || !demande.getDecideur().getId().equals(decideur.getId())) {
-            throw new DecisionCongeNonAutoriseeException("Seul le decideur assigne peut traiter cette demande");
-        }
         String commentaire = trim(request.getCommentaire());
         if (commentaireObligatoire && commentaire == null) {
             throw new CongeDemandeInvalideException("Le commentaire est obligatoire");
@@ -269,6 +283,14 @@ public class CongeDemandeService {
 
     private void assurerEnAttente(CongeDemande demande, String message) {
         if (demande.getStatut() == null || !STATUT_EN_ATTENTE.equals(demande.getStatut().getLibelle())) throw new DecisionCongeNonAutoriseeException(message);
+    }
+
+    private void assurerBrouillon(CongeDemande demande, String message) {
+        if (demande.getStatut() == null || !STATUT_BROUILLON.equals(demande.getStatut().getLibelle())) throw new DecisionCongeNonAutoriseeException(message);
+    }
+
+    private void assurerProprietaire(CongeDemande demande, Long employeId) {
+        if (employeId == null || !demande.getEmploye().getId().equals(employeId)) throw new DecisionCongeNonAutoriseeException("Vous ne pouvez agir que sur vos propres brouillons");
     }
 
     private void validerDates(LocalDate debut, LocalDate fin) {

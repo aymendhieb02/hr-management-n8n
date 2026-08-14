@@ -79,7 +79,7 @@ public class NotificationFrancaiseService {
 
     @Transactional(readOnly = true)
     public List<NotificationFrancaiseResponse> visiblesPour(CustomUserDetails utilisateur, boolean uniquementNonLues) {
-        boolean visionGlobale = utilisateur.getRole() == RoleType.MANAGER
+        boolean visionGlobale = utilisateur.getRole() == RoleType.DG || utilisateur.getRole() == RoleType.DT
                 || utilisateur.getRole() == RoleType.HR
                 || utilisateur.getRole() == RoleType.ADMIN;
         List<NotificationFrancaise> notifications = visionGlobale
@@ -108,6 +108,11 @@ public class NotificationFrancaiseService {
 
     @Transactional
     public void notifier(Employe destinataire, String typeLibelle, String titre, String contenu, String priorite) {
+        notifier(destinataire,typeLibelle,titre,contenu,priorite,null,null);
+    }
+
+    @Transactional
+    public void notifier(Employe destinataire, String typeLibelle, String titre, String contenu, String priorite, Long demandeId, Long etapeId) {
         if (destinataire == null) return;
         NotificationType type = types.findByLibelle(typeLibelle)
                 .orElseThrow(() -> new NotificationTypeIntrouvableException(typeLibelle));
@@ -119,6 +124,8 @@ public class NotificationFrancaiseService {
         notification.setPriorite(priorite);
         notification.setLu(false);
         notification.setDateCreation(LocalDateTime.now());
+        notification.setCongeDemandeId(demandeId);
+        notification.setWorkflowEtapeId(etapeId);
         repository.save(notification);
         com.xtensus.hrmanagementapi.notificationfr.realtime.NotificationRealtimePublisher.publierApresCommit();
     }
