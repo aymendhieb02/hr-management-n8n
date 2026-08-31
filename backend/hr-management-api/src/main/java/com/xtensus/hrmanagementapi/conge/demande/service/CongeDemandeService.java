@@ -256,7 +256,7 @@ public class CongeDemandeService {
         java.util.LinkedHashMap<Long,CongeDemande> visibles=new java.util.LinkedHashMap<>();
         workflowService.demandesActives(decideurId).forEach(d->visibles.put(d.getId(),d));
         if(role==com.xtensus.hrmanagementapi.domain.enums.RoleType.DG||role==com.xtensus.hrmanagementapi.domain.enums.RoleType.DT){
-            demandeRepository.findAll().stream().filter(d->d.getStatut()!=null&&STATUT_APPROUVEE.equals(d.getStatut().getLibelle())).forEach(d->visibles.put(d.getId(),d));
+            demandeRepository.findAll().stream().filter(d->d.getStatut()!=null&&!STATUT_BROUILLON.equals(d.getStatut().getLibelle())).forEach(d->visibles.put(d.getId(),d));
         }
         return visibles.values().stream().map(this::response).toList();
     }

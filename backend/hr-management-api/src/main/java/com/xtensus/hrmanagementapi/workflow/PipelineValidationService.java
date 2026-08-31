@@ -14,6 +14,7 @@ import com.xtensus.hrmanagementapi.domain.entity.*; import com.xtensus.hrmanagem
   if(r.nom()==null||r.nom().isBlank())throw new IllegalArgumentException("Le nom du circuit est obligatoire"); if(r.etapes()==null||r.etapes().isEmpty())throw new IllegalArgumentException("Le circuit doit contenir au moins une étape");
   Employe cible=employes.findById(r.employeId()).orElseThrow(()->new IllegalArgumentException("Employé introuvable")); boolean actif=!Boolean.FALSE.equals(r.actif());
   if(pipelines.existsByEmployeIdAndIdNot(cible.getId(),p.getId()==null?-1L:p.getId()))throw new IllegalArgumentException("Ce collaborateur possède déjà un circuit de validation");
+  if(p.getId()!=null&&!p.getEtapes().isEmpty()){p.getEtapes().clear();pipelines.saveAndFlush(p);}
   Set<Integer> priorites=new HashSet<>();Set<Long> decideurs=new HashSet<>();List<PipelineValidationEtape> nouvelles=new ArrayList<>();
   for(EtapeRequest e:r.etapes()){
    if(e.priorite()==null||e.priorite()<1||!priorites.add(e.priorite()))throw new IllegalArgumentException("Les priorités doivent être uniques et positives");

@@ -69,6 +69,8 @@ public class SecurityConfig {
                                 .requestMatchers(HttpMethod.GET, "/api/variables-systeme/politique-conges").authenticated()
                                 .requestMatchers(HttpMethod.GET, "/api/variables-systeme/**").hasRole("ADMIN")
                                 .requestMatchers(HttpMethod.PUT, "/api/variables-systeme/**").hasRole("ADMIN")
+                                .requestMatchers(HttpMethod.POST, "/api/variables-systeme/solde-conge-par-mois/tester").hasRole("ADMIN")
+                                .requestMatchers(HttpMethod.POST, "/api/variables-systeme/solde-conge-par-mois/retourner").hasRole("ADMIN")
                                 .requestMatchers("/api/pipelines-validation/**").hasRole("ADMIN")
 
                                 .requestMatchers(HttpMethod.GET, "/api/departements/**").authenticated()
@@ -95,7 +97,7 @@ public class SecurityConfig {
                                 .requestMatchers(HttpMethod.PUT, "/api/conge-types/**", "/api/conge-demande-statuts/**").hasAnyRole("HR", "ADMIN")
                                 .requestMatchers(HttpMethod.DELETE, "/api/conge-types/**", "/api/conge-demande-statuts/**").hasAnyRole("HR", "ADMIN")
 
-                                .requestMatchers(HttpMethod.GET, "/api/employes/*/equipe").hasAnyRole("MANAGER", "HR", "ADMIN")
+                                .requestMatchers(HttpMethod.GET, "/api/employes/*/equipe").hasAnyRole("MANAGER", "DG", "DT", "HR", "ADMIN")
                                 .requestMatchers(HttpMethod.GET, "/api/employes/me").authenticated()
                                 .requestMatchers(HttpMethod.PUT, "/api/employes/me/password").authenticated()
                                 .requestMatchers(HttpMethod.POST, "/api/employes/me/photo").authenticated()
@@ -117,12 +119,12 @@ public class SecurityConfig {
                                 .requestMatchers("/api/leave-accruals/**", "/api/acquisitions-conges/**").hasAnyRole("HR", "ADMIN")
 
                                 .requestMatchers(HttpMethod.POST, "/api/conge-demandes-v2").hasAnyRole("EMPLOYEE", "MANAGER", "HR", "ADMIN")
-                                .requestMatchers(HttpMethod.GET, "/api/conge-demandes-v2").hasAnyRole("HR", "ADMIN")
+                                .requestMatchers(HttpMethod.GET, "/api/conge-demandes-v2").hasAnyRole("MANAGER", "DG", "DT", "HR", "ADMIN")
                                 .requestMatchers(HttpMethod.GET, "/api/conge-demandes-v2/employe/**").authenticated()
-                                .requestMatchers(HttpMethod.GET, "/api/conge-demandes-v2/decideur/**").hasAnyRole("MANAGER", "HR", "ADMIN")
+                                .requestMatchers(HttpMethod.GET, "/api/conge-demandes-v2/decideur/**").hasAnyRole("MANAGER", "DG", "DT", "HR", "ADMIN")
                                 .requestMatchers(HttpMethod.POST, "/api/conge-demandes-v2/*/approuver").hasAnyRole("MANAGER", "HR", "ADMIN")
                                 .requestMatchers(HttpMethod.POST, "/api/conge-demandes-v2/*/refuser").hasAnyRole("MANAGER", "HR", "ADMIN")
-                                .requestMatchers(HttpMethod.POST, "/api/conge-demandes-v2/*/consommation-reelle").hasAnyRole("MANAGER", "HR", "ADMIN")
+                                .requestMatchers(HttpMethod.POST, "/api/conge-demandes-v2/*/consommation-reelle").hasAnyRole("MANAGER", "DG", "DT", "HR", "ADMIN")
                                 .requestMatchers(HttpMethod.PUT, "/api/conge-demandes-v2/**").authenticated()
                                 .requestMatchers(HttpMethod.DELETE, "/api/conge-demandes-v2/**").authenticated()
                                 .requestMatchers(HttpMethod.GET, "/api/conge-demandes-v2/**").authenticated()

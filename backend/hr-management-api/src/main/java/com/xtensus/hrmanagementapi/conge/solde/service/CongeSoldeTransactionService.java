@@ -7,6 +7,7 @@ import com.xtensus.hrmanagementapi.domain.entity.CongeSolde;
 import com.xtensus.hrmanagementapi.domain.entity.CongeType;
 import com.xtensus.hrmanagementapi.domain.entity.Employe;
 import com.xtensus.hrmanagementapi.repository.CongeSoldeRepository;
+import com.xtensus.hrmanagementapi.repository.CongeSoldeHistoriqueRepository;
 import com.xtensus.hrmanagementapi.repository.CongeTypeRepository;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -21,8 +22,9 @@ public class CongeSoldeTransactionService {
     private final CongeTypeRepository types;
     private final CongeSoldeHistoriqueService historiques;
     private final VariableSystemeService variables;
-    public CongeSoldeTransactionService(CongeSoldeRepository soldes, CongeTypeRepository types, CongeSoldeHistoriqueService historiques, VariableSystemeService variables) {
-        this.soldes=soldes; this.types=types; this.historiques=historiques; this.variables=variables;
+    private final CongeSoldeHistoriqueRepository historiqueRepo;
+    public CongeSoldeTransactionService(CongeSoldeRepository soldes, CongeTypeRepository types, CongeSoldeHistoriqueService historiques, VariableSystemeService variables, CongeSoldeHistoriqueRepository historiqueRepo) {
+        this.soldes=soldes; this.types=types; this.historiques=historiques; this.variables=variables; this.historiqueRepo=historiqueRepo;
     }
 
     @Transactional
@@ -74,6 +76,20 @@ public class CongeSoldeTransactionService {
     }
 
     @Transactional
+    public int annulerAcquisitionsTest(String prefix) {
+        var lignes = historiqueRepo.findByReferenceStartingWith(prefix);
+        for (var ligne : lignes) {
+            CongeSolde solde = ligne.getSolde();
+            solde.setRestants(solde.getRestants().subtract(ligne.getMontant()));
+            solde.setDroitAcquis(solde.getDroitAcquis().subtract(ligne.getMontant()));
+            solde.setDateModification(LocalDateTime.now());
+            soldes.save(solde);
+            historiqueRepo.delete(ligne);
+        }
+        return lignes.size();
+    }
+
+    @Transactional
     public void ajusterConsommation(CongeDemande demande, BigDecimal joursReels) {
         if ("AUTORISATION_ABSENCE".equals(demande.getNature())) throw new CongeDemandeInvalideException("Une autorisation d'absence ne debite pas le solde de conge");
         if (joursReels == null || joursReels.signum() < 0 || joursReels.compareTo(demande.getNombreJours()) > 0) {
@@ -82,11 +98,9 @@ public class CongeSoldeTransactionService {
         BigDecimal dejaCompte = demande.getNombreJoursConsomme() == null ? demande.getNombreJours() : demande.getNombreJoursConsomme();
         BigDecimal correction = dejaCompte.subtract(joursReels).setScale(2, RoundingMode.HALF_UP);
         if (correction.signum() == 0) return;
-        String reference = "AJUSTEMENT_DEMANDE:" + demande.getId() + ":" + java.util.UUID.randomUUID();
+        String reference = "AJUSTEMENT_DEMANDE:" + demande.getId() + ":" + joursReels.stripTrailingZeros().toPlainString();
+        if (historiques.existe(reference)) return;
         CongeSolde solde=assurerSolde(demande.getEmploye()); BigDecimal avant=solde.getRestants(); BigDecimal apres=avant.add(correction);
-        if (correction.signum() < 0 && apres.compareTo(soldeMinimum()) < 0) {
-            throw new CongeDemandeInvalideException("Solde insuffisant pour augmenter la consommation reelle");
-        }
         solde.setRestants(apres); solde.setJoursUtilises(solde.getJoursUtilises().subtract(correction)); solde.setDateModification(LocalDateTime.now());
         soldes.save(solde); historiques.enregistrer(solde,demande,"AJUSTEMENT_CONSOMMATION",correction,avant,apres,reference);
     }

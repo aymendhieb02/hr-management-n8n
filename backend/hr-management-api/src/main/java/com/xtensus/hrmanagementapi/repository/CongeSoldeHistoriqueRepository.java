@@ -9,4 +9,5 @@ public interface CongeSoldeHistoriqueRepository extends JpaRepository<CongeSolde
     List<CongeSoldeHistorique> findBySoldeEmployeIdOrderByDateExecutionDesc(Long employeId);
     List<CongeSoldeHistorique> findAllByOrderByDateExecutionDesc();
     boolean existsByReference(String reference);
+    List<CongeSoldeHistorique> findByReferenceStartingWith(String prefix);
 }
