@@ -1,123 +1,110 @@
 # XTENSUS HR Management
 
-Application web de gestion des ressources humaines et des congés pour XTENSUS.
+Application web de gestion des ressources humaines et des congés. Le projet est composé d'une API Spring Boot/MySQL et d'une interface Angular responsive en français.
 
-Le dépôt principal contient deux applications indépendantes :
+## Fonctionnalités
 
-- `frontend/hr-management-web` : interface Angular 21 ;
-- `backend/hr-management-api` : API REST Spring Boot 4 / Java 17 ;
-- MySQL : stockage des employés, demandes, soldes, jours fériés, notifications et certificats médicaux.
+- Authentification JWT avec cookies HttpOnly, changement de mot de passe temporaire et mot de passe oublié par code email.
+- Gestion des employés, photos, postes, types de contrat et rôles (`ADMIN`, `DG`, `DT`, `RH`, `EMPLOYE`).
+- Un seul Directeur général (`DG`) et une seule Directrice technique (`DT`).
+- Demandes de congé et autorisations d'absence avec brouillon, soumission, validation séquentielle et annulation.
+- Congé maladie avec certificat médical (PDF/JPG/PNG).
+- Soldes de congé, acquisition mensuelle configurable et historique des transactions.
+- Régularisation de la consommation réelle par DG/DT.
+- Jours fériés, calendriers personnel/équipe, disponibilité et rapports.
+- Notifications internes, WebSocket et emails persistants via `email_outbox`.
+- Interface d'administration des circuits de validation.
 
-## Fonctionnalités principales
+## Structure
 
-- authentification sécurisée par JWT dans un cookie HttpOnly ;
-- gestion des employés, postes et types de contrat ;
-- demandes de congé et autorisations d'absence ;
-- validation par rôle et suivi de l'historique ;
-- calcul des jours ouvrés hors week-ends et jours fériés ;
-- soldes de congé et transactions mensuelles ;
-- certificats médicaux PDF, JPG et PNG ;
-- notifications en temps réel avec WebSocket ;
-- calendriers personnel et d'équipe ;
-- tableaux de bord et rapports en français.
+```text
+backend/hr-management-api/       API Spring Boot 3 / Java
+frontend/hr-management-web/     Angular 21
+database/mysql/                  Scripts SQL et sauvegardes
+architecture/                    Documents techniques (non requis à l'exécution)
+```
+
+Les branches GitHub sont séparées : `frontend-hr-management-web`, `backend-hr-management-api` et `main`.
 
 ## Prérequis
 
-- Java 17 ;
-- Node.js 20 ou version compatible avec Angular 21 ;
-- npm 10 ;
-- MySQL 8 ;
-- Git.
+- Java 17+, Maven Wrapper
+- Node.js 20+ et npm
+- MySQL ou MariaDB 10.6+
+- Une base `rh_xtensus`
 
-## Base de données MySQL
+## Installation backend
 
-Créez une base nommée `rh_xtensus`, puis importez le schéma MySQL du projet ou activez Flyway si vous souhaitez appliquer les migrations automatiquement.
-
-Configuration locale par défaut :
-
-```text
-Hôte : 127.0.0.1
-Port : 3306
-Base : rh_xtensus
-Utilisateur : root
-Mot de passe : vide
-```
-
-Les valeurs peuvent être remplacées avec des variables d'environnement :
-
-```powershell
-$env:DB_URL="jdbc:mysql://127.0.0.1:3306/rh_xtensus?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Africa/Tunis&zeroDateTimeBehavior=CONVERT_TO_NULL"
-$env:DB_USERNAME="root"
-$env:DB_PASSWORD="votre_mot_de_passe"
-$env:JWT_SECRET="une_cle_secrete_robuste_de_32_caracteres_minimum"
-$env:FLYWAY_ENABLED="false"
-```
-
-## Lancer le backend
-
-```powershell
+```bash
 cd backend/hr-management-api
-.\mvnw.cmd spring-boot:run
+copy .env.example .env
+./mvnw spring-boot:run
 ```
 
-L'API démarre par défaut sur `http://localhost:8081`.
+Variables principales : `DB_URL`, `DB_USERNAME`, `DB_PASSWORD`, `JWT_SECRET`, `MEDICAL_CERTIFICATES_PATH`, `SMTP_HOST`, `SMTP_PORT`, `SMTP_USERNAME`, `SMTP_PASSWORD`.
 
-## Lancer le frontend
+Le port API par défaut est `8081`. Flyway est désactivé par défaut dans certains environnements (`FLYWAY_ENABLED=false`) : exécuter les scripts de `src/main/resources/db/migration` dans l'ordre si nécessaire.
 
-Dans un second terminal :
+## Installation frontend
 
-```powershell
+```bash
 cd frontend/hr-management-web
 npm install
 npm start
 ```
 
-L'interface Angular est ensuite disponible sur `http://localhost:4200`.
+L'interface est servie sur `http://localhost:4200` et utilise l'URL API définie dans `src/environments`.
 
-## Tests
+## Modèle métier
 
-Backend :
+Une demande est créée en `BROUILLON`, visible uniquement par son propriétaire. Lors de la confirmation, les contrôles de délai, jours ouvrables, jours fériés, chevauchement, solde et circuit actif sont appliqués. La demande passe alors à `EN_ATTENTE`.
 
-```powershell
+Un circuit contient des étapes ordonnées. Seul le décideur de l'étape active peut approuver ou refuser. Une approbation intermédiaire active l'étape suivante; la dernière approbation débite le solde et informe l'employé. Un refus clôt immédiatement le circuit.
+
+Une demi-journée vaut `0.5` jour et utilise un horaire matin `08:30–13:00` ou après-midi `14:00–18:00`.
+
+## Rôles et accès
+
+- `ADMIN` : configuration, employés, contrats, postes, circuits et supervision complète.
+- `DG` / `DT` : pilotage d'équipe, décisions de workflow, employés de leur périmètre et régularisation.
+- `RH` : gestion RH selon les gardes backend.
+- `EMPLOYE` : profil, mot de passe, demandes personnelles, certificats, solde et notifications personnelles.
+
+Les contrôles d'accès doivent toujours être vérifiés côté serveur; les gardes Angular ne sont qu'une aide d'interface.
+
+## Configuration système
+
+Les variables de la table `variables` pilotent notamment `solde_conge_par_mois`, `reinitialisation_solde`, `solde_negatif`, `solde_negatif_max` et les paramètres SMTP. L'action « Tester » de l'acquisition applique un test temporaire identifié `TEST_ACQUISITION:`; « Retourner » annule uniquement ce test et supprime ses lignes d'historique.
+
+## Tests et qualité
+
+```bash
 cd backend/hr-management-api
-.\mvnw.cmd test
-```
+./mvnw test
+./mvnw -DskipTests package
 
-Frontend :
-
-```powershell
 cd frontend/hr-management-web
-npm test -- --watch=false
+npm test
+npx ng build hr-management-web --configuration production
 ```
 
-Build de production du frontend :
+Les avertissements de budget CSS Angular ne bloquent pas la compilation.
 
-```powershell
-cd frontend/hr-management-web
-npm run build
-```
+## Données et migrations
 
-## Configuration utile
+Ne jamais supprimer une table en production. Utiliser les migrations Flyway non destructives et sauvegarder la base avant toute correction SQL. Les dates doivent être de vraies dates MySQL (jamais `0000-00-00`). Les demandes existantes conservent leur workflow copié; modifier un circuit ne change que les demandes futures.
 
-Les principales variables sont définies dans `backend/hr-management-api/src/main/resources/application.yml` :
+## Livraison Git
 
-| Variable | Valeur locale par défaut | Description |
-| --- | --- | --- |
-| `SERVER_PORT` | `8081` | Port de l'API |
-| `DB_URL` | MySQL local `rh_xtensus` | URL JDBC |
-| `DB_USERNAME` | `root` | Utilisateur MySQL |
-| `DB_PASSWORD` | vide | Mot de passe MySQL |
-| `JWT_SECRET` | valeur de développement | Secret JWT, à remplacer en production |
-| `AUTH_COOKIE_SECURE` | `false` | À mettre à `true` derrière HTTPS |
-| `MEDICAL_CERTIFICATES_PATH` | `./storage/medical-certificates` | Stockage des certificats |
-| `FLYWAY_ENABLED` | `false` | Activation des migrations Flyway |
+Les modifications frontend doivent être poussées uniquement vers `frontend-hr-management-web`, les modifications backend/migrations vers `backend-hr-management-api`, puis les versions validées peuvent être fusionnées dans `main`. Exclure `node_modules`, `target`, `dist`, `storage`, `mysql-data`, journaux locaux et fichiers d'environnement.
 
-## Branches
+## Dépannage rapide
 
-- `main` : application complète ;
-- `frontend-hr-management-web` : dossier frontend uniquement ;
-- `backend-hr-management-api` : dossier backend uniquement.
+- Erreur SMTP : vérifier les variables SMTP; la décision métier reste enregistrée dans `email_outbox` pour nouvelle tentative.
+- Erreur `Zero date value prohibited` : rechercher et corriger les dates `0000-00-00`.
+- Demande absente d'un décideur : vérifier `conge_demande_workflows`, l'étape `EN_ATTENTE`, `etape_courante` et l'identité du décideur.
+- Certificat absent : la demande doit être un congé maladie, et l'employé propriétaire est le seul à pouvoir téléverser.
 
-## Sécurité
+## Contact technique
 
-Ne versionnez jamais les mots de passe, fichiers `.env`, certificats médicaux ou secrets JWT. En production, utilisez HTTPS, activez `AUTH_COOKIE_SECURE=true` et fournissez les secrets par variables d'environnement ou via un gestionnaire de secrets.
+Avant toute modification importante, vérifier les migrations, les DTO backend, les services métier et les tests Angular correspondants. Conserver les libellés français et les règles d'autorisation existantes.
