@@ -52,7 +52,7 @@ export class TeamAvailabilityComponent implements OnInit {
     if (!manager) return;
     forkJoin({
       members: this.userService.findTeamMembers(manager.id),
-      requests: this.leaveRequestService.findByApprover(manager.id),
+      requests: (manager.role === 'DG' || manager.role === 'DT') ? this.leaveRequestService.findAll() : this.leaveRequestService.findByApprover(manager.id),
       holidays: this.holidayService.getActive()
     }).subscribe({
       next: ({ members, requests, holidays }) => {

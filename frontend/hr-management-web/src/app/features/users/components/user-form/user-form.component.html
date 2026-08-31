@@ -89,7 +89,7 @@
           @if (fieldError('typeContractId')) { <p class="field-error">{{ fieldError('typeContractId') }}</p> }
         </label>
 
-        @if (!managerMode()) { <label class="form-field">
+        @if (!managerMode() || canChooseManager()) { <label class="form-field">
           <span>Manager</span>
           <select formControlName="managerId">
             <option [ngValue]="null">Aucun manager</option>

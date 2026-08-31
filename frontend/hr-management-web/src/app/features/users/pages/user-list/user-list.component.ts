@@ -67,6 +67,7 @@ export class UserListComponent implements OnInit {
   protected readonly canManage = computed(() => this.authService.hasAnyRole('HR', 'ADMIN', 'DG', 'DT'));
   protected readonly isAdmin = computed(() => this.authService.hasAnyRole('ADMIN'));
   protected readonly canAssignRole = computed(() => this.authService.hasAnyRole('ADMIN', 'DG', 'DT'));
+  protected readonly canChooseManager = computed(() => this.authService.getCurrentUser()?.role === 'DG');
   protected readonly isTeamMode = computed(() => this.route.snapshot.routeConfig?.path === 'team-members');
   protected readonly title = computed(() => this.isTeamMode() ? "Membres de l'équipe" : 'Employés');
   protected readonly filteredUsers = computed(() => {

@@ -81,3 +81,12 @@
     <footer class="dialog-actions"><button class="secondary-button" type="button" (click)="open.set(false)"><app-icon name="close" />Annuler</button><button class="primary-button" type="button" (click)="save()" [disabled]="!formComplete()"><app-icon name="check" />Enregistrer le circuit</button></footer>
   </section></div>
 }
+@if(pendingDisable();as circuit){
+  <div class="dialog-backdrop"><section class="dialog disable-circuit-dialog" role="alertdialog" aria-modal="true" aria-labelledby="disable-circuit-title">
+    <span class="disable-dialog-icon"><app-icon name="ban" /></span>
+    <span class="eyebrow">CONFIRMATION</span>
+    <h2 id="disable-circuit-title">Désactiver ce circuit ?</h2>
+    <p>Le circuit <strong>« {{circuit.nom}} »</strong> ne sera plus utilisé pour les nouvelles demandes. Son historique restera conservé et vous pourrez toujours le consulter ou le copier.</p>
+    <div class="dialog-actions"><button class="secondary-button" type="button" (click)="pendingDisable.set(null)"><app-icon name="close" />Annuler</button><button class="danger-button" type="button" (click)="confirmDisable()"><app-icon name="ban" />Désactiver</button></div>
+  </section></div>
+}

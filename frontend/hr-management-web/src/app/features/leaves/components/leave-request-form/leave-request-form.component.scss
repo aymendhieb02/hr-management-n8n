@@ -1,0 +1,15 @@
+.half-day-choice {
+  width: fit-content;
+  margin-top: 2px;
+  padding: 10px 14px;
+  border: 1px solid #ead8c8;
+  border-radius: 10px;
+  background: #fff8f1;
+  color: #5f554d;
+}
+
+.half-day-choice:has(input:checked) {
+  border-color: #f28a24;
+  background: #fff0df;
+  color: #bd5907;
+}

@@ -46,7 +46,11 @@ export class CalendarComponent implements OnInit {
     if (!user) return;
     this.loading.set(true);
     const path = this.route.snapshot.routeConfig?.path;
-    const requests$ = path === 'calendar' ? this.leaveRequests.findAll() : path === 'team-calendar' ? this.leaveRequests.findByApprover(user.id) : this.leaveRequests.findByRequester(user.id);
+    // DG et DT disposent d'une vision complète du calendrier de l'équipe.
+    const visionGlobale = user.role === 'DG' || user.role === 'DT';
+    const requests$ = path === 'calendar' || (path === 'team-calendar' && visionGlobale)
+      ? this.leaveRequests.findAll()
+      : path === 'team-calendar' ? this.leaveRequests.findByApprover(user.id) : this.leaveRequests.findByRequester(user.id);
     forkJoin({ requests: requests$, users: path === 'calendar' ? this.users.findAll() : of([]), holidays: this.holidays.getActive() }).subscribe({
       next: ({ requests, users, holidays }) => {
         const holidayEvents: CalendarEvent[] = holidays.map((holiday) => ({
@@ -71,6 +75,6 @@ export class CalendarComponent implements OnInit {
     this.month.set(new Date(year, month - 1, day, 12));
   }
   protected statusLabel(status: string): string {
-    return ({ APPROVED: 'Approuvée', PENDING: 'En attente', REJECTED: 'Refusée', CANCELLED: 'Annulée' } as Record<string, string>)[status] ?? status.replaceAll('_', ' ');
+    return ({ DRAFT: 'Brouillon', APPROVED: 'Approuvée', PENDING: 'En attente', REJECTED: 'Refusée', CANCELLED: 'Annulée' } as Record<string, string>)[status] ?? status.replaceAll('_', ' ');
   }
 }

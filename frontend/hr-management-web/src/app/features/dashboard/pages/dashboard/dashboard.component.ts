@@ -114,7 +114,7 @@ export class DashboardComponent implements OnInit {
     this.loading.set(true);
     this.error.set(null);
     const usersSource = this.isManager() ? this.users.findTeamMembers(current.id) : this.users.findAll();
-    const requestsSource = this.isManager() ? this.requests.findByApprover(current.id) : this.requests.findAll();
+    const requestsSource = this.isManager() ? this.requests.findAll() : this.requests.findAll();
     forkJoin({
       users: usersSource,
       requests: requestsSource,

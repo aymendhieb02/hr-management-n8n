@@ -47,7 +47,7 @@ export class HomeSummaryComponent implements OnInit {
     this.loading.set(true);
     const manager = user.role === 'DG' || user.role === 'DT';
     forkJoin({
-      requests: manager ? this.leaveRequests.findByApprover(user.id) : this.leaveRequests.findByRequester(user.id),
+      requests: manager ? this.leaveRequests.findAll() : this.leaveRequests.findByRequester(user.id),
       balances: this.balances.findByUser(user.id),
       unread: this.notifications.findUnread(user.id),
       team: manager ? this.users.findTeamMembers(user.id) : of([]),

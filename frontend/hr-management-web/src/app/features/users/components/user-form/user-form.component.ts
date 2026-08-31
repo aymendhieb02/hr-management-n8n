@@ -20,6 +20,7 @@ export class UserFormComponent implements OnChanges {
   readonly generalError = input<string | null>(null);
   readonly managerMode = input(false);
   readonly roleEditable = input(false);
+  readonly canChooseManager = input(false);
   @Output() readonly save = new EventEmitter<UserCreateRequest | UserUpdateRequest>();
   @Output() readonly cancel = new EventEmitter<void>();
 
@@ -48,7 +49,7 @@ export class UserFormComponent implements OnChanges {
   protected readonly eligibleManagers = computed(() => {
     const editedId = this.user()?.id;
     return this.users().filter((candidate) =>
-      ['DG', 'DT', 'HR', 'ADMIN'].includes(candidate.role) && candidate.id !== editedId
+      ['DG', 'DT', 'HR'].includes(candidate.role) && candidate.id !== editedId
     );
   });
 
@@ -99,7 +100,7 @@ export class UserFormComponent implements OnChanges {
       role: this.managerMode() ? 'EMPLOYEE' : value.role,
       status: this.user()?.status ?? 'ACTIVE',
       enabled: this.user()?.enabled ?? true,
-      managerId: this.managerMode() ? null : value.managerId || null,
+      managerId: this.managerMode() && !this.canChooseManager() ? null : value.managerId || null,
       departmentId: null,
       positionId: value.positionId || null,
       typeContractId: value.typeContractId || null

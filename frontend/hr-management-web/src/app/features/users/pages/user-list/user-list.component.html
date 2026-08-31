@@ -116,6 +116,7 @@
     [validationErrors]="formErrors()"
     [generalError]="formGeneralError()"
     [managerMode]="isTeamMode()"
+    [canChooseManager]="canChooseManager()"
     [roleEditable]="isAdmin()"
     (save)="saveUser($event)"
     (cancel)="formOpen.set(false)"

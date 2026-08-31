@@ -113,7 +113,9 @@ export class LeaveRequestListComponent implements OnInit {
     this.isLoading.set(true);
     this.error.set(null);
     const source = this.isManagerMode()
-      ? this.leaveRequestService.findByApprover(currentUser.id)
+      ? (currentUser.role === 'DG' || currentUser.role === 'DT'
+        ? this.leaveRequestService.findAll()
+        : this.leaveRequestService.findByApprover(currentUser.id))
       : this.leaveRequestService.findByRequester(currentUser.id);
     source.subscribe({
       next: (requests) => {

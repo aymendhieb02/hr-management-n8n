@@ -9,7 +9,7 @@ import { LeaveRequestResponse, LeaveRequestUpdateRequest } from '../../models/le
   selector: 'app-leave-request-form',
   imports: [ReactiveFormsModule],
   templateUrl: './leave-request-form.component.html',
-  styleUrl: '../../../shared/resource-page.scss'
+  styleUrls: ['../../../shared/resource-page.scss', './leave-request-form.component.scss']
 })
 export class LeaveRequestFormComponent implements OnChanges {
   protected readonly today = this.localDate(new Date());
@@ -35,13 +35,14 @@ export class LeaveRequestFormComponent implements OnChanges {
     reasonChoice: ['', Validators.required],
     otherReason: ['', Validators.maxLength(255)],
     startDate: ['', Validators.required],
-    numberOfDays: [1, [Validators.required, Validators.min(1), Validators.max(365)]],
+    numberOfDays: [1, [Validators.required, Validators.min(0.5), Validators.max(365)]],
     endDate: [''],
     startTime: [''],
     endTime: [''],
     reason: ['', Validators.maxLength(1000)]
   });
   protected formLevelError: string | null = null;
+  protected halfDay = false;
 
   protected selectType(typeId: number | null): void {
     const nature = typeId === 2 ? 'AUTORISATION_ABSENCE' : 'CONGE';
@@ -73,7 +74,8 @@ export class LeaveRequestFormComponent implements OnChanges {
   protected calculateEndDate(): void {
     const start = this.form.controls.startDate.value;
     const days = this.form.controls.numberOfDays.value;
-    if (!start || days < 1) { this.form.controls.endDate.setValue(''); return; }
+    if (!start || days <= 0) { this.form.controls.endDate.setValue(''); return; }
+    if (this.halfDay) { this.form.controls.endDate.setValue(start); this.updateBalanceError(); return; }
 
     const activeHolidays = new Set((this.holidays() || []).filter((h) => h.actif).map((h) => h.date));
     let current = new Date(`${start}T12:00:00`);
@@ -152,6 +154,7 @@ export class LeaveRequestFormComponent implements OnChanges {
         endTime: request?.endTime?.slice(0, 5) ?? '',
         reason: request?.reason ?? ''
       });
+      this.halfDay = request?.nature === 'CONGE' && request.requestedDays === 0.5;
       this.reasonChanged();
     }
   }
@@ -190,7 +193,7 @@ export class LeaveRequestFormComponent implements OnChanges {
     if (value.startDate && value.startDate < this.firstAllowedDate) return `La demande doit être déposée au moins 24 heures à l'avance (à partir du ${new Intl.DateTimeFormat('fr-FR').format(new Date(this.firstAllowedDate + 'T12:00:00'))}).`;
     const unavailableReason = this.unavailableStartDateReason(value.startDate ?? '');
     if (unavailableReason) return unavailableReason;
-    if (value.nature === 'CONGE' && (!value.numberOfDays || value.numberOfDays < 1)) return 'Le nombre de jours doit etre au minimum de 1.';
+    if (value.nature === 'CONGE' && (!value.numberOfDays || value.numberOfDays <= 0 || (!this.halfDay && value.numberOfDays < 1))) return 'Le nombre de jours doit etre au minimum de 1, ou une demi-journée.';
     const maximum = this.maximumLeaveDays();
     if (value.nature === 'CONGE' && maximum !== null && Number(value.numberOfDays) > maximum) {
       return `Solde insuffisant : vous pouvez demander au maximum ${maximum} jour(s), demandes en attente comprises.`;
@@ -242,7 +245,7 @@ export class LeaveRequestFormComponent implements OnChanges {
     if (backendError) return backendError;
     if (!(control.touched || control.dirty)) return null;
     if (control.hasError('required')) return 'Ce champ est obligatoire.';
-    if (control.hasError('min')) return 'Le nombre de jours doit etre au minimum de 1.';
+    if (control.hasError('min')) return 'Le nombre de jours doit etre au minimum de 1, ou une demi-journée.';
     if (control.hasError('maxlength')) return field === 'otherReason' ? 'Utilisez au maximum 255 caracteres.' : 'Utilisez au maximum 1000 caracteres.';
     return null;
   }
