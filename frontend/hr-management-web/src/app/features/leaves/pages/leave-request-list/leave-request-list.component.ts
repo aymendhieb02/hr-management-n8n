@@ -91,6 +91,20 @@ export class LeaveRequestListComponent implements OnInit {
       ].some((value) => value.toLowerCase().includes(search)));
   });
 
+  /** En mode équipe, ne montrer que les demandes dont l'étape active nous est attribuée. */
+  protected canDecide(request: LeaveRequestResponse): boolean {
+    if (!this.isManagerMode() || request.status !== 'PENDING') return false;
+    const user = this.authService.getCurrentUser();
+    const workflow = request.workflow;
+    if (!user || !workflow || workflow.currentStep == null) return false;
+    const step = workflow.steps.find((item) => item.priority === workflow.currentStep);
+    // Le décideur courant est aussi recopié sur la demande : cette double vérification
+    // évite qu'une demande réapparaisse chez un ancien valideur après le passage au DG.
+    return step?.approver?.id === user.id
+      && step.status === 'EN_ATTENTE'
+      && request.approver?.id === user.id;
+  }
+
   ngOnInit(): void {
     this.http.get<{soldeMinimum:number}>(`${environment.apiUrl}/variables-systeme/politique-conges`).subscribe({next:p=>this.minimumBalance.set(Number(p.soldeMinimum)),error:()=>{}});
     this.leaveTypeService.findActive().subscribe({ next: (types) => this.leaveTypes.set(types), error: () => {} });
@@ -112,14 +126,20 @@ export class LeaveRequestListComponent implements OnInit {
     if (!currentUser) return;
     this.isLoading.set(true);
     this.error.set(null);
+    // La vue équipe est une vue de suivi complète pour tous les profils habilités.
+    // Les droits de décision restent contrôlés séparément par canDecide().
     const source = this.isManagerMode()
-      ? (currentUser.role === 'DG' || currentUser.role === 'DT'
-        ? this.leaveRequestService.findAll()
-        : this.leaveRequestService.findByApprover(currentUser.id))
+      ? this.leaveRequestService.findAll()
       : this.leaveRequestService.findByRequester(currentUser.id);
     source.subscribe({
       next: (requests) => {
-        this.requests.set(requests);
+        // Les demandes d'équipe sont toujours présentées de la plus récente à la plus ancienne.
+        const ordered = [...requests].sort((a, b) => {
+          const dateA = a.dateCreation ?? a.submittedAt ?? '';
+          const dateB = b.dateCreation ?? b.submittedAt ?? '';
+          return dateB.localeCompare(dateA);
+        });
+        this.requests.set(ordered);
         if (!this.isManagerMode()) this.loadEmployeeCertificates(currentUser.id);
         this.isLoading.set(false);
       },
@@ -250,6 +270,8 @@ export class LeaveRequestListComponent implements OnInit {
 
   protected isSickLeave(request: LeaveRequestResponse): boolean {
     if (request.medicalCertificateRequired) return true;
+    const leaveTypeName = request.leaveType?.name ?? '';
+    if (leaveTypeName.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().includes('malad')) return true;
     const configuredReason = request.reasonId == null ? '' : this.reasons().find(reason => reason.id === request.reasonId)?.commentaire ?? '';
     const reason = `${request.reason ?? ''} ${configuredReason}`.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
     return request.nature === 'CONGE' && (reason.includes('malad') || reason.includes('medical') || reason.includes('sante'));

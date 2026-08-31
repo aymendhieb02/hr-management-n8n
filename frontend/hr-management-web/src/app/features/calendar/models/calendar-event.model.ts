@@ -1,5 +1,5 @@
 export interface CalendarEvent {
-  kind?: 'LEAVE' | 'HOLIDAY' | 'RESTORED';
+  kind?: 'LEAVE' | 'HOLIDAY' | 'RESTORED' | 'HALF_DAY';
   eventId?: string;
   leaveRequestId: number;
   userId: number;

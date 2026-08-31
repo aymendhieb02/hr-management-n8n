@@ -10,6 +10,7 @@ export class CalendarService {
     const userDepartment = new Map(users.map((user) => [user.id, user.department?.name ?? null]));
     return requests.flatMap((request) => {
       const base:CalendarEvent={
+        kind: request.requestedDays === 0.5 ? 'HALF_DAY' : 'LEAVE',
         eventId:`leave-${request.id}`,
         leaveRequestId: request.id,
         userId: request.requester.id,

@@ -58,12 +58,15 @@
                   @if (!isManagerMode() && isSickLeave(request) && (request.status === 'PENDING' || request.status === 'APPROVED')) {
                     <button class="certificate-button" type="button" (click)="detailRequest.set(request)" title="Gérer le certificat médical" aria-label="Gérer le certificat médical">{{ hasCertificate(request.id) ? 'Voir le certificat' : '✚ Ajouter un certificat' }}</button>
                   }
+                  @if (isManagerMode() && isSickLeave(request) && hasCertificate(request.id)) {
+                    <button class="certificate-button" type="button" (click)="detailRequest.set(request)" title="Voir le certificat médical" aria-label="Voir le certificat médical">Voir le certificat</button>
+                  }
                   @if (!isManagerMode() && request.status === 'DRAFT') {
                     <button class="table-action edit-action" type="button" (click)="openEdit(request)" title="Modifier" aria-label="Modifier"><app-icon name="edit" /></button>
                     <button class="table-action delete-action" type="button" (click)="deleteRequest(request)" [disabled]="isSaving()" title="Supprimer" aria-label="Supprimer"><app-icon name="delete" /></button>
                     <button class="table-action send-action" type="button" (click)="askSubmit(request)" title="Confirmer et envoyer" aria-label="Confirmer et envoyer"><app-icon name="send" /></button>
                   }
-                  @if (isManagerMode() && request.status === 'PENDING') {
+                  @if (isManagerMode() && canDecide(request)) {
                     <button class="table-action approve-action" type="button" (click)="openDecision(request, 'approve')" title="Approuver" aria-label="Approuver"><app-icon name="check" /></button>
                     <button class="table-action reject-action" type="button" (click)="openDecision(request, 'reject')" title="Refuser" aria-label="Refuser"><app-icon name="ban" /></button>
                   }

@@ -1,5 +1,6 @@
 import { Component, EventEmitter, input, OnChanges, Output, SimpleChanges } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormsModule } from '@angular/forms';
 import { LeaveType } from '../../../leave-types/models/leave-type.model';
 import { Reason } from '../../../reasons/reason.model';
 import { JourFerieResponse } from '../../../jours-feries/models/jour-ferie.model';
@@ -7,7 +8,7 @@ import { LeaveRequestResponse, LeaveRequestUpdateRequest } from '../../models/le
 
 @Component({
   selector: 'app-leave-request-form',
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, FormsModule],
   templateUrl: './leave-request-form.component.html',
   styleUrls: ['../../../shared/resource-page.scss', './leave-request-form.component.scss']
 })
@@ -43,6 +44,7 @@ export class LeaveRequestFormComponent implements OnChanges {
   });
   protected formLevelError: string | null = null;
   protected halfDay = false;
+  protected halfDayPeriod: 'MATIN' | 'APRES_MIDI' = 'MATIN';
 
   protected selectType(typeId: number | null): void {
     const nature = typeId === 2 ? 'AUTORISATION_ABSENCE' : 'CONGE';
@@ -155,6 +157,7 @@ export class LeaveRequestFormComponent implements OnChanges {
         reason: request?.reason ?? ''
       });
       this.halfDay = request?.nature === 'CONGE' && request.requestedDays === 0.5;
+      this.halfDayPeriod = request?.startTime?.startsWith('14:00') ? 'APRES_MIDI' : 'MATIN';
       this.reasonChanged();
     }
   }
@@ -176,9 +179,9 @@ export class LeaveRequestFormComponent implements OnChanges {
       otherReason: precision || null,
       startDate: value.startDate,
       endDate: authorization ? value.startDate : value.endDate,
-      startTime: authorization ? value.startTime : null,
-      endTime: authorization ? value.endTime : null,
-      numberOfDays: authorization ? 1 : Number(value.numberOfDays),
+      startTime: authorization ? value.startTime : (this.halfDay ? (this.halfDayPeriod === 'MATIN' ? '08:30' : '14:00') : null),
+      endTime: authorization ? value.endTime : (this.halfDay ? (this.halfDayPeriod === 'MATIN' ? '13:00' : '18:00') : null),
+      numberOfDays: authorization ? 1 : (this.halfDay ? 0.5 : Number(value.numberOfDays)),
       reason: null
     });
   }

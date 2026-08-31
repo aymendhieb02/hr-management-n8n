@@ -76,11 +76,12 @@ export class WeekPlannerComponent {
   protected eventColor(event: CalendarEvent): string {
     if (event.kind === 'HOLIDAY') return 'green';
     if (event.kind === 'RESTORED') return 'restored';
+    if (event.kind === 'HALF_DAY') return 'violet';
     return event.nature === 'AUTORISATION_ABSENCE' ? 'orange' : 'blue';
   }
 
   protected statusLabel(status: string): string {
-    return ({ APPROVED: 'Approuvée', PENDING: 'En attente', REJECTED: 'Refusée', CANCELLED: 'Annulée' } as Record<string, string>)[status] ?? status.replaceAll('_', ' ');
+    return ({ DRAFT: 'Brouillon', BROUILLON: 'Brouillon', APPROVED: 'Approuvée', PENDING: 'En attente', REJECTED: 'Refusée', CANCELLED: 'Annulée' } as Record<string, string>)[status] ?? status.replaceAll('_', ' ');
   }
 
   protected natureLabel(nature: CalendarEvent['nature']): string {

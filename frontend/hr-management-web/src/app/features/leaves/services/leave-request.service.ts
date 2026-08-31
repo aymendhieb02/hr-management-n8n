@@ -21,6 +21,7 @@ interface CongeDemandeApiResponse {
   certificatMedicalRequis?: boolean;
   statut: { id: number; libelle: string };
   dateSoumission: string | null;
+  dateCreation?: string | null;
   dateDecision: string | null;
   commentaireDecision: string | null;
   samediCompte?: boolean;
@@ -128,6 +129,7 @@ function toLeaveRequest(response: CongeDemandeApiResponse): LeaveRequestResponse
     medicalCertificateRequired: Boolean(response.certificatMedicalRequis),
     status: toLeaveRequestStatus(response.statut.libelle),
     submittedAt: response.dateSoumission ?? '',
+    dateCreation: response.dateCreation,
     decisionAt: response.dateDecision,
     decisionComment: response.commentaireDecision,
     saturdayCounts: response.samediCompte,

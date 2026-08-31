@@ -64,6 +64,7 @@ export interface LeaveRequestResponse {
   medicalCertificateRequired?: boolean;
   status: LeaveRequestStatus;
   submittedAt: string;
+  dateCreation?: string | null;
   decisionAt: string | null;
   decisionComment: string | null;
   saturdayCounts?: boolean;

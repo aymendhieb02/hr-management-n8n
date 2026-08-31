@@ -38,10 +38,10 @@
               @if(segment.event.employeePhotoUrl){<img class="event-avatar" [src]="segment.event.employeePhotoUrl" [alt]="segment.event.employeeName" [title]="segment.event.employeeName"/>}
               @else{<span class="event-avatar fallback" [title]="segment.event.employeeName">{{segment.event.employeeName.charAt(0)}}</span>}
             }@else{<strong>{{segment.event.employeeName}}</strong>}
-            <span>{{ segment.event.kind === 'HOLIDAY' ? 'Jour férié' : segment.event.kind === 'RESTORED' ? 'Restitué' : natureLabel(segment.event.nature) }}</span>
+            <span>{{ segment.event.kind === 'HOLIDAY' ? 'Jour férié' : segment.event.kind === 'RESTORED' ? 'Restitué' : segment.event.kind === 'HALF_DAY' ? 'Demi-journée' : natureLabel(segment.event.nature) }}</span>
           </div>
           @if (segment.event.kind !== 'HOLIDAY') {
-            @if (segment.event.nature === 'AUTORISATION_ABSENCE') { <small>{{ segment.event.startTime?.slice(0, 5) }} – {{ segment.event.endTime?.slice(0, 5) }}</small> }
+            @if (segment.event.nature === 'AUTORISATION_ABSENCE' || segment.event.kind === 'HALF_DAY') { <small>{{ segment.event.startTime?.slice(0, 5) }} – {{ segment.event.endTime?.slice(0, 5) }}</small> }
             @else { <small>{{ segment.event.startDate | date:'dd/MM' }} – {{ segment.event.endDate | date:'dd/MM' }}</small> }
             <em [class]="'status ' + segment.event.status.toLowerCase()">{{ segment.event.kind==='RESTORED'?'Restitué':statusLabel(segment.event.status) }}</em>
           }

@@ -75,6 +75,6 @@ export class CalendarComponent implements OnInit {
     this.month.set(new Date(year, month - 1, day, 12));
   }
   protected statusLabel(status: string): string {
-    return ({ DRAFT: 'Brouillon', APPROVED: 'Approuvée', PENDING: 'En attente', REJECTED: 'Refusée', CANCELLED: 'Annulée' } as Record<string, string>)[status] ?? status.replaceAll('_', ' ');
+    return ({ DRAFT: 'Brouillon', BROUILLON: 'Brouillon', APPROVED: 'Approuvée', PENDING: 'En attente', REJECTED: 'Refusée', CANCELLED: 'Annulée' } as Record<string, string>)[status] ?? status.replaceAll('_', ' ');
   }
 }

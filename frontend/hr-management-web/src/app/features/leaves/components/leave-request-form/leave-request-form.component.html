@@ -31,6 +31,7 @@
             <label class="form-field"><span>Nombre de jours</span><input formControlName="numberOfDays" type="number" min="0.5" [max]="maximumLeaveDays() ?? 365" step="0.5" (input)="calculateEndDate()" />@if (fieldError('numberOfDays')) { <p class="field-error">{{ fieldError('numberOfDays') }}</p> } @if (maximumLeaveDays() !== null) { <small>Capacité maximale actuelle : {{ maximumLeaveDays() }} jour(s), demandes en attente comprises.</small> }</label>
           }
           <label class="checkbox-field half-day-choice"><input type="checkbox" [checked]="halfDay" (change)="halfDay=$any($event.target).checked; form.controls.numberOfDays.setValue(halfDay ? 0.5 : 1); calculateEndDate()" /> Demi-journée (0,5 jour)</label>
+          @if (halfDay) { <label class="form-field half-day-period"><span>Période</span><select [(ngModel)]="halfDayPeriod" [ngModelOptions]="{standalone:true}"><option value="MATIN">Matin (08:30 – 13:00)</option><option value="APRES_MIDI">Après-midi (14:00 – 18:00)</option></select></label> }
         </div>
       } @else {
         <label class="form-field"><span>Jour de l'autorisation</span><input formControlName="startDate" type="date" [min]="firstAllowedDate" (change)="startDateChanged()" /></label>

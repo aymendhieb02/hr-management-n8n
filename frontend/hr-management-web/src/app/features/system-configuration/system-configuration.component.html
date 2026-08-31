@@ -17,7 +17,8 @@
           @if(estLimiteNegative(variable)&&!soldeNegatifActif()){<p class="disabled-explanation">Désactivé : la limite est automatiquement fixée à 0.</p>}
           <footer><code>{{variable.nom}}</code><div class="setting-actions">
             @if(editing()===variable.id){<button class="cancel-edit" type="button" (click)="annuler()">Annuler</button><button type="button" (click)="demanderConfirmation(variable)" [disabled]="saving()===variable.id||(estLimiteNegative(variable)&&!soldeNegatifActif())||(estSecret(variable)&&!variable.valeur)">{{saving()===variable.id?'Enregistrement...':'Enregistrer'}}</button>}
-            @else {<button type="button" (click)="modifier(variable)" [disabled]="editing()!==null">Modifier</button>@if(variable.nom==='solde_conge_par_mois'){<button type="button" class="test-action" (click)="testerAcquisition()" [disabled]="testingAccrual()||editing()!==null">{{testingAccrual()?'Test…':'Tester'}}</button>@if(testApplied()){<button type="button" class="return-action" (click)="retournerAcquisition()" [disabled]="testingAccrual()||editing()!==null">Retourner</button>}}}
+            @else {<button type="button" (click)="modifier(variable)" [disabled]="editing()!==null">Modifier</button>@if(variable.nom==='solde_conge_par_mois'){<button type="button" class="test-action" (click)="testerAcquisition()" [disabled]="testingAccrual()||editing()!==null">{{testingAccrual()?'Test…':'Tester'}}</button>}}
+            @if(variable.nom==='solde_conge_par_mois' && testApplied()){<button type="button" class="return-action" (click)="retournerAcquisition()" [disabled]="testingAccrual()||editing()!==null">Retourner</button>}
           </div></footer>
         </article>
       }
