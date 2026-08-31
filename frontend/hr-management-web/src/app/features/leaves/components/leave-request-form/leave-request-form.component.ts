@@ -111,6 +111,7 @@ export class LeaveRequestFormComponent implements OnChanges {
       this.formLevelError = null;
     }
   }
+  protected formatDays(value: number | null): string { return value == null || !Number.isFinite(value) ? '' : value.toFixed(2).replace(/\.00$/, '').replace('.', ','); }
 
   protected startTimeChanged(): void {
     const end = this.form.controls.endTime.value;
