@@ -27,13 +27,10 @@ public class CongeDemandeResponse {
     private LocalDate dateFin;
     private LocalTime heureFin;
     private LocalDateTime dateSoumission;
+    private LocalDateTime dateCreation;
     private BigDecimal nombreJours;
     private Boolean samediCompte;
     private BigDecimal nombreJoursConsomme;
-    private LocalDate dateFinReelle;
-    private LocalDateTime dateRegularisation;
-    private EmployeResume regularisePar;
-    private String commentaireRegularisation;
     private String commentaireEmploye;
     private String commentaireDecision;
     private LocalDateTime dateDecision;

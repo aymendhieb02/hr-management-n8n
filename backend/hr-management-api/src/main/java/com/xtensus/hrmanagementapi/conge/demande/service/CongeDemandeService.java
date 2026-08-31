@@ -25,6 +25,7 @@ import com.xtensus.hrmanagementapi.conge.demande.historique.CongeDemandeHistoriq
 import com.xtensus.hrmanagementapi.notificationfr.service.NotificationFrancaiseService;
 import com.xtensus.hrmanagementapi.conge.solde.service.CongeSoldeTransactionService;
 import com.xtensus.hrmanagementapi.workflow.CongeWorkflowService;
+import com.xtensus.hrmanagementapi.workflow.EmailOutboxService;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -53,7 +54,7 @@ public class CongeDemandeService {
     private final CongeSoldeTransactionService soldeTransactionService;
     private final JourFerieRepository jourFerieRepository;
     private final CongeWorkflowService workflowService;
-    private final com.xtensus.hrmanagementapi.workflow.EmailOutboxService emailOutboxService;
+    private final EmailOutboxService emailOutboxService;
 
     public CongeDemandeService(CongeDemandeRepository demandeRepository, EmployeRepository employeRepository,
             CongeTypeRepository congeTypeRepository, CongeDemandeStatutRepository statutRepository,
@@ -61,8 +62,7 @@ public class CongeDemandeService {
             CongeDemandeHistoriqueService historiqueService,
             NotificationFrancaiseService notificationService,
             CongeSoldeTransactionService soldeTransactionService,
-            JourFerieRepository jourFerieRepository, CongeWorkflowService workflowService,
-            com.xtensus.hrmanagementapi.workflow.EmailOutboxService emailOutboxService) {
+            JourFerieRepository jourFerieRepository, CongeWorkflowService workflowService, EmailOutboxService emailOutboxService) {
         this.demandeRepository = demandeRepository;
         this.employeRepository = employeRepository;
         this.congeTypeRepository = congeTypeRepository;
@@ -178,7 +178,8 @@ public class CongeDemandeService {
         }
         boolean samediCompte = Boolean.TRUE.equals(request.getSamediCompte());
         demande.setSamediCompte(samediCompte);
-        if (!"AUTORISATION_ABSENCE".equals(demande.getNature())) {
+        if (!"AUTORISATION_ABSENCE".equals(demande.getNature())
+                && (demande.getNombreJours() == null || demande.getNombreJours().compareTo(java.math.BigDecimal.valueOf(0.5)) != 0)) {
             demande.setNombreJours(nombreJoursOuvrables(demande.getDateDebut(), demande.getDateFin(), samediCompte));
         }
         appliquerDecisionFinale(demande, request, STATUT_APPROUVEE, false);
@@ -189,6 +190,9 @@ public class CongeDemandeService {
                 saved.getEmploye(), "DECISION_CONGE", "Demande approuvée",
                 "Votre " + libelleNature(saved) + " du " + periode(saved) + " a été approuvée."
                         + commentaireDecision(saved), "HAUTE");
+        emailOutboxService.planifier(saved.getEmploye(), "Votre congé a été approuvé", "Congé approuvé",
+                "Votre " + libelleNature(saved) + " du " + periode(saved) + " a été approuvé(e)."
+                        + commentaireDecision(saved));
         return response(saved);
     }
 
@@ -207,39 +211,27 @@ public class CongeDemandeService {
                 saved.getEmploye(), "DECISION_CONGE", "Demande refusée",
                 "Votre " + libelleNature(saved) + " du " + periode(saved) + " a été refusée."
                         + commentaireDecision(saved), "HAUTE");
+        emailOutboxService.planifier(saved.getEmploye(), "Votre congé a été refusé", "Congé refusé",
+                "Votre " + libelleNature(saved) + " du " + periode(saved) + " a été refusé(e)."
+                        + commentaireDecision(saved));
         return response(saved);
     }
 
     @Transactional
-    public CongeDemandeResponse ajusterConsommation(Long id, BigDecimal joursReels, String commentaire, Long acteurId) {
+    public CongeDemandeResponse ajusterConsommation(Long id, BigDecimal joursReels, String commentaire) {
+        if (commentaire == null || commentaire.trim().isEmpty()) {
+            throw new CongeDemandeInvalideException("Le commentaire de régularisation est obligatoire");
+        }
         CongeDemande demande=entite(id);
         if (demande.getStatut()==null || !STATUT_APPROUVEE.equals(demande.getStatut().getLibelle())) {
             throw new CongeDemandeInvalideException("Seule une demande approuvee peut etre ajustee");
         }
-        if (demande.getDateDebut().isAfter(LocalDate.now())) throw new CongeDemandeInvalideException("La consommation ne peut etre regularisee qu'apres le debut du conge");
-        String commentaireNettoye=trim(commentaire); if(commentaireNettoye==null) throw new CongeDemandeInvalideException("Le commentaire de regularisation est obligatoire");
-        BigDecimal ancienne=demande.getNombreJoursConsomme()==null?demande.getNombreJours():demande.getNombreJoursConsomme();
-        if(joursReels!=null&&ancienne.compareTo(joursReels)==0) throw new CongeDemandeInvalideException("La consommation reelle est deja enregistree a cette valeur");
         soldeTransactionService.ajusterConsommation(demande, joursReels);
-        demande.setNombreJoursConsomme(joursReels);
-        demande.setDateFinReelle(calculerDateFinReelle(demande.getDateDebut(),joursReels,Boolean.TRUE.equals(demande.getSamediCompte())));
-        demande.setDateRegularisation(LocalDateTime.now()); demande.setRegularisePar(employe(acteurId));
-        demande.setCommentaireRegularisation(commentaireNettoye); demande.setDateModification(LocalDateTime.now());
+        demande.setNombreJoursConsomme(joursReels); demande.setDateModification(LocalDateTime.now());
         CongeDemande saved=demandeRepository.save(demande);
-        historiqueService.enregistrer(saved,"AJUSTEMENT_CONSOMMATION",STATUT_APPROUVEE,STATUT_APPROUVEE,"Consommation reelle : "+ancienne+" -> "+joursReels+" jour(s). Regularise par "+saved.getRegularisePar().getPrenom()+" "+saved.getRegularisePar().getNom()+". "+commentaireNettoye);
-        notificationService.notifier(saved.getEmploye(),"DECISION_CONGE","Conge regularise","Votre conge a ete regularise a "+joursReels+" jour(s) reellement consomme(s). Motif : "+commentaireNettoye,"NORMALE");
-        emailOutboxService.planifier(saved.getEmploye(),"XTENSUS HR - Conge regularise","Votre conge a ete regularise",
-                "La consommation reelle de votre conge du "+saved.getDateDebut()+" au "+saved.getDateFin()+" est maintenant de "+joursReels+" jour(s). Motif : "+commentaireNettoye);
+        historiqueService.enregistrer(saved,"AJUSTEMENT_CONSOMMATION",STATUT_APPROUVEE,STATUT_APPROUVEE,commentaire.trim());
+        notificationService.notifier(saved.getEmploye(),"DECISION_CONGE","Congé régularisé","Votre congé a été régularisé à "+joursReels+" jour(s) réellement consommé(s).","NORMALE");
         return response(saved);
-    }
-
-    private LocalDate calculerDateFinReelle(LocalDate debut, BigDecimal joursReels, boolean samediCompte) {
-        if(joursReels==null||joursReels.signum()==0)return null;
-        int jours;
-        try { jours=joursReels.intValueExact(); } catch(ArithmeticException ex) { throw new CongeDemandeInvalideException("La consommation reelle doit etre un nombre entier de jours"); }
-        LocalDate date=debut.minusDays(1);int comptes=0;
-        while(comptes<jours){date=date.plusDays(1);if(date.getDayOfWeek()==java.time.DayOfWeek.SUNDAY)continue;if(!samediCompte&&date.getDayOfWeek()==java.time.DayOfWeek.SATURDAY)continue;if(jourFerieRepository.existsByDateAndActifTrue(date))continue;comptes++;}
-        return date;
     }
 
     @Transactional(readOnly = true)
@@ -252,14 +244,7 @@ public class CongeDemandeService {
     public List<CongeDemandeResponse> parEmploye(Long employeId, Long acteurId) { return demandeRepository.findByEmployeIdOrderByDateSoumissionDesc(employeId).stream().filter(d -> employeId.equals(acteurId) || !STATUT_BROUILLON.equals(d.getStatut().getLibelle())).map(this::response).toList(); }
 
     @Transactional(readOnly = true)
-    public List<CongeDemandeResponse> parDecideur(Long decideurId, com.xtensus.hrmanagementapi.domain.enums.RoleType role) {
-        java.util.LinkedHashMap<Long,CongeDemande> visibles=new java.util.LinkedHashMap<>();
-        workflowService.demandesActives(decideurId).forEach(d->visibles.put(d.getId(),d));
-        if(role==com.xtensus.hrmanagementapi.domain.enums.RoleType.DG||role==com.xtensus.hrmanagementapi.domain.enums.RoleType.DT){
-            demandeRepository.findAll().stream().filter(d->d.getStatut()!=null&&!STATUT_BROUILLON.equals(d.getStatut().getLibelle())).forEach(d->visibles.put(d.getId(),d));
-        }
-        return visibles.values().stream().map(this::response).toList();
-    }
+    public List<CongeDemandeResponse> parDecideur(Long decideurId) { return workflowService.demandesActives(decideurId).stream().map(this::response).toList(); }
 
     private CongeDemandeResponse response(CongeDemande demande) { CongeDemandeResponse r=mapper.toResponse(demande); workflowService.enrichir(r); return r; }
 
